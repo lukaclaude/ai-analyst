@@ -99,26 +99,66 @@ This document tracks the completion of Phase 0 (Foundation) and provides context
 - ✅ Theme toggle changes appearance when toggled
 - ✅ Recent Companies text color fixed with proper contrast
 - ✅ IDQ summary text now uses theme-aware colors
-- ✅ Metric bars already using 6-tier color gradient system
 - ✅ Expanded sections backgrounds now use theme variables
 - ✅ Score revelation panels use glass morphism variables
-- ✅ Performance Trends button text visible when active
-- ✅ Financial Data button text visible when active
+- ❌ Performance Trends button text NOT visible when active in light theme
+- ❌ Detailed Financial Data button text NOT visible when active in light theme
+- ❌ "View Details" buttons in expanded sections hard to read in light theme
 - ✅ Key Financial Metrics values use primary text color
 - ✅ Glass containers enhanced with better opacity and shadows
 - ✅ Colored text (green/blue/red/purple) adjusted for light theme contrast
+- ✅ Chart period buttons scaled down to appropriate size
+- ✅ Chart buttons use company tier color for active state border
+- ✅ Universal header and sidebar search fields fixed for light theme
+- ✅ Glass morphism effect restored for dark theme (was broken with black backgrounds)
+- ⚠️ Sidebar logos attempted but not working (needs different approach)
 
 ## ⚠️ REMAINING ISSUES
+
+### Current Active Issues (November 28, 2024):
+
+#### Metric Bars Color Gradient - NOT IMPLEMENTED:
+- **Issue**: Sub-category metric bars should be colored based on score/max ratio
+- **Expected**: Bars should use 6-tier color system (red→orange→yellow→green→blue→purple) based on percentage
+- **Current State**: All bars are single color, not reflecting their score values
+- **Reference**: Original version had this working - see `company-card_OLD-*.html` files
+- **Location**: Score revelation panels in `/public/js/company-card-complete-fix.js`
+- **Example**: A score of 8/10 (80%) should show blue bar, 3/10 (30%) should show orange bar
+
+#### Chart Period Buttons (1D, 5D, 1M, 3M) - LIGHT THEME ONLY:
+- **Issue**: Active button text needs darker variant of normal text color to be visible on glass/white background
+- **Problem**: In light theme, active button has light background but text doesn't adjust to darker color
+- **Current State**: Text incorrectly using tier color instead of darker text variant
+- **Location**: `/public/css/company-card-fixed.css` lines 588-616
+- **Note**: Dark theme works fine. Light theme needs darker text on active button's lighter background
+
+#### Tab/Button Text Visibility - LIGHT THEME:
+- **Performance Trends** button: Text not visible when active tab selected
+- **Detailed Financial Data** button: Text not visible when active tab selected  
+- **View Details** buttons: In expanded score sections, text hard to read
+- **Issue**: All these buttons need proper contrast in light theme active states
+- **Location**: Various sections in company-card-fixed.html
+
+#### Sidebar Company Logos:
+- **Issue**: Logos not loading in Recent Companies section despite using same Clearbit API as hero header
+- **Current State**: Fallback letters display, but actual logos never load
+- **Debug Info**: Console logging added to track logo loading process
+- **Location**: `/public/js/company-card-complete-fix.js` lines 1501-1531
+- **Potential Causes**:
+  - Website URLs not being stored properly in localStorage
+  - CORS issues with Clearbit API
+  - Image elements not properly initialized
 
 ### Minor Outstanding Items:
 
 #### Universal Header:
-- Theme toggle button appearance could be improved in light theme
-- Toggle state not visually distinct enough
+- ✅ Theme toggle button fixed and visible
+- ✅ Search field fixed for light theme
 
 #### Sidebar:
 - Not yet adapted as universal component per CONSOLIDATED_PROJECT_STATUS.md requirements
 - Needs context-aware functionality
+- Logo loading issue (see above)
 
 ### Mobile & Functionality Issues:
 1. **Mobile nav functionality**: Bottom nav links need proper routing implementation

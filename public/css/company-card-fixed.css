@@ -41,13 +41,14 @@
     --glow-red: rgba(239, 68, 68, 0.3);
     
     /* Glass Morphism & Overlays */
-    --glass-bg: var(--glass-bg);
-    --glass-bg-hover: var(--glass-bg);
-    --glass-border: var(--glass-border);
-    --glass-border-hover: rgba(255, 255, 255, 0.12);
-    --glass-gradient-start: var(--glass-border);
-    --glass-gradient-end: var(--glass-gradient-end);
-    --glass-inset-shadow: inset 0 0 20px var(--glass-bg);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-bg-hover: rgba(255, 255, 255, 0.08);
+    --glass-bg-active: rgba(255, 255, 255, 0.12);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-hover: rgba(255, 255, 255, 0.15);
+    --glass-gradient-start: rgba(255, 255, 255, 0.08);
+    --glass-gradient-end: rgba(255, 255, 255, 0.02);
+    --glass-inset-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
     --glass-blur: blur(20px);
     --glass-saturate: saturate(180%);
     
@@ -183,6 +184,7 @@ body.light-theme {
     /* Glass Morphism for Light Theme - Enhanced Contrast */
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-bg-hover: rgba(255, 255, 255, 0.92);
+    --glass-bg-active: rgba(255, 255, 255, 0.95);
     --glass-border: rgba(0, 0, 0, 0.1);
     --glass-border-hover: rgba(0, 0, 0, 0.15);
     --glass-gradient-start: rgba(255, 255, 255, 0.95);
@@ -419,6 +421,28 @@ body {
     border: 1px solid var(--color-border-primary);
 }
 
+/* Light theme search input fixes */
+.light-theme .sidebar-input {
+    background: #ffffff;
+    color: var(--color-text-primary);
+    border: 1px solid #d0d7de;
+}
+
+.light-theme .sidebar-input::placeholder {
+    color: #656d76;
+}
+
+.light-theme .sidebar-input:focus {
+    border-color: #0969da;
+    box-shadow: 0 0 0 1px #0969da;
+}
+
+.light-theme .search-results-dropdown {
+    background: #ffffff;
+    border: 1px solid #d0d7de;
+    box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+}
+
 .sidebar-section-border {
     border-top: 1px solid var(--color-border-primary);
 }
@@ -434,9 +458,6 @@ body {
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .recent-company-item:hover {
@@ -444,10 +465,54 @@ body {
     transform: translateX(4px);
 }
 
+.company-info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.company-mini-logo {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border-primary);
+}
+
+.logo-fallback-mini {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, var(--color-accent-purple), var(--color-accent-blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border-primary);
+}
+
+.logo-fallback-mini span {
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.company-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex-grow: 1;
+}
+
 .recent-company-item .ticker {
     font-weight: var(--weight-semibold);
-    color: var(--color-accent-purple);
+    color: var(--color-text-primary);
     font-size: var(--text-sm);
+    line-height: 1.2;
 }
 
 .recent-company-item .name {
@@ -456,10 +521,14 @@ body {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    max-width: 150px;
+    line-height: 1.2;
 }
 
 /* Light theme adjustments for recent companies */
+.light-theme .recent-company-item .ticker {
+    color: var(--color-text-primary);
+}
+
 .light-theme .recent-company-item .name {
     color: var(--color-text-secondary);
 }
@@ -487,33 +556,68 @@ body {
 
 /* Chart controls container */
 .chart-controls {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    display: flex;
+    gap: 2px;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 2px;
+    border-radius: 6px;
+    border: 1px solid var(--glass-border);
 }
 
-/* Chart timeframe buttons */
+/* Chart timeframe buttons - much smaller */
 .chart-timeframe-btn {
-    background: var(--color-bg-tertiary);
+    background: var(--glass-bg);
     color: var(--color-text-secondary);
-    border: 1px solid var(--color-border-primary);
+    border: 1px solid var(--glass-border);
+    padding: 1px 6px;
+    font-size: 10px;
+    line-height: 1.2;
+    min-width: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
 }
 
 .chart-timeframe-btn:hover {
-    background: var(--color-bg-quaternary);
+    background: var(--glass-bg-hover);
     color: var(--color-text-primary);
+    border-color: var(--glass-border-hover);
 }
 
 .chart-timeframe-btn.active {
-    background: var(--tier-color, var(--color-score-purple)) !important;
-    color: white !important;
-    border-color: var(--tier-color, var(--color-score-purple)) !important;
+    background: var(--glass-bg-active);
+    color: var(--tier-color, var(--color-score-purple)) !important;
+    border-color: var(--tier-color, var(--color-score-purple));
+    font-weight: 600 !important;
 }
 
-/* Light theme specific fix for active chart buttons */
+/* Light theme adjustments */
+.light-theme .chart-controls {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.light-theme .chart-timeframe-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .chart-timeframe-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.9);
+}
+
 .light-theme .chart-timeframe-btn.active {
-    background: var(--tier-color, var(--color-score-purple)) !important;
-    color: white !important;
-    border-color: var(--tier-color, var(--color-score-purple)) !important;
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--tier-color, var(--color-score-purple)) !important;
+    border-color: var(--tier-color, var(--color-score-purple));
+    font-weight: 600 !important;
 }
 
 /* ============================================

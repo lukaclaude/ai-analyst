@@ -1435,8 +1435,9 @@ async function fetchAndDisplayCompanyData(ticker) {
         state.currentStockData = stockData;
         state.currentTicker = ticker.toUpperCase();
         
-        // Update recent companies
-        updateRecentCompanies(ticker.toUpperCase(), stockData.Portfolio.companyName);
+        // Update recent companies with website if available
+        const website = stockData.Financials?.General?.companyWebsite || null;
+        updateRecentCompanies(ticker.toUpperCase(), stockData.Portfolio.companyName, website);
         
         // Populate everything
         await populateCompanyCard();
@@ -1457,9 +1458,9 @@ async function fetchAndDisplayCompanyData(ticker) {
 // HELPER FUNCTIONS
 // ============================================
 
-function updateRecentCompanies(ticker, companyName) {
+function updateRecentCompanies(ticker, companyName, website = null) {
     const recent = state.recentCompanies.filter(c => c.ticker !== ticker);
-    recent.unshift({ ticker, companyName });
+    recent.unshift({ ticker, companyName, website });
     state.recentCompanies = recent.slice(0, 5);
     localStorage.setItem('recentCompanies', JSON.stringify(state.recentCompanies));
     displayRecentCompanies();
@@ -1469,12 +1470,65 @@ function displayRecentCompanies() {
     const container = document.getElementById('recent-companies');
     if (!container) return;
     
-    container.innerHTML = state.recentCompanies.map(company => `
-        <div class="recent-company-item" onclick="navigateToCompany('${company.ticker}')">
-            <span class="ticker">${company.ticker}</span>
-            <span class="name">${company.companyName}</span>
-        </div>
-    `).join('');
+    // Clear localStorage if old format detected (for testing)
+    const firstItem = state.recentCompanies[0];
+    if (firstItem && !('website' in firstItem)) {
+        console.log('Clearing old recent companies format');
+        state.recentCompanies = [];
+        localStorage.removeItem('recentCompanies');
+    }
+    
+    container.innerHTML = state.recentCompanies.map((company, index) => {
+        return `
+            <div class="recent-company-item" onclick="navigateToCompany('${company.ticker}')">
+                <div class="company-info-row">
+                    <img class="company-mini-logo" 
+                         id="mini-logo-${index}"
+                         alt="${company.ticker}"
+                         style="display:none;">
+                    <div id="mini-logo-fallback-${index}" class="logo-fallback-mini">
+                        <span>${company.ticker.charAt(0)}</span>
+                    </div>
+                    <div class="company-text">
+                        <span class="ticker">${company.ticker}</span>
+                        <span class="name">${company.companyName}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Now set the logo sources and handlers after rendering
+    state.recentCompanies.forEach((company, index) => {
+        const logoEl = document.getElementById(`mini-logo-${index}`);
+        const fallbackEl = document.getElementById(`mini-logo-fallback-${index}`);
+        
+        console.log(`Processing ${company.ticker}: website="${company.website}", logoEl=${!!logoEl}`);
+        
+        if (logoEl && company.website) {
+            try {
+                const hostname = new URL(company.website).hostname;
+                const logoUrl = `https://logo.clearbit.com/${hostname}`;
+                console.log(`Logo URL for ${company.ticker}: ${logoUrl}`);
+                
+                logoEl.src = logoUrl;
+                logoEl.onload = function() {
+                    console.log(`Logo loaded successfully for ${company.ticker}`);
+                    this.style.display = 'block';
+                    if (fallbackEl) fallbackEl.style.display = 'none';
+                };
+                logoEl.onerror = function() {
+                    console.log(`Logo load failed for ${company.ticker}`);
+                    this.style.display = 'none';
+                    if (fallbackEl) fallbackEl.style.display = 'flex';
+                };
+            } catch (e) {
+                console.log(`Invalid URL for ${company.ticker}: ${company.website}`, e);
+            }
+        } else if (!company.website) {
+            console.log(`No website stored for ${company.ticker}`);
+        }
+    });
 }
 
 function navigateToCompany(ticker) {
