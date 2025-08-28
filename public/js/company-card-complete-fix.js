@@ -1700,17 +1700,17 @@ function createEarningsChart(metricType = 'revenue') {
     const portfolio = state.currentStockData.Portfolio;
     const ctx = canvas.getContext('2d');
 
-    // Theme-aware colors
-    const isLightTheme = document.body.classList.contains('light-theme');
-    const gridColor = isLightTheme ? '#dee2e6' : '#30363D';
-    const textColor = isLightTheme ? '#535a5f' : '#8B949E';
-    const pointColor = isLightTheme ? '#2e3338' : '#E6EDF3';
-    const estimatePointColor = isLightTheme ? '#0d6efd' : '#3b82f6';
-    const upColor = isLightTheme ? 'rgba(22, 163, 74, 0.9)' : 'rgba(34, 197, 94, 0.9)';
-    const downColor = isLightTheme ? 'rgba(220, 53, 69, 0.9)' : 'rgba(239, 68, 68, 0.9)';
-    const neutralColor = isLightTheme ? 'rgba(108, 117, 125, 0.9)' : 'rgba(139, 148, 158, 0.9)';
-    const labelColor = isLightTheme ? '#2e3338' : '#E6EDF3';
-    const estimateTextColor = isLightTheme ? '#0d6efd' : '#3b82f6';
+    // Get theme-aware colors from CSS variables
+    const computedStyle = getComputedStyle(document.documentElement);
+    const gridColor = computedStyle.getPropertyValue('--chart-grid-color').trim();
+    const textColor = computedStyle.getPropertyValue('--chart-text-color').trim();
+    const pointColor = computedStyle.getPropertyValue('--color-text-primary').trim();
+    const estimatePointColor = computedStyle.getPropertyValue('--chart-line-color').trim();
+    const upColor = computedStyle.getPropertyValue('--chart-positive').trim();
+    const downColor = computedStyle.getPropertyValue('--chart-negative').trim();
+    const neutralColor = computedStyle.getPropertyValue('--color-text-muted').trim();
+    const labelColor = computedStyle.getPropertyValue('--color-text-primary').trim();
+    const estimateTextColor = computedStyle.getPropertyValue('--chart-line-color').trim();
 
     const metricConfigs = {
         revenue: { path: 'Income_Statement.revenue', label: 'Revenue' },
@@ -1892,6 +1892,37 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function setupEventListeners() {
+    // Mobile navigation toggle
+    const mobileNavTrigger = document.getElementById('mobile-nav-trigger');
+    const sidebar = document.getElementById('navigation-sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    
+    if (mobileNavTrigger) {
+        mobileNavTrigger.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            // Prevent body scroll when sidebar is open
+            document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+        });
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+    
+    // Close mobile nav on ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+    
     // Theme toggle
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
