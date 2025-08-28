@@ -504,9 +504,16 @@ body {
 }
 
 .chart-timeframe-btn.active {
-    background: var(--color-score-purple);
-    color: var(--color-text-inverse);
-    border-color: var(--color-score-purple);
+    background: var(--tier-color, var(--color-score-purple)) !important;
+    color: white !important;
+    border-color: var(--tier-color, var(--color-score-purple)) !important;
+}
+
+/* Light theme specific fix for active chart buttons */
+.light-theme .chart-timeframe-btn.active {
+    background: var(--tier-color, var(--color-score-purple)) !important;
+    color: white !important;
+    border-color: var(--tier-color, var(--color-score-purple)) !important;
 }
 
 /* ============================================
@@ -716,11 +723,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--color-text-primary) !important;
 }
 
-.universal-header .header-button {
-    background: var(--glass-bg) !important;
-    border-color: var(--glass-border) !important;
-    color: var(--color-text-primary) !important;
-}
+/* Removed - let universal-header.html handle its own button styles */
 
 /* ============================================
    GLASS MORPHISM EFFECTS

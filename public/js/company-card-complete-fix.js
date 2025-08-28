@@ -735,6 +735,12 @@ async function populateCompanyCard() {
         }
     }
     
+    // Store company tier color for chart buttons
+    const chartContainer = document.querySelector('#chart-timeframe-buttons');
+    if (chartContainer) {
+        chartContainer.style.setProperty('--tier-color', companyTier.color);
+    }
+    
     // Fetch and draw price chart from API after a small delay to ensure DOM is ready
     setTimeout(() => {
         fetchAndDrawPriceChart(portfolio.ticker, '1M');
