@@ -180,16 +180,16 @@ body.light-theme {
     --glow-orange: rgba(234, 88, 12, 0.2);
     --glow-red: rgba(220, 38, 38, 0.2);
     
-    /* Glass Morphism for Light Theme */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-bg-hover: rgba(255, 255, 255, 0.8);
-    --glass-border: rgba(0, 0, 0, 0.08);
-    --glass-border-hover: rgba(0, 0, 0, 0.12);
-    --glass-gradient-start: rgba(255, 255, 255, 0.9);
-    --glass-gradient-end: rgba(248, 249, 250, 0.5);
-    --glass-inset-shadow: inset 0 0 20px rgba(255, 255, 255, 0.8);
-    --glass-blur: blur(16px);
-    --glass-saturate: saturate(150%);
+    /* Glass Morphism for Light Theme - Enhanced Contrast */
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-bg-hover: rgba(255, 255, 255, 0.92);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-border-hover: rgba(0, 0, 0, 0.15);
+    --glass-gradient-start: rgba(255, 255, 255, 0.95);
+    --glass-gradient-end: rgba(248, 249, 250, 0.7);
+    --glass-inset-shadow: inset 0 0 20px rgba(255, 255, 255, 0.9);
+    --glass-blur: blur(20px);
+    --glass-saturate: saturate(120%);
     
     /* Light Theme Shadows */
     --shadow-color: 0, 0, 0;
@@ -427,6 +427,47 @@ body {
     color: var(--color-text-muted);
 }
 
+/* Recent Companies styling */
+.recent-company-item {
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recent-company-item:hover {
+    background: var(--glass-bg);
+    transform: translateX(4px);
+}
+
+.recent-company-item .ticker {
+    font-weight: var(--weight-semibold);
+    color: var(--color-accent-purple);
+    font-size: var(--text-sm);
+}
+
+.recent-company-item .name {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 150px;
+}
+
+/* Light theme adjustments for recent companies */
+.light-theme .recent-company-item .name {
+    color: var(--color-text-secondary);
+}
+
+.light-theme .recent-company-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
 /* Ticker badge */
 .ticker-badge {
     background: var(--color-bg-tertiary);
@@ -612,6 +653,46 @@ a.button:focus-visible {
 }
 
 /* ============================================
+   THEME-AWARE TEXT COLORS
+   ============================================ */
+/* Dynamic values (CEO name, market cap, etc) */
+.dynamic-value {
+    color: var(--color-text-primary) !important;
+    font-weight: 500;
+}
+
+/* Muted labels (Updated:, etc) */
+.muted-label {
+    color: var(--color-text-muted) !important;
+}
+
+/* Muted headings */
+.muted-heading {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Subtle text */
+.subtle-text {
+    color: var(--color-text-subtle) !important;
+}
+
+/* Secondary text */
+.secondary-text {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Ensure headings use proper contrast */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--color-text-primary);
+}
+
+/* Score section headings */
+.section-heading {
+    color: var(--color-text-primary) !important;
+    font-weight: 600;
+}
+
+/* ============================================
    UNIVERSAL HEADER OVERRIDES
    ============================================ */
 /* Ensure universal header uses theme variables */
@@ -679,8 +760,31 @@ a.button:focus-visible {
 }
 
 body.light-theme .glass-morphism {
-    /* Glass morphism inherits from CSS variables automatically */
-    /* No override needed - variables change with theme */
+    /* Enhanced contrast for glass morphism in light theme */
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Improve colored text visibility in light theme tables */
+.light-theme .text-green-400,
+.light-theme .text-green-500 {
+    color: #059669 !important; /* Darker green for better contrast */
+}
+
+.light-theme .text-blue-400,
+.light-theme .text-blue-500 {
+    color: #2563eb !important; /* Darker blue for better contrast */
+}
+
+.light-theme .text-red-400,
+.light-theme .text-red-500 {
+    color: #dc2626 !important; /* Darker red for better contrast */
+}
+
+.light-theme .text-purple-400,
+.light-theme .text-purple-500 {
+    color: #7c3aed !important; /* Darker purple for better contrast */
 }
 
 /* ============================================
@@ -874,9 +978,9 @@ body.light-theme .glass-morphism {
 .score-card {
     background: linear-gradient(
         145deg,
-        rgba(30, 35, 42, 0.95) 0%,
-        rgba(22, 27, 34, 0.85) 50%,
-        rgba(13, 17, 23, 0.9) 100%
+        var(--glass-gradient-start) 0%,
+        var(--glass-bg) 50%,
+        var(--glass-gradient-end) 100%
     );
     backdrop-filter: var(--glass-blur) var(--glass-saturate);
     border: 1px solid var(--glass-border-hover);
@@ -1034,8 +1138,8 @@ body.light-theme .glass-morphism {
     padding: var(--space-8);
     background: linear-gradient(
         135deg,
-        rgba(22, 27, 34, 0.95) 0%,
-        rgba(13, 17, 23, 0.85) 100%
+        var(--glass-gradient-start) 0%,
+        var(--glass-gradient-end) 100%
     );
     border-radius: var(--radius-xl);
     border: 1px solid var(--glass-border);
@@ -1137,6 +1241,7 @@ body.light-theme .glass-morphism {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
@@ -1168,7 +1273,7 @@ body.light-theme .glass-morphism {
 }
 
 .reveal-btn:hover .reveal-text {
-    color: #E6EDF3;
+    color: var(--color-text-primary);
 }
 
 .score-card.active .reveal-btn {
@@ -1177,7 +1282,7 @@ body.light-theme .glass-morphism {
 }
 
 .score-card.active .reveal-btn .reveal-text {
-    color: #E6EDF3;
+    color: var(--color-text-primary);
 }
 
 /* Score-specific color variables */
@@ -1380,20 +1485,21 @@ body.light-theme .glass-morphism {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
-    color: #7d8590;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .tab-button:hover {
-    background: var(--glass-border);
-    color: #E6EDF3;
+    background: var(--glass-bg-hover);
+    color: var(--color-text-primary);
+    border-color: var(--glass-border-hover);
 }
 
 .tab-button.active {
-    background: var(--color-accent-purple);
-    color: white;
-    border-color: var(--color-accent-purple);
+    background: var(--color-accent-purple) !important;
+    color: white !important;
+    border-color: var(--color-accent-purple) !important;
 }
 
 /* Removed conflicting min-height rule that was affecting header chart */
@@ -1409,25 +1515,36 @@ body.light-theme .glass-morphism {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
-    color: #7d8590;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .data-tab-button:hover {
-    background: var(--glass-border);
-    color: #E6EDF3;
+    background: var(--glass-bg-hover);
+    color: var(--color-text-primary);
+    border-color: var(--glass-border-hover);
 }
 
 .data-tab-button.active {
-    background: var(--color-accent-green);
-    color: white;
-    border-color: var(--color-accent-green);
+    background: var(--color-accent-green) !important;
+    color: white !important;
+    border-color: var(--color-accent-green) !important;
 }
 
 /* Financial Tables */
 .financial-table-wrapper {
     margin-bottom: 32px;
+}
+
+.table-header {
+    background: var(--glass-bg);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.light-theme .table-header {
+    background: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .financial-table-wrapper table {
@@ -1573,6 +1690,7 @@ body.light-theme .glass-morphism {
 .metric-value {
     font-weight: var(--weight-semibold);
     font-family: var(--font-mono);
+    color: var(--color-text-primary);
 }
 
 /* ============================================
@@ -1605,9 +1723,15 @@ body.light-theme .glass-morphism {
     font-weight: var(--weight-semibold);
 }
 
-.analysis-content p {
+.analysis-content p,
+.analysis-content li {
     line-height: 1.7;
     color: var(--color-text-secondary);
+}
+
+.analysis-content strong {
+    color: var(--color-text-primary);
+    font-weight: var(--weight-semibold);
 }
 
 /* ============================================
@@ -1667,8 +1791,8 @@ body.light-theme .glass-morphism {
         display: block;
         margin-top: var(--space-3);
         padding: var(--space-2) var(--space-4);
-        background: var(--glass-border);
-        border: 1px solid var(--glass-border-hover);
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
         border-radius: var(--radius-md);
         color: var(--color-text-primary);
         font-size: var(--text-sm);
@@ -1760,4 +1884,90 @@ body.light-theme .glass-morphism {
 .rounded-md { border-radius: var(--radius-md); }
 .rounded-lg { border-radius: var(--radius-lg); }
 .rounded-xl { border-radius: var(--radius-xl); }
+
+/* ============================================
+   RANK BADGES & TOOLTIPS
+   ============================================ */
+.rank-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    font-size: 11px;
+    font-weight: var(--weight-medium);
+    color: var(--color-text-muted);
+    position: relative;
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.rank-badge:hover {
+    background: var(--glass-bg-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-accent-purple);
+    transform: scale(1.05);
+}
+
+/* Tooltip for rank badges */
+.rank-badge[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: normal;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.rank-badge[data-percentile]::before {
+    content: attr(data-percentile);
+    position: absolute;
+    top: calc(100% + 28px);
+    right: 0;
+    padding: 4px 8px;
+    background: var(--color-accent-purple);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: var(--weight-bold);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.rank-badge:hover::after,
+.rank-badge:hover::before {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Light theme adjustments for rank badges */
+.light-theme .rank-badge {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--color-text-secondary);
+}
+
+.light-theme .rank-badge:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: var(--color-accent-purple);
+}
+
+.light-theme .rank-badge[data-tooltip]::after {
+    background: rgba(0, 0, 0, 0.9);
+}
 .rounded-full { border-radius: var(--radius-full); }

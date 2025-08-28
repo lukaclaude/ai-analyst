@@ -92,13 +92,39 @@ This document tracks the completion of Phase 0 (Foundation) and provides context
 
 ---
 
-## ⚠️ REMAINING MINOR ISSUES
+## ✅ COMPLETED FIXES (Session 2)
 
-### Known Bugs to Fix:
-1. **Small theme inconsistencies**: Some edge cases where colors don't fully switch
+### Light Theme Fixes Completed:
+- ✅ Universal header theme toggle now visible with proper contrast
+- ✅ Theme toggle changes appearance when toggled
+- ✅ Recent Companies text color fixed with proper contrast
+- ✅ IDQ summary text now uses theme-aware colors
+- ✅ Metric bars already using 6-tier color gradient system
+- ✅ Expanded sections backgrounds now use theme variables
+- ✅ Score revelation panels use glass morphism variables
+- ✅ Performance Trends button text visible when active
+- ✅ Financial Data button text visible when active
+- ✅ Key Financial Metrics values use primary text color
+- ✅ Glass containers enhanced with better opacity and shadows
+- ✅ Colored text (green/blue/red/purple) adjusted for light theme contrast
+
+## ⚠️ REMAINING ISSUES
+
+### Minor Outstanding Items:
+
+#### Universal Header:
+- Theme toggle button appearance could be improved in light theme
+- Toggle state not visually distinct enough
+
+#### Sidebar:
+- Not yet adapted as universal component per CONSOLIDATED_PROJECT_STATUS.md requirements
+- Needs context-aware functionality
+
+### Mobile & Functionality Issues:
+1. **Mobile nav functionality**: Bottom nav links need proper routing implementation
 2. **Universal header loading**: CSS variables may not be available on initial load
-3. **Mobile nav functionality**: Bottom nav links need proper routing implementation
-4. **Search results dropdown**: Needs theme-aware styling
+3. **Search results dropdown**: Needs theme-aware styling
+4. **Sidebar**: Not yet universal component as specified
 
 ### Suggested Quick Fixes:
 ```css
@@ -308,7 +334,7 @@ http://localhost:8000/company-card-fixed.html?ticker=NVDA
 
 | Phase | Status | Completion | Notes |
 |-------|--------|------------|-------|
-| Phase 0: Foundation | ✅ Complete | 95% | Minor theme issues remain |
+| Phase 0: Foundation | ✅ Complete | 98% | Major issues resolved, minor tweaks remain |
 | Phase 1: Universal Components | 🔄 Not Started | 0% | Start with sidebar |
 | Phase 2: Responsive Content | 🔄 Not Started | 0% | Some responsive work done in Phase 0 |
 | Phase 3: Visual Polish | 🔄 Not Started | 0% | Glass morphism partially done |

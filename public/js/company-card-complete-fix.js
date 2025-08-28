@@ -532,10 +532,10 @@ async function populateCompanyCard() {
         const websiteLine = document.getElementById('website-line');
         
         if (details1) details1.innerHTML = `
-            <span>Mkt Cap: <span class="font-medium text-gray-200">${mktCap}</span></span> • 
-            <span>Exchange: <span class="font-medium text-gray-200">${g.stockExchange || 'N/A'}</span></span>
+            <span>Mkt Cap: <span class="font-medium dynamic-value">${mktCap}</span></span> • 
+            <span>Exchange: <span class="font-medium dynamic-value">${g.stockExchange || 'N/A'}</span></span>
         `;
-        if (details2) details2.innerHTML = `<span>CEO: <span class="font-medium text-gray-200">${g.cEO || 'N/A'}</span></span> • <span>Employees: <span class="font-medium text-gray-200">${employeeCount}</span></span>`;
+        if (details2) details2.innerHTML = `<span>CEO: <span class="font-medium dynamic-value">${g.cEO || 'N/A'}</span></span> • <span>Employees: <span class="font-medium dynamic-value">${employeeCount}</span></span>`;
         if (details3) details3.innerHTML = `<span>${g.industry || 'N/A'}</span> • <span>${g.sector || 'N/A'}</span>`;
         
         if (websiteLine && g.companyWebsite) {
@@ -585,7 +585,7 @@ async function populateCompanyCard() {
             const priceTargetNum = parseFloat(priceTarget);
             const upside = ((priceTargetNum - priceNum) / priceNum) * 100;
 
-            let textColorClass = 'text-gray-400';
+            let textColorClass = 'muted-heading';
             if (upside > 0) textColorClass = 'text-green-400';
             else if (upside < 0) textColorClass = 'text-red-400';
 
@@ -624,8 +624,8 @@ async function populateCompanyCard() {
         const details1 = document.getElementById('details-line-1');
         if (details1) {
             details1.innerHTML = `
-                <span>Mkt Cap: <span class="font-medium text-gray-200">${marketCapText}</span></span> • 
-                <span>Exchange: <span class="font-medium text-gray-200">${financials?.General?.stockExchange || 'N/A'}</span></span>
+                <span>Mkt Cap: <span class="font-medium dynamic-value">${marketCapText}</span></span> • 
+                <span>Exchange: <span class="font-medium dynamic-value">${financials?.General?.stockExchange || 'N/A'}</span></span>
             `;
         }
         
@@ -707,7 +707,7 @@ async function populateCompanyCard() {
             mobileTierLabel.className = `mobile-tier-label ${companyTier.class}`;
         }
         if (mobileBadge) {
-            mobileBadge.innerHTML = `<span style="color: white; font-weight: 600;">${companyTier.score.toFixed(1)}</span> • ${companyTier.name}`;
+            mobileBadge.innerHTML = `<span class="font-semibold">${companyTier.score.toFixed(1)}</span> • ${companyTier.name}`;
             mobileBadge.style.cssText = `background: ${companyTier.color}20; border-color: ${companyTier.color}; color: ${companyTier.color};`;
         }
     }
@@ -720,18 +720,18 @@ async function populateCompanyCard() {
             const dates = lastUpdateString.split('\n').filter(date => date.trim());
             if (dates.length > 0) {
                 const mostRecentDate = dates[0].split(' - ')[0].trim();
-                lastUpdated.innerHTML = `<span class="text-gray-600">Updated:</span> ${mostRecentDate}`;
+                lastUpdated.innerHTML = `<span class="muted-label">Updated:</span> ${mostRecentDate}`;
             } else {
                 // Fallback to current date if no data
                 const now = new Date();
                 const dateStr = now.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-                lastUpdated.innerHTML = `<span class="text-gray-600">Updated:</span> ${dateStr}`;
+                lastUpdated.innerHTML = `<span class="muted-label">Updated:</span> ${dateStr}`;
             }
         } else {
             // Fallback to current date if no data
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-            lastUpdated.innerHTML = `<span class="text-gray-600">Updated:</span> ${dateStr}`;
+            lastUpdated.innerHTML = `<span class="muted-label">Updated:</span> ${dateStr}`;
         }
     }
     
@@ -809,7 +809,7 @@ async function populateCompanyCard() {
             return `
                 <div class="subscore-item">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs text-gray-400">${score.label}</span>
+                        <span class="text-xs muted-heading">${score.label}</span>
                         <span class="text-xs font-semibold" style="color: ${barColor}">
                             ${score.value}${score.isNegative ? '' : `/${score.max}`}
                         </span>
@@ -906,7 +906,7 @@ async function populateCompanyCard() {
             return `
                 <div class="subscore-item">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs text-gray-400">${score.label}</span>
+                        <span class="text-xs muted-heading">${score.label}</span>
                         <span class="text-xs font-semibold" style="color: ${barColor}">
                             ${score.value}/${score.max}
                         </span>
@@ -1114,7 +1114,7 @@ function populateAnalysis() {
                     
                     <div class="mt-4 pt-4 border-t border-gray-700">
                         <div class="flex items-center gap-3">
-                            <span class="text-sm text-gray-400">Overall Assessment:</span>
+                            <span class="text-sm muted-heading">Overall Assessment:</span>
                             <span class="font-bold text-lg ${companyTier.class}" style="text-shadow: 0 0 10px ${companyTier.color};">
                                 ${companyTier.name}
                             </span>
@@ -1123,7 +1123,7 @@ function populateAnalysis() {
                                 <span class="thesis-score-total">/100</span>
                             </span>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">${companyTier.description}</p>
+                        <p class="text-xs muted-heading mt-1">${companyTier.description}</p>
                     </div>
                 </div>
             </div>
@@ -1134,7 +1134,7 @@ function populateAnalysis() {
                     <h3 class="analysis-title">The Big Picture</h3>
                 </div>
                 <div class="analysis-content">
-                    <p class="text-gray-300 leading-relaxed">${bigPicture}</p>
+                    <p class="secondary-text leading-relaxed">${bigPicture}</p>
                 </div>
             </div>
             ` : ''}
@@ -1145,7 +1145,7 @@ function populateAnalysis() {
                     <h3 class="analysis-title">The Core Debate</h3>
                 </div>
                 <div class="analysis-content">
-                    <p class="text-gray-300 leading-relaxed">${coreDebate}</p>
+                    <p class="secondary-text leading-relaxed">${coreDebate}</p>
                 </div>
             </div>
             ` : ''}
@@ -1361,12 +1361,44 @@ function populateFinancialMetrics() {
                 <div class="metric-category glass-morphism">
                     <h3 class="category-title">${category.category}</h3>
                     <div class="metric-items">
-                        ${category.items.map(item => `
+                        ${category.items.map(item => {
+                            let valueClass = 'metric-value';
+                            let displayValue = item.value || 'N/A';
+                            
+                            // Add color to growth metrics
+                            if (item.label.includes('Growth') && item.value && item.value !== 'N/A') {
+                                const growth = parseFloat(item.value);
+                                if (growth > 0) valueClass += ' text-green-400';
+                                else if (growth < 0) valueClass += ' text-red-400';
+                            }
+                            // Add color to scores
+                            else if (item.label.includes('Score') && item.value && item.value !== 'N/A') {
+                                const score = parseFloat(item.value);
+                                if (item.label.includes('Piotroski')) {
+                                    if (score >= 7) valueClass += ' text-green-400';
+                                    else if (score >= 4) valueClass += ' text-yellow-500';
+                                    else valueClass += ' text-red-400';
+                                } else if (item.label.includes('Altman')) {
+                                    if (score > 3) valueClass += ' text-green-400';
+                                    else if (score >= 1.8) valueClass += ' text-yellow-500';
+                                    else valueClass += ' text-red-400';
+                                }
+                            }
+                            // Add color to ROE/ROA
+                            else if ((item.label === 'ROE' || item.label === 'ROA') && item.value && item.value !== 'N/A') {
+                                const returnVal = parseFloat(item.value);
+                                if (returnVal > 15) valueClass += ' text-green-400';
+                                else if (returnVal > 5) valueClass += ' text-yellow-500';
+                                else if (returnVal < 0) valueClass += ' text-red-400';
+                            }
+                            
+                            return `
                             <div class="metric-item">
                                 <span class="metric-label">${item.label}</span>
-                                <span class="metric-value">${item.value || 'N/A'}</span>
+                                <span class="${valueClass}">${displayValue}</span>
                             </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `).join('')}
@@ -1402,6 +1434,9 @@ async function fetchAndDisplayCompanyData(ticker) {
         
         // Populate everything
         await populateCompanyCard();
+        
+        // Calculate rankings after scores are loaded
+        await calculateScoreRankings();
         
         hideLoadingState();
         
@@ -1497,7 +1532,7 @@ function populateDetailedFinancials(viewType = 'income') {
     
     const financials = state.currentStockData.API_Financials;
     if (!financials) {
-        container.innerHTML = '<p class="text-center text-gray-400">No financial data available</p>';
+        container.innerHTML = '<p class="text-center muted-heading">No financial data available</p>';
         return;
     }
     
@@ -1512,20 +1547,20 @@ function populateDetailedFinancials(viewType = 'income') {
             <div class="financial-table-wrapper">
                 <h3 class="text-lg font-semibold mb-4">${title}</h3>
                 <table class="w-full text-sm">
-                    <thead class="bg-gradient-to-r from-gray-900 to-gray-800">
+                    <thead class="table-header">
                         <tr>
-                            <th class="text-left px-4 py-3 font-medium text-gray-400">Metric</th>
+                            <th class="text-left px-4 py-3 font-medium secondary-text">Metric</th>
         `;
         
         periods.forEach(p => {
-            html += `<th class="text-right px-4 py-3 font-medium text-gray-400">${p.label}</th>`;
+            html += `<th class="text-right px-4 py-3 font-medium secondary-text">${p.label}</th>`;
         });
         
         html += '</tr></thead><tbody class="divide-y divide-gray-700">';
         
         metrics.forEach(metric => {
             html += `<tr class="hover:bg-gray-800/50 transition-colors">`;
-            html += `<td class="px-4 py-3 text-gray-300">${metric.name}</td>`;
+            html += `<td class="px-4 py-3 secondary-text">${metric.name}</td>`;
             
             let previousValue = null;
             periods.forEach(period => {
@@ -2169,20 +2204,24 @@ function formatNumber(value, decimals = 1) {
 
 // Helper function to get gradient fill based on percentage
 function getGradientFill(percentage) {
-    if (percentage >= 80) return 'linear-gradient(90deg, #a855f7, #9333ea)'; // Purple
-    if (percentage >= 60) return 'linear-gradient(90deg, #3b82f6, #2563eb)'; // Blue
-    if (percentage >= 40) return 'linear-gradient(90deg, #10b981, #059669)'; // Green
-    if (percentage >= 20) return 'linear-gradient(90deg, #eab308, #f59e0b)'; // Yellow
-    return 'linear-gradient(90deg, #ef4444, #dc2626)'; // Red
+    // 6-tier color system matching original
+    if (percentage >= 80) return 'linear-gradient(90deg, #a855f7, #9333ea)'; // Purple (Excellent)
+    if (percentage >= 74) return 'linear-gradient(90deg, #3b82f6, #2563eb)'; // Blue (Very Good)
+    if (percentage >= 65) return 'linear-gradient(90deg, #22c55e, #16a34a)'; // Green (Good)
+    if (percentage >= 55) return 'linear-gradient(90deg, #eab308, #f59e0b)'; // Yellow (Average)
+    if (percentage >= 32) return 'linear-gradient(90deg, #f97316, #ea580c)'; // Orange (Below Average)
+    return 'linear-gradient(90deg, #ef4444, #dc2626)'; // Red (Poor)
 }
 
 // Helper function to get score color
 function getScoreTextColor(percentage) {
-    if (percentage >= 80) return '#a855f7'; // Purple
-    if (percentage >= 60) return '#3b82f6'; // Blue
-    if (percentage >= 40) return '#10b981'; // Green
-    if (percentage >= 20) return '#eab308'; // Yellow
-    return '#ef4444'; // Red
+    // 6-tier color system matching original
+    if (percentage >= 80) return '#a855f7'; // Purple (Excellent)
+    if (percentage >= 74) return '#3b82f6'; // Blue (Very Good)
+    if (percentage >= 65) return '#22c55e'; // Green (Good)
+    if (percentage >= 55) return '#eab308'; // Yellow (Average)
+    if (percentage >= 32) return '#f97316'; // Orange (Below Average)
+    return '#ef4444'; // Red (Poor)
 }
 
 // Helper function to render a metric with bar
@@ -2201,10 +2240,10 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
             metricHtml = `
                 <div class="metric-item ${hasReasoning}" data-tooltip="${tooltip}">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-sm text-gray-400">${name}${reasoningIcon}</span>
+                        <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                         <span class="text-sm font-mono">
                             <span class="font-bold" style="color: ${scoreColor}">${formatNumber(score, 0)}</span>
-                            <span class="text-gray-500"> / 0</span>
+                            <span class="subtle-text"> / 0</span>
                         </span>
                     </div>
                     <div class="metric-bar">
@@ -2215,10 +2254,10 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
             metricHtml = `
                 <div class="metric-item ${hasReasoning}" data-tooltip="${tooltip}">
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-400">${name}${reasoningIcon}</span>
+                        <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                         <span class="text-sm font-mono">
                             <span class="font-bold" style="color: ${scoreColor}">${formatNumber(score, 0)}</span>
-                            <span class="text-gray-500"> / 0</span>
+                            <span class="subtle-text"> / 0</span>
                         </span>
                     </div>
                 </div>`;
@@ -2233,10 +2272,10 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
         metricHtml = `
             <div class="metric-item ${hasReasoning}" data-tooltip="${tooltip}">
                 <div class="flex justify-between items-center mb-1">
-                    <span class="text-sm text-gray-400">${name}${reasoningIcon}</span>
+                    <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                     <span class="text-sm font-mono">
                         <span class="font-bold" style="color: ${textColor}">${formatNumber(score)}</span>
-                        <span class="text-gray-500">/${max}</span>
+                        <span class="subtle-text">/${max}</span>
                     </span>
                 </div>
                 <div class="metric-bar">
@@ -2332,9 +2371,9 @@ function populateQualityExpanded() {
         const groupNameLower = group.name.toLowerCase();
 
         html += `
-            <div class="summary-metric-card bg-gradient-to-br from-[#161B22] to-[#1C2128] rounded-lg p-4 border border-[#30363D] flex flex-col text-center transition-all duration-300">
+            <div class="summary-metric-card glass-morphism rounded-lg p-4 border flex flex-col text-center transition-all duration-300">
                 <h4 class="font-medium text-secondary">${group.name}</h4>
-                <div class="text-4xl font-bold text-gray-200 my-2">${formatNumber(group.score)}<span class="text-lg text-gray-500"> / ${group.max}</span></div>
+                <div class="text-4xl font-bold dynamic-value my-2">${formatNumber(group.score)}<span class="text-lg subtle-text"> / ${group.max}</span></div>
                 <div class="mt-auto">
                     <button 
                         class="summary-button mt-2 w-full" 
@@ -2351,7 +2390,7 @@ function populateQualityExpanded() {
 
     const gauntletScore = groupScores.Gauntlet_Group_Score;
     html += `
-        <div class="summary-metric-card bg-gradient-to-br from-[#1C2128] to-[#242B33] rounded-lg p-3 border border-[#30363D] flex items-center justify-between transition-all duration-300 mb-8">
+        <div class="summary-metric-card glass-morphism rounded-lg p-3 border flex items-center justify-between transition-all duration-300 mb-8">
             <h4 class="font-medium text-red-400">Gauntlet Score</h4>
             <div class="flex items-center gap-4">
                 <div class="text-2xl font-bold text-red-400">${gauntletScore}</div>
@@ -2395,7 +2434,7 @@ function populateIDQExpanded() {
     html += `
         <div class="idq-section">
             <h4 class="idq-section-title">Overall Summary</h4>
-            <p class="text-gray-400 leading-relaxed">${idqReport.idqSummary || 'No summary available.'}</p>
+            <p class="muted-heading leading-relaxed">${idqReport.idqSummary || 'No summary available.'}</p>
         </div>
     `;
     
@@ -2432,13 +2471,13 @@ function populateIDQExpanded() {
                 html += `
                     <div class="idq-facet-item">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-medium text-gray-300">${title}</span>
+                            <span class="text-sm font-medium secondary-text">${title}</span>
                             <span class="text-sm font-mono"><span class="font-bold text-white">${score}</span>/${maxScore}</span>
                         </div>
                         <div class="metric-bar mb-3">
                             <div class="metric-fill ${shimmerClass}" style="width: ${percentage}%; background: ${barColor};"></div>
                         </div>
-                        <p class="text-xs text-gray-400 leading-relaxed">${description}</p>
+                        <p class="text-xs muted-heading leading-relaxed">${description}</p>
                     </div>
                 `;
             }
@@ -2452,9 +2491,9 @@ function populateIDQExpanded() {
         html += `
             <div class="idq-section">
                 <h4 class="idq-section-title">Catalyst Watch</h4>
-                <div class="text-xs text-gray-500 mb-3">Last Updated: ${idqReport.lastUpdated || 'N/A'}</div>
+                <div class="text-xs subtle-text mb-3">Last Updated: ${idqReport.lastUpdated || 'N/A'}</div>
                 <div class="border-l-2 border-gray-600 pl-4 space-y-2">
-                    ${idqReport.catalystWatch.split('•').filter(line => line.trim()).map(line => `<p class="text-gray-400 leading-relaxed">${line.trim()}</p>`).join('')}
+                    ${idqReport.catalystWatch.split('•').filter(line => line.trim()).map(line => `<p class="muted-heading leading-relaxed">${line.trim()}</p>`).join('')}
                 </div>
             </div>
         `;
@@ -2490,9 +2529,9 @@ function populateAntiFragileExpanded() {
 
     groupData.forEach(group => {
         html += `
-            <div class="summary-metric-card bg-gradient-to-br from-[#161B22] to-[#1C2128] rounded-lg p-4 border border-[#30363D] flex flex-col text-center">
-                <h4 class="font-medium text-gray-400">${group.name}</h4>
-                <div class="text-4xl font-bold text-gray-200 my-2">${formatNumber(group.score)}<span class="text-lg text-gray-500"> / ${group.max}</span></div>
+            <div class="summary-metric-card glass-morphism rounded-lg p-4 border flex flex-col text-center">
+                <h4 class="font-medium muted-heading">${group.name}</h4>
+                <div class="text-4xl font-bold dynamic-value my-2">${formatNumber(group.score)}<span class="text-lg subtle-text"> / ${group.max}</span></div>
             </div>
         `;
     });
@@ -2503,7 +2542,7 @@ function populateAntiFragileExpanded() {
 
     // Strategic Core Metrics
     const sc = antiFragile.metricScores.barbellMethod;
-    html += '<div><h4 class="font-semibold text-gray-300 mb-3">Strategic Core</h4><div class="space-y-4">';
+    html += '<div><h4 class="font-semibold secondary-text mb-3">Strategic Core</h4><div class="space-y-4">';
 
     // Special logic for Mission Statement color
     let missionColorPercentage = null;
@@ -2521,14 +2560,14 @@ function populateAntiFragileExpanded() {
 
     // Financial Fortitude Metrics
     const ff = antiFragile.metricScores.financialFortitude;
-    html += '<div><h4 class="font-semibold text-gray-300 mb-3">Financial Fortitude</h4><div class="space-y-4">';
+    html += '<div><h4 class="font-semibold secondary-text mb-3">Financial Fortitude</h4><div class="space-y-4">';
     html += renderMetric('Cash, Debt, FCF', ff.cashDebtFreeCashFlow, 1, llmResearch.Financials_Group?.financialResilienceReasoning);
     html += renderMetric('Concentration Penalty', ff.concentration, 0, llmResearch.Gauntlet_Group?.customerConcentrationReasoning, true);
     html += '</div></div>';
 
     // Skin in the Game Metrics
     const sitg = antiFragile.metricScores.skinInTheGame;
-    html += '<div class="md:col-span-2"><h4 class="font-semibold text-gray-300 mb-3 mt-4">Skin in the Game</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">';
+    html += '<div class="md:col-span-2"><h4 class="font-semibold secondary-text mb-3 mt-4">Skin in the Game</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">';
     html += renderMetric('Glassdoor', sitg.glassdoor, 1, llmResearch.Culture_and_Pastperformance_Group?.glassdoorRatingsReasoning, sitg.glassdoor < 0);
     html += renderMetric('Founder-Led', sitg.founder, 1, llmResearch.Culture_and_Pastperformance_Group?.soulInTheGameReasoning);
     html += renderMetric('Ownership', sitg.ownership, 1, llmResearch.Culture_and_Pastperformance_Group?.insideOwnershipReasoning, sitg.ownership < 0);
@@ -2632,9 +2671,9 @@ function showGroupDetails(groupName) {
     
     // Build the content
     content = `
-        <div class="p-6 bg-gradient-to-br from-[#161B22] to-[#1C2128] rounded-lg border border-[#30363D]">
+        <div class="p-6 glass-morphism rounded-lg border">
             <h4 class="text-lg font-semibold mb-3 capitalize">${groupName} Details</h4>
-            <p class="text-sm text-gray-400 mb-6 leading-relaxed">${summary}</p>
+            <p class="text-sm muted-heading mb-6 leading-relaxed">${summary}</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
     `;
     
@@ -2656,7 +2695,7 @@ function showGroupDetails(groupName) {
                 content += `
                     <div class="metric-item ${hasReasoning ? 'has-reasoning' : ''}" ${hasReasoning ? `data-tooltip="${tooltipText}"` : ''}>
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-400">${displayName}${reasoningIcon}</span>
+                            <span class="text-sm muted-heading">${displayName}${reasoningIcon}</span>
                             <span class="text-sm font-bold ${scoreColorClass}">${value}</span>
                         </div>
                     </div>
@@ -2673,7 +2712,7 @@ function showGroupDetails(groupName) {
                     content += `
                         <div class="metric-item ${reasoning ? 'has-reasoning' : ''}" ${reasoning ? `data-tooltip="${tooltipText}"` : ''}>
                             <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-400">${displayName}${reasoning ? '<span class="reasoning-icon">💡</span>' : ''}</span>
+                                <span class="text-sm muted-heading">${displayName}${reasoning ? '<span class="reasoning-icon">💡</span>' : ''}</span>
                                 <span class="text-sm font-mono font-bold text-white">${formatNumber(value)}</span>
                             </div>
                         </div>
@@ -2694,6 +2733,100 @@ function showGroupDetails(groupName) {
     setTimeout(() => {
         panel.classList.add('show');
     }, 10);
+}
+
+// ============================================
+// SCORE RANKINGS CALCULATION
+// ============================================
+
+async function calculateScoreRankings() {
+    try {
+        console.log('Calculating score rankings...');
+        
+        // Get current company scores
+        const currentTicker = state.ticker;
+        const qualityScore = parseFloat(document.getElementById('quality-score-value')?.textContent) || 0;
+        const idqScore = parseFloat(document.getElementById('idq-score-value')?.textContent) || 0;
+        const antiFragileScore = parseFloat(document.getElementById('antifragile-score-value')?.textContent) || 0;
+        
+        // Fetch all stocks to calculate rankings
+        const db = firebase.firestore();
+        const stocksSnapshot = await db.collection('stocks').get();
+        
+        const allScores = {
+            quality: [],
+            idq: [],
+            antiFragile: []
+        };
+        
+        // Collect all scores
+        stocksSnapshot.forEach(doc => {
+            const data = doc.data();
+            
+            // Calculate Quality Score
+            if (data.Scores?.EnterpriseQualityScore?.overall_score) {
+                allScores.quality.push(data.Scores.EnterpriseQualityScore.overall_score);
+            }
+            
+            // Calculate IDQ Score
+            if (data.Scores?.IDQScore?.overall_score) {
+                allScores.idq.push(data.Scores.IDQScore.overall_score);
+            }
+            
+            // Calculate Anti-Fragile Score
+            if (data.Scores?.AntiFragileScore?.overall_score) {
+                allScores.antiFragile.push(data.Scores.AntiFragileScore.overall_score);
+            }
+        });
+        
+        // Sort scores in descending order (highest first)
+        allScores.quality.sort((a, b) => b - a);
+        allScores.idq.sort((a, b) => b - a);
+        allScores.antiFragile.sort((a, b) => b - a);
+        
+        // Find rankings (1-based)
+        const qualityRank = allScores.quality.findIndex(s => s <= qualityScore) + 1;
+        const idqRank = allScores.idq.findIndex(s => s <= idqScore) + 1;
+        const antiFragileRank = allScores.antiFragile.findIndex(s => s <= antiFragileScore) + 1;
+        
+        // Update UI with rankings and tooltips
+        const qualityRankEl = document.getElementById('quality-rank');
+        const idqRankEl = document.getElementById('idq-rank');
+        const antiFragileRankEl = document.getElementById('antifragile-rank');
+        
+        if (qualityRankEl && qualityRank > 0) {
+            qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length}`;
+            qualityRankEl.setAttribute('data-tooltip', `This company ranks ${qualityRank} out of ${allScores.quality.length} companies in Enterprise Quality`);
+            qualityRankEl.classList.add('rank-badge');
+            
+            // Add percentile for context
+            const percentile = Math.round(((allScores.quality.length - qualityRank + 1) / allScores.quality.length) * 100);
+            qualityRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+        }
+        
+        if (idqRankEl && idqRank > 0) {
+            idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length}`;
+            idqRankEl.setAttribute('data-tooltip', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in Innovation & Disruption Quotient`);
+            idqRankEl.classList.add('rank-badge');
+            
+            const percentile = Math.round(((allScores.idq.length - idqRank + 1) / allScores.idq.length) * 100);
+            idqRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+        }
+        
+        if (antiFragileRankEl && antiFragileRank > 0) {
+            antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length}`;
+            antiFragileRankEl.setAttribute('data-tooltip', `This company ranks ${antiFragileRank} out of ${allScores.antiFragile.length} companies in Anti-Fragile Score`);
+            antiFragileRankEl.classList.add('rank-badge');
+            
+            const percentile = Math.round(((allScores.antiFragile.length - antiFragileRank + 1) / allScores.antiFragile.length) * 100);
+            antiFragileRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+        }
+        
+        console.log(`Rankings calculated - Quality: #${qualityRank}, IDQ: #${idqRank}, Anti-Fragile: #${antiFragileRank}`);
+        
+    } catch (error) {
+        console.error('Error calculating score rankings:', error);
+    }
 }
 
 // ============================================
@@ -2789,12 +2922,12 @@ function setupSearchBar() {
             ).slice(0, 10); // Limit to 10 results
             
             if (matches.length === 0) {
-                searchResults.innerHTML = '<div class="p-3 text-sm text-gray-400 text-center">No stocks found</div>';
+                searchResults.innerHTML = '<div class="p-3 text-sm muted-heading text-center">No stocks found</div>';
             } else {
                 searchResults.innerHTML = matches.map(stock => `
                     <div class="search-result-item cursor-pointer hover:bg-gray-800 p-2 rounded" data-ticker="${stock.ticker}">
                         <div class="font-bold text-sm">${stock.ticker}</div>
-                        <div class="text-xs text-gray-400">${stock.name}</div>
+                        <div class="text-xs muted-heading">${stock.name}</div>
                     </div>
                 `).join('');
                 
