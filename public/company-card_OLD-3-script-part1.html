@@ -1,0 +1,1612 @@
+    <script>
+        // Firebase configuration (from your index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjllbzGx8QK3L7mePVk0uZ0R-ccenxElA",
+            authDomain: "sheets-to-firestore-sync-v2.firebaseapp.com",
+            projectId: "sheets-to-firestore-sync-v2",
+            storageBucket: "sheets-to-firestore-sync-v2.firebasestorage.app",
+            messagingSenderId: "1035123111291",
+            appId: "1:1035123111291:web:30c0f5ee30f001c1a739de",
+            measurementId: "G-QQW25R6FB8"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Global variables
+        let currentStockData = null;
+        let currentExpanded = null;
+        let currentSummary = null;
+        let currentChartMetric = 'eps';
+        let currentChartTimeframe = '1M';
+        
+        // This function controls the new shared summary panel
+        function showGroupDetails(groupName) {
+        // On mobile, show in overlay instead
+        if (isMobile()) {
+            const overlay = document.getElementById('mobile-overlay');
+            const content = document.getElementById('mobile-overlay-content');
+            
+            const panel = document.createElement('div');
+            panel.className = 'summary-content show';
+            showGroupDetailsContent(groupName, panel);
+            
+            // Clean up any existing tooltips before showing new content
+            const existingTooltip = overlay.querySelector('.mobile-tooltip');
+            if (existingTooltip) {
+                existingTooltip.classList.remove('show');
+                existingTooltip.style.opacity = '0';
+            }
+            
+            content.innerHTML = `
+                <div class="flex items-center gap-4 mb-6">
+                    <button onclick="closeMobileOverlay(); setTimeout(() => openMobileOverlay('quality'), 300);" class="back-button p-2 rounded-lg hover:bg-[#1C2128] transition-colors">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-2xl font-bold">Quality Score Details</h2>
+                </div>
+                ${panel.outerHTML}
+            `;
+            
+            // Ensure tooltips are set up after content is loaded
+            setTimeout(() => {
+                setupMobileOverlayTooltips();
+            }, 100);
+            
+            overlay.style.display = 'block';
+            setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+            document.body.style.overflow = 'hidden';
+            return;
+        }
+        
+        // Desktop behavior remains the same
+        const panel = document.getElementById('shared-summary-panel');
+        const newButton = document.querySelector(`[data-group="${groupName}"]`);
+        const newCard = newButton.closest('.summary-metric-card');
+    
+        const activeCard = document.querySelector('.summary-metric-card.active-card');
+        const activeButton = document.querySelector('.summary-button.active');
+    
+        if (activeCard) activeCard.classList.remove('active-card');
+        if (activeButton) activeButton.classList.remove('active');
+    
+        if (currentSummary === groupName) {
+            panel.classList.remove('show');
+            currentSummary = null;
+        } else {
+            const qualityScore = parseFloat(currentStockData.Portfolio.qualityScore);
+            const qualityPercentage = (qualityScore / 109) * 100;
+            const qualityColors = getScoreColor(qualityPercentage);
+            
+            showGroupDetailsContent(groupName, panel);
+            
+            panel.classList.add('show');
+            if (newCard) newCard.classList.add('active-card');
+            if (newButton) newButton.classList.add('active');
+            currentSummary = groupName;
+        }
+    }
+
+        function showGroupDetailsContent(groupName, panel) {
+        const llmResearch = currentStockData.LLM_Research_and_Comments;
+        
+        let summaryKey, dataKey, groupKey, displayName, summaryContent;
+        switch (groupName) {
+            case 'financials': displayName = 'Financials'; summaryKey = 'financialsSummary'; dataKey = 'Financials_Group'; groupKey = 'financials'; break;
+            case 'moat': displayName = 'Moat'; summaryKey = 'moatSummary'; dataKey = 'Moat_Group'; groupKey = 'moat'; break;
+            case 'potential': displayName = 'Potential'; summaryKey = 'potentialSummary'; dataKey = 'Potential_Group'; groupKey = 'potential'; break;
+            case 'culture': displayName = 'Culture'; summaryKey = 'cultureAndPerformanceSummary'; dataKey = 'Culture_and_Pastperformance_Group'; groupKey = 'culture'; break;
+            case 'gauntlet': displayName = 'Gauntlet'; dataKey = 'Gauntlet_Group'; groupKey = 'gauntlet'; break;
+        }
+    
+        if (summaryKey) {
+            summaryContent = llmResearch.Summaries_Group[summaryKey] || 'No summary available.';
+        } else {
+            summaryContent = 'The Gauntlet identifies potential risks or red flags. Each metric represents a penalty if triggered.';
+        }
+        const groupData = llmResearch[dataKey];
+        
+        let detailsHtml = `<h4 class="font-semibold mb-2 text-gray-300">${displayName} Summary</h4>`;
+        detailsHtml += `<p class="text-sm text-gray-400 leading-relaxed mb-8">${summaryContent}</p>`;
+    
+        if (groupData) {
+            detailsHtml += `<h4 class="font-semibold mb-4 text-gray-300">Metric Breakdown</h4>`;
+            detailsHtml += `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">`;
+            
+            Object.entries(groupData).forEach(([metric, value]) => {
+                if (metric.endsWith('Reasoning')) return;
+                const reasoning = groupData[`${metric}Reasoning`];
+                const score = parseFloat(value);
+                if (isNaN(score)) return;
+                
+                // Gauntlet metrics have a unique display
+                if (groupName === 'gauntlet') {
+                    const scoreColorClass = score === 0 ? 'text-white' : 'text-red-400';
+                    const hasReasoning = reasoning && score !== 0;
+                    const reasoningIcon = hasReasoning ? '<span class="reasoning-icon">💡</span>' : '';
+                    const tooltipText = hasReasoning ? reasoning : '';
+    
+                    detailsHtml += `
+                        <div class="metric-item ${hasReasoning ? 'has-reasoning' : ''}" data-tooltip="${tooltipText}">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">${formatMetricName(metric)}${reasoningIcon}</span>
+                                <span class="text-sm font-bold ${scoreColorClass}">${score}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const hasReasoning = !!reasoning;
+                    const reasoningIcon = hasReasoning ? '<span class="reasoning-icon">💡</span>' : '';
+                    const metricRanges = scoreRanges[groupKey] || {};
+                    const [minScore, maxScore] = metricRanges[metric] || [0, 5];
+                    const range = maxScore - minScore;
+                    let barFillHtml = '';
+    
+                    if (score === 0 && minScore === 0) {
+                        barFillHtml = `<div class="metric-fill" style="width: 4px; background-color: var(--color-red);"></div>`;
+                    } else {
+                        const percentage = range > 0 ? Math.max(0, ((score - minScore) / range)) * 100 : 0;
+                        const shimmerClass = percentage >= 80 ? 'shimmer-effect' : '';
+                        barFillHtml = `<div class="metric-fill ${shimmerClass}" style="width: ${percentage}%; background: ${getGradientFill(percentage)};"></div>`;
+                    }
+                    
+                    detailsHtml += `
+                        <div class="metric-item ${hasReasoning ? 'has-reasoning' : ''}" data-tooltip="${reasoning || ''}">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm text-gray-400">${formatMetricName(metric)}${reasoningIcon}</span>
+                                <span class="text-sm font-bold text-white">${score}/${maxScore}</span>
+                            </div>
+                            <div class="metric-bar">${barFillHtml}</div>
+                        </div>
+                    `;
+                }
+            });
+            detailsHtml += `</div>`;
+        }
+    
+        panel.innerHTML = detailsHtml;
+        
+        // Apply scrollable boxes after content is set
+        setTimeout(() => {
+            if (isMobile()) {
+                const mobileSummaries = document.querySelectorAll('.mobile-overlay .summary-content p.text-sm.text-gray-400.leading-relaxed');
+                const isLightTheme = document.body.classList.contains('light-theme');
+                
+                mobileSummaries.forEach(p => {
+                    if (p.textContent && p.textContent.length > 200) {
+                        p.style.maxHeight = '200px';
+                        p.style.overflowY = 'auto';
+                        p.style.padding = '12px';
+                        p.style.borderRadius = '8px';
+                        
+                        // Conditionally apply styles based on theme
+                        if (isLightTheme) {
+                            p.style.border = '1px solid #dee2e6';
+                            p.style.backgroundColor = '#f8f9fa';
+                        } else {
+                            p.style.border = '1px solid #30363D';
+                            p.style.backgroundColor = '#0D1117';
+                        }
+                    }
+                });
+            }
+        }, 100);
+    }
+        
+        // Enhanced color system based on percentage
+        function getScoreColor(percentage) {
+            if (percentage >= 80) return { color: '#a855f7', glow: 'var(--color-purple-glow)', class: 'text-purple-500' }; // Purple (87.2+)
+            if (percentage >= 74) return { color: '#3b82f6', glow: 'var(--color-blue-glow)', class: 'text-blue-500' }; // Blue (80.6+)
+            if (percentage >= 65) return { color: '#22c55e', glow: 'var(--color-green-glow)', class: 'text-green-500' }; // Green (70.9+)
+            if (percentage >= 55) return { color: '#eab308', glow: 'var(--color-yellow-glow)', class: 'text-yellow-500' }; // Yellow (60+)
+            if (percentage >= 32) return { color: '#f97316', glow: 'var(--color-orange-glow)', class: 'text-orange-500' }; // Orange (35+)
+            return { color: '#ef4444', glow: 'var(--color-red-glow)', class: 'text-red-500' }; // Red
+        }
+        
+        // New helper to get a universal tier name from a percentage
+        function getTierName(percentage) {
+            if (percentage >= 80) return 'Purple';
+            if (percentage >= 74) return 'Blue';
+            if (percentage >= 65) return 'Green';
+            if (percentage >= 55) return 'Yellow';
+            if (percentage >= 32) return 'Orange';
+            return 'Red';
+        }
+        
+        function expandCardFromLink(scoreType) {
+            const targetCard = document.getElementById(`${scoreType}-card`);
+            if (!targetCard) return;
+
+            // If the target card is already expanded, do nothing.
+            if (currentExpanded === scoreType) {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // Expand the target card
+            toggleScoreExpansion(scoreType);
+            
+            // Scroll to the newly expanded card
+            setTimeout(() => {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 500); // Wait for the expand animation to finish
+        }
+
+        // New helper to generate the correct hover glow style based on the tier
+        function getHoverGlowStyle(tierName, colorHex) {
+            const rgb = hexToRgb(colorHex);
+            if (!rgb) return 'none';
+            let blur, spread, alpha, yOffset = 0;
+
+            switch (tierName) {
+                case 'Purple':
+                    blur = 60; spread = 10; alpha = 0.5; yOffset = 10;
+                    break;
+                case 'Blue':
+                    blur = 40; spread = 6; alpha = 0.4; yOffset = 5;
+                    break;
+                case 'Green':
+                    blur = 25; spread = 3; alpha = 0.3; yOffset = 0;
+                    break;
+                default: // Red, Orange, Yellow
+                    // Creates the "subtle line with a tiny bit of glow"
+                    blur = 12; spread = 0; alpha = 0.4; yOffset = 0;
+                    break;
+            }
+            const glowColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+            // The first box-shadow is for the main glow, the second is a standard dark shadow for depth
+            return `0 ${yOffset}px ${blur}px ${spread}px ${glowColor}, 0 10px 20px rgba(0,0,0,0.2)`;
+        }
+
+        // Helper function to convert hex color to RGB object
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        // New function to get IDQ grade, color, and index based on new ranges
+        function getIdqDetails(score) {
+            const colors = {
+                purple: '#a855f7',
+                blue: '#3b82f6',
+                green: '#22c55e',
+                yellow: '#eab308',
+                red: '#ef4444'
+            };
+
+            if (score >= 11) {
+                return { gradeName: 'Pioneer', color: colors.purple, index: 4 };
+            } else if (score >= 9) {
+                return { gradeName: 'Leader', color: colors.blue, index: 3 };
+            } else if (score >= 6) {
+                return { gradeName: 'Integrator', color: colors.green, index: 2 };
+            } else if (score >= 3) {
+                return { gradeName: 'Follower', color: colors.yellow, index: 1 };
+            } else {
+                return { gradeName: 'Lagging', color: colors.red, index: 0 };
+            }
+        }
+
+        // New function for IDQ Facet bar colors
+        function getIdqFacetColor(score) {
+            switch (parseInt(score, 10)) {
+                case 1: return 'var(--color-red)';
+                case 2: return 'var(--color-yellow)';
+                case 3: return 'var(--color-green)';
+                case 4: return 'var(--color-blue)';
+                case 5: return 'var(--color-purple)';
+                default: return 'var(--color-red)';
+            }
+        }
+
+        // New function for Anti-Fragile score colors based on its unique range
+        function getAntiFragileColor(score) {
+            const min = -7; // The minimum possible score
+            const max = 17; // The maximum possible score
+            const range = max - min; // The total range of scores (24)
+
+            // Normalize the score to a 0-100 percentage
+            const percentage = ((score - min) / range) * 100;
+            
+            // Return the color object from the master function
+            return getScoreColor(percentage);
+        }
+        
+        // New function for Anti-Fragile score colors based on its unique range
+        function getAntiFragileColor(score) {
+            const min = -7; // The minimum possible score
+            const max = 17; // The maximum possible score
+            const range = max - min; // The total range of scores (24)
+
+            // Normalize the score to a 0-100 percentage
+            const percentage = ((score - min) / range) * 100;
+            
+            // Return the color object from the master function
+            return getScoreColor(percentage);
+        }
+
+        // New function to determine the visual tier of the Anti-Fragile score
+        function getAntiFragileTier(score) {
+            if (score >= 14) return 'unbreakable'; // Purple
+            if (score >= 12) return 'strong';      // Blue
+            if (score >= 7) return 'mid';         // Green, Yellow
+            return 'weak';                        // Orange, Red
+        }
+
+        // Get gradient fill based on percentage
+        function getGradientFill(percentage, isReversed = false) {
+            const colors = getScoreColor(percentage);
+            if (isReversed) {
+                // For right-to-left bars, start opaque and end transparent
+                return `linear-gradient(90deg, ${colors.color}, ${colors.color}cc)`;
+            }
+            // For standard left-to-right bars
+            return `linear-gradient(90deg, ${colors.color}cc, ${colors.color})`;
+        }
+
+        // Score ranges for color coding (from your spreadsheet)
+        const scoreRanges = {
+            financials: { financialResilience: [0, 5], grossMargin: [0, 3], returnsOnCapital: [0, 3], freeCashFlow: [0, 3], earningsPerShare: [0, 3] },
+            moat: { networkEffectProductEcosystem: [0, 15], switchingCosts: [0, 15], durableCostAdvantage: [0, 15], intangibles: [0, 15], counterPosition: [0, 10], moatDirection: [0, 5] },
+            potential: { optionality: [0, 7], organicGrowthRunway: [0, 4], operatingLeverageAhead: [0, 4], recurringRevenue: [0, 5], pricingPower: [0, 5], dependence: [0, 5], acquisition: [0, 5], innovationDisruptionQuotient: [-3, 12] },
+            culture: { soulInTheGame: [0, 4], insideOwnership: [0, 3], glassdoorRatings: [0, 4], missionStatement: [0, 3], fiveYearPerformanceVsSP500: [0, 4], consistentlyBeatsExpectations: [0, 4], shareholderFriendlyActions: [0, 3] }
+        };
+
+        // Helper function to get logo URL
+        function getLogoUrl(website) {
+            if (!website) return '';
+            try {
+                const domain = new URL(website).hostname.replace('www.', '');
+                return `https://logo.clearbit.com/${domain}`;
+            } catch (e) { return ''; }
+        }
+
+        // Helper function to calculate score color class
+        function getScoreClass(score, min, max) {
+            const percentage = ((score - min) / (max - min)) * 100;
+            const colors = getScoreColor(percentage);
+            return colors.class;
+        }
+
+        // Helper function to format numbers
+        function formatNumber(num, decimals = 1) {
+            if (num === null || num === undefined || isNaN(num)) return 'N/A';
+            return parseFloat(num).toFixed(decimals);
+        }
+
+        // Helper function to format currency
+        function formatCurrency(value, forceDecimals = 2, currencyCode = 'USD') {
+            if (value === null || value === undefined || isNaN(parseFloat(value))) return 'N/A';
+            
+            const currencySymbols = {
+                USD: '$', EUR: '€', TWD: 'NT$', CNY: '¥', JPY: '¥', 
+                DKK: 'kr', CAD: 'C$', KRW: '₩', GBP: '£', CHF: 'CHF'
+            };
+            
+            const symbol = currencySymbols[currencyCode.toUpperCase()] || currencyCode + ' ';
+
+            const num = parseFloat(value);
+            const absNum = Math.abs(num);
+            
+            let formattedNum;
+            if (absNum >= 1e12) formattedNum = `${(num / 1e12).toFixed(forceDecimals)}T`;
+            else if (absNum >= 1e9) formattedNum = `${(num / 1e9).toFixed(forceDecimals)}B`;
+            else if (absNum >= 1e6) formattedNum = `${(num / 1e6).toFixed(forceDecimals)}M`;
+            else if (absNum >= 1e3) formattedNum = `${(num / 1e3).toFixed(forceDecimals)}K`;
+            else formattedNum = num.toFixed(forceDecimals);
+            
+            // For currencies like USD, EUR, GBP, put symbol first. For others, put it after.
+            if (['USD', 'EUR', 'GBP', 'CAD', 'CHF'].includes(currencyCode.toUpperCase())) {
+                return `${symbol}${formattedNum}`;
+            }
+            return `${formattedNum} ${symbol}`;
+        }
+        
+        // --- REPLACE the old function with this NEW version ---
+        async function fetchLiveStockPrice(ticker, currency) {
+            // ▼▼▼ PASTE YOUR getStockPrice URL FROM FIREBASE HERE ▼▼▼
+            const functionUrl = 'https://getstockprice-py46mxz5aq-uc.a.run.app';
+        
+            console.log(`Fetching live price for ${ticker} via HTTP Function`);
+            try {
+                const response = await fetch(`${functionUrl}?ticker=${ticker}`);
+                if (!response.ok) {
+                    throw new Error(`Function returned status ${response.status}`);
+                }
+                const result = await response.json();
+        
+                if (result && result.price) {
+                    updatePriceDisplay(result.price, currency);
+                } else {
+                    console.warn('HTTP function did not return a price. Using fallback.');
+                }
+            } catch (error) {
+                console.error('Error calling getStockPrice HTTP function:', error);
+            }
+        }
+
+        // --- REPLACE the old function with this NEW version ---
+        async function fetchAndDrawPriceChart(ticker, timeframe = '1M') {
+            currentChartTimeframe = timeframe;
+        const functionUrl = 'https://getchartdata-py46mxz5aq-uc.a.run.app';
+        const canvas = document.getElementById('mini-price-chart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+    
+        // --- THEME-AWARE COLOR DEFINITIONS ---
+        const isLightTheme = document.body.classList.contains('light-theme');
+        const upColor = isLightTheme ? 'rgba(22, 163, 74, 0.8)' : 'rgba(34, 197, 94, 0.8)';
+        const downColor = isLightTheme ? 'rgba(220, 53, 69, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+        const upGradient = isLightTheme ? 'rgba(22, 163, 74, 0.2)' : 'rgba(34, 197, 94, 0.3)';
+        const downGradient = isLightTheme ? 'rgba(220, 53, 69, 0.2)' : 'rgba(239, 68, 68, 0.3)';
+        const labelColor = isLightTheme ? '#535a5f' : '#C9D1D9';
+        const gradientEndColor = isLightTheme ? 'rgba(248, 249, 250, 0)' : 'rgba(13, 17, 23, 0)';
+        const errorColor = isLightTheme ? '#dc3545' : '#ef4444';
+    
+        document.querySelectorAll('#chart-timeframe-buttons button').forEach(btn => {
+            btn.classList.remove('active-chart-button');
+            if (btn.textContent === timeframe) btn.classList.add('active-chart-button');
+        });
+    
+        try {
+            const response = await fetch(`${functionUrl}?ticker=${ticker}&timeframe=${timeframe}`);
+            if (!response.ok) throw new Error(`Function returned status ${response.status}`);
+            
+            const result = await response.json();
+            const data = result.data;
+    
+            if (!data || data.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = labelColor;
+                ctx.textAlign = 'center';
+                ctx.fillText('No chart data available.', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+    
+            const historicalData = data.reverse();
+            const prices = historicalData.map(d => d.close);
+            const isUp = prices[prices.length - 1] >= prices[0];
+            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min(...prices);
+            const midPrice = minPrice + (maxPrice - minPrice) / 2;
+            const range = maxPrice - minPrice === 0 ? 1 : maxPrice - minPrice;
+    
+            const width = canvas.width = canvas.parentElement.offsetWidth;
+            const height = canvas.height = canvas.parentElement.offsetHeight;
+    
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.moveTo(0, height - ((prices[0] - minPrice) / range) * height);
+            prices.forEach((price, index) => {
+                const x = (index / (prices.length - 1)) * width;
+                const y = height - ((price - minPrice) / range) * height;
+                ctx.lineTo(x, y);
+            });
+    
+            ctx.strokeStyle = isUp ? upColor : downColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+    
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, isUp ? upGradient : downGradient);
+            gradient.addColorStop(1, gradientEndColor);
+            ctx.fillStyle = gradient;
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            ctx.fill();
+    
+            ctx.fillStyle = labelColor;
+            ctx.font = '10px Inter';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxPrice.toFixed(2), width - 5, 10);
+            ctx.fillText(midPrice.toFixed(2), width - 5, height / 2 + 5);
+            ctx.fillText(minPrice.toFixed(2), width - 5, height - 25);
+    
+            const formatDate = (dateStr) => {
+                const date = new Date(dateStr);
+                if (timeframe === '1D') return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            };
+            const startDate = formatDate(historicalData[0].date);
+            const midDate = formatDate(historicalData[Math.floor(historicalData.length / 2)].date);
+            const endDate = formatDate(historicalData[historicalData.length - 1].date);
+    
+            ctx.textAlign = 'left';
+            ctx.fillText(startDate, 5, height - 5);
+            ctx.textAlign = 'center';
+            ctx.fillText(midDate, width / 2, height - 5);
+            ctx.textAlign = 'right';
+            ctx.fillText(endDate, width - 40, height - 5);
+    
+        } catch (error) {
+            console.error('Error calling getChartData HTTP function:', error);
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+             ctx.fillStyle = errorColor;
+             ctx.textAlign = 'center';
+             ctx.fillText('Failed to load chart.', canvas.width / 2, canvas.height / 2);
+        }
+    }        
+        // --- NEW FUNCTION TO UPDATE THE HEADER PRICE DISPLAY ---
+        function updatePriceDisplay(price, currency) {
+            const portfolio = currentStockData.Portfolio;
+            const financials = currentStockData.API_Financials;
+            const priceNum = parseFloat(price);
+    
+            // 1. Format and display the main stock price
+            let priceDisplay = '';
+            if (currency === 'USD') priceDisplay = `$${priceNum.toFixed(2)}`;
+            else if (currency === 'EUR') priceDisplay = `€${priceNum.toFixed(2)}`;
+            else if (currency === 'GBP') priceDisplay = `£${priceNum.toFixed(2)}`;
+            else priceDisplay = `${priceNum.toFixed(2)} ${currency}`;
+    
+            document.getElementById('stock-price').textContent = priceDisplay;
+            document.getElementById('currency').textContent = currency;
+            
+            // Update mobile price display
+            const mobilePrice = document.getElementById('mobile-price');
+            if (mobilePrice) {
+                // Extract just the number part
+                const priceNumberOnly = priceNum.toFixed(2);
+                mobilePrice.textContent = priceNumberOnly;
+                
+                // Set currency separately
+                const mobileCurrency = document.getElementById('mobile-currency');
+                if (mobileCurrency) {
+                    mobileCurrency.textContent = currency;
+                }
+            }
+            
+            // Populate tier info for scrolled state
+            const mobileTierScore = document.getElementById('mobile-tier-score');
+            const mobileTierLabel = document.getElementById('mobile-tier-label');
+            if (mobileTierScore && mobileTierLabel) {
+                const tierInfo = calculateCompanyTier();
+                const isLightTheme = document.body.classList.contains('light-theme');
+            
+                // Style ONLY the score to be bold and theme-aware
+                mobileTierScore.textContent = tierInfo.score.toFixed(1);
+                mobileTierScore.style.fontWeight = '700';
+                mobileTierScore.style.color = isLightTheme ? '#0b0d0e' : 'white';
+            
+                // Revert label to its original logic
+                mobileTierLabel.textContent = tierInfo.name;
+                mobileTierLabel.className = `mobile-tier-label ${tierInfo.class}`;
+            }
+    
+            // 2. Recalculate and display the Analyst 1Y Price Target
+            const priceTarget = financials?.Estimates?.Y1FWD?.analyst1YPriceTargetAvg;
+            if (priceTarget && !isNaN(priceTarget)) {
+                const priceTargetNum = parseFloat(priceTarget);
+                const upside = ((priceTargetNum - priceNum) / priceNum) * 100;
+    
+                let textColorClass = 'text-gray-400';
+                if (upside > 0) textColorClass = 'text-green-400';
+                else if (upside < 0) textColorClass = 'text-red-400';
+    
+                const priceTargetEl = document.getElementById('analyst-price-target');
+                if (priceTargetEl) {
+                    priceTargetEl.innerHTML = `
+                        <span class="font-medium">1Y Target Est:</span> 
+                        <span class="font-bold font-mono ${textColorClass}">${priceDisplay.charAt(0)}${priceTargetNum.toFixed(2)}</span>
+                        <span class="font-mono ${textColorClass}">(${upside > 0 ? '+' : ''}${upside.toFixed(1)}%)</span>
+                    `;
+                }
+                
+                // Update mobile target
+                const mobileTarget = document.getElementById('mobile-target');
+                if (mobileTarget) {
+                    const currencySymbol = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '';
+                    mobileTarget.innerHTML = `<span class="${textColorClass}">${currencySymbol}${priceTargetNum.toFixed(2)} (${upside > 0 ? '+' : ''}${upside.toFixed(1)}%)</span>`;
+                }
+            }
+    
+            // 3. Recalculate and display Market Cap using the current price
+            const sharesString = financials?.TTM?.Income_Statement?.weightedAverageShares || financials?.General?.sharesOutstanding;
+            
+            // Remove commas from the string before converting to a number
+            const shares = sharesString ? parseFloat(sharesString.replace(/,/g, '')) : null;
+
+            let marketCapText = 'N/A';
+            if (shares && price) {
+                marketCapText = formatMarketCap(shares * priceNum, currency);
+            }
+            document.getElementById('details-line-1').innerHTML = `
+                <span>Mkt Cap: <span class="font-medium text-gray-200">${marketCapText}</span></span> &bull; 
+                <span>Exchange: <span class="font-medium text-gray-200">${financials?.General?.stockExchange || 'N/A'}</span></span>
+            `;
+        }
+        
+        // Helper function to format metric names
+        function formatMetricName(metric) {
+            return metric
+                .replace(/([A-Z])/g, ' $1')
+                .trim()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        }
+
+        // New function to format market cap with currency and magnitude
+        function formatMarketCap(value, currencyCode) {
+            if (!value || isNaN(value)) return 'N/A';
+
+            let symbol = '';
+            switch (currencyCode.toUpperCase()) {
+                case 'USD': symbol = '$'; break;
+                case 'EUR': symbol = '€'; break;
+                case 'GBP': symbol = '£'; break;
+                case 'DKK': symbol = 'kr.'; break;
+                default: symbol = currencyCode + ' '; break;
+            }
+
+            let displayValue;
+            if (value >= 1e12) {
+                displayValue = `${(value / 1e12).toFixed(1)} tn`;
+            } else if (value >= 1e9) {
+                displayValue = `${(value / 1e9).toFixed(1)} bn`;
+            } else if (value >= 1e6) {
+                displayValue = `${(value / 1e6).toFixed(1)} m`;
+            } else if (value >= 1e3) {
+                displayValue = `${(value / 1e3).toFixed(1)} k`;
+            } else {
+                displayValue = value.toFixed(2);
+            }
+            
+            return `${symbol}${displayValue}`;
+        }
+
+        // Load stock data from Firebase
+        async function loadStockData(ticker) {
+            try {
+                const querySnapshot = await db.collection("stocks").where("Portfolio.ticker", "==", ticker).get();
+                if (!querySnapshot.empty) {
+                    currentStockData = querySnapshot.docs[0].data();
+                    populateCompanyCard();
+                    return true;
+                } else {
+                    console.error("Stock not found:", ticker);
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error loading stock data:", error);
+                return false;
+            }
+        }
+        
+        // Search functionality
+        let searchableStocks = [];
+        
+        async function loadSearchableStocks() {
+            try {
+                const querySnapshot = await db.collection("stocks").get();
+                searchableStocks = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.Portfolio?.ticker && data.Portfolio?.companyName) {
+                        searchableStocks.push({
+                            ticker: data.Portfolio.ticker,
+                            name: data.Portfolio.companyName
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error("Error loading searchable stocks:", error);
+            }
+        }
+        
+        function setupSearchBar() {
+            // Handle click on search icon when sidebar is collapsed
+            const searchContainer = document.querySelector('.nav-item-search');
+            if (searchContainer) {
+                searchContainer.addEventListener('click', (e) => {
+                    const sidebar = document.querySelector('.sidebar');
+                    const isCollapsed = sidebar.classList.contains('sidebar-collapsed') || 
+                                       !sidebar.classList.contains('sidebar-expanded');
+                    
+                    if (isCollapsed && !e.target.matches('input')) {
+                        e.preventDefault();
+                        expandSidebarForSearch();
+                    }
+                });
+            }
+            const searchInput = document.getElementById('sidebar-search');
+            const searchResults = document.getElementById('search-results');
+            
+            if (!searchInput || !searchResults) return;
+            
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    searchResults.innerHTML = '';
+                    return;
+                }
+                
+                searchTimeout = setTimeout(() => {
+                    const matches = searchableStocks.filter(stock => 
+                        stock.ticker.toLowerCase().includes(query) || 
+                        stock.name.toLowerCase().includes(query)
+                    ).slice(0, 10); // Limit to 10 results
+                    
+                    if (matches.length === 0) {
+                        searchResults.innerHTML = '<div class="p-3 text-sm text-gray-400 text-center">No stocks found</div>';
+                    } else {
+                        searchResults.innerHTML = matches.map(stock => `
+                            <div class="search-result-item" data-ticker="${stock.ticker}">
+                                <div class="search-result-ticker">${stock.ticker}</div>
+                                <div class="search-result-name">${stock.name}</div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    searchResults.classList.remove('hidden');
+                }, 300);
+            });
+            
+            // Handle result clicks
+            searchResults.addEventListener('click', (e) => {
+                const resultItem = e.target.closest('.search-result-item');
+                if (resultItem) {
+                    const ticker = resultItem.dataset.ticker;
+                    window.location.href = `company-card.html?ticker=${ticker}`;
+                }
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.sidebar-search-container')) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+            
+            // Handle escape key
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchResults.classList.add('hidden');
+                    searchInput.blur();
+                }
+            });
+        }
+
+        // Populate the company card with data
+        // --- PASTE THE NEW, UNIFIED FUNCTION HERE ---
+
+        // Populate the company card with data
+        function populateCompanyCard() {
+            if (!currentStockData) {
+                console.error("populateCompanyCard called but currentStockData is not available.");
+                return;
+            }
+    
+            const portfolio = currentStockData.Portfolio;
+            const financials = currentStockData.API_Financials;
+            const llmResearch = currentStockData.LLM_Research_and_Comments;
+            const llmReports = currentStockData.LLM_Reports;
+            const antiFragile = currentStockData.Anti_Fragile_Score;
+    
+            if (!portfolio || !portfolio.ticker) {
+                console.error("Essential Portfolio data or ticker is missing. Cannot proceed.");
+                return;
+            }
+        
+            // ========================================================================
+            // SECTION 1: POPULATE HEADER & LIVE DATA CALLS
+            // ========================================================================
+            document.getElementById('company-name').textContent = portfolio.companyName;
+            document.getElementById('ticker').textContent = portfolio.ticker;
+            // Update recent companies
+            updateRecentCompanies(portfolio.ticker, portfolio.companyName);
+            
+            // --- Logo and General Details ---
+            if (financials?.General) {
+                const g = financials.General;
+                const employeeCount = g.fulltimeEmployees ? Number(g.fulltimeEmployees).toLocaleString() : 'N/A';
+                document.getElementById('details-line-2').innerHTML = `<span>CEO: <span class="font-medium text-gray-200">${g.cEO || 'N/A'}</span></span> &bull; <span>Employees: <span class="font-medium text-gray-200">${employeeCount}</span></span>`;
+                document.getElementById('details-line-3').innerHTML = `<span>${g.industry || 'N/A'}</span> &bull; <span>${g.sector || 'N/A'}</span>`;
+                if (g.companyWebsite) {
+                    document.getElementById('website-line').innerHTML = `<a href="${g.companyWebsite}" class="font-medium text-blue-400 hover:text-blue-300 hover:underline transition-colors magnetic" target="_blank">${g.companyWebsite.replace(/https?:\/\//, '')}</a>`;
+                }
+                const logoUrl = getLogoUrl(g.companyWebsite);
+                document.getElementById('company-logo').src = logoUrl;
+                document.getElementById('logo-fallback').textContent = portfolio.ticker[0];
+                
+                // Populate mobile header elements after logo is set
+                const mobileCompanyName = document.getElementById('mobile-company-name');
+                if (mobileCompanyName) {
+                    mobileCompanyName.textContent = portfolio.companyName;
+                }
+                const mobileTicker = document.getElementById('mobile-ticker');
+                if (mobileTicker) {
+                    mobileTicker.textContent = portfolio.ticker;
+                }
+                const mobileLogo = document.getElementById('mobile-logo');
+                if (mobileLogo) {
+                    mobileLogo.src = logoUrl;
+                }
+            }
+            
+            // --- Price, Market Cap, and Chart Logic ---
+            const stockPriceFromDB = parseFloat(portfolio.stockPriceNow);
+            // Add last updated date
+            const lastUpdateString = llmResearch.Summaries_Group?.lastUpdate;
+            if (lastUpdateString) {
+                const dates = lastUpdateString.split('\n').filter(date => date.trim());
+                if (dates.length > 0) {
+                    const mostRecentDate = dates[0].split(' - ')[0].trim();
+                    document.getElementById('last-updated').innerHTML = `<span class="text-gray-600">Updated:</span> ${mostRecentDate}`;
+                }
+            }
+            const currency = portfolio.stockpricecurrency || 'USD';
+        
+            // 1. Immediately display the price from Firestore as a fallback.
+            updatePriceDisplay(stockPriceFromDB, currency);
+        
+            // 2. Call the cloud functions to get live price and chart data.
+            fetchLiveStockPrice(portfolio.ticker, currency);
+            fetchAndDrawPriceChart(portfolio.ticker, '1M');
+        
+            // 3. Create timeframe buttons for the chart
+            const buttonContainer = document.getElementById('chart-timeframe-buttons');
+            if(buttonContainer) {
+                buttonContainer.innerHTML = ''; // Clear old buttons
+                ['1D', '5D', '1M', '3M'].forEach(label => {
+                    const button = document.createElement('button');
+                    button.textContent = label;
+                    button.className = 'px-2 py-0.5 text-xs bg-gray-800 hover:bg-gray-700 rounded-md transition-colors';
+                    button.onclick = (e) => {
+                        e.preventDefault();
+                        fetchAndDrawPriceChart(portfolio.ticker, label);
+                    };
+                    buttonContainer.appendChild(button);
+                });
+            }
+            
+            // ========================================================================
+            // SECTION 2: POPULATE MAIN SCORE CARDS (THIS IS THE MISSING LOGIC)
+            // ========================================================================
+    
+            // --- 2a. Enterprise Quality Score Card ---
+            // Quality Score with enhanced visual
+            const qualityScore = parseFloat(portfolio.qualityScore);
+            const qualityPercentage = (qualityScore / 109) * 100;
+            const qualityColors = getScoreColor(qualityPercentage);
+            const qualityCard = document.getElementById('quality-card');
+            const qualityCircle = document.getElementById('quality-circle');
+            const qualityValueEl = document.getElementById('quality-score-value');
+            
+            if (qualityCard && qualityCircle && qualityValueEl) {
+                // Update gradient colors in the SVG definition
+                qualityCard.querySelector('.quality-gradient-start').setAttribute('style', `stop-color:${qualityColors.color}`);
+                qualityCard.querySelector('.quality-gradient-end').setAttribute('style', `stop-color:${qualityColors.color}cc`);
+
+                // Update score value text and color
+                animateValue(qualityValueEl, 0, qualityScore, 1000);
+                qualityValueEl.style.color = 'white';
+                if (qualityPercentage >= 75) {
+                    qualityValueEl.classList.add('score-is-glowing');
+                }
+                if (qualityPercentage >= 75) {
+                    qualityValueEl.classList.add('score-is-glowing');
+                }
+                
+                // Set the card's hover glow using the new unified logic
+                const qualityTierName = getTierName(qualityPercentage);
+                const dynamicGlowValue = getHoverGlowStyle(qualityTierName, qualityColors.color);
+                qualityCard.style.setProperty('--card-dynamic-glow', dynamicGlowValue);
+
+                // Add subtle animation for high scores
+                if (qualityPercentage >= 77) { // Corresponds to a numeric score of ~84
+                    qualityCard.classList.add('card-is-animated');
+                    if (qualityPercentage >= 82.5) { // Corresponds to a numeric score of ~90
+                        qualityCard.style.setProperty('--pulse-scale', '1.03');
+                    } else {
+                        qualityCard.style.setProperty('--pulse-scale', '1.02');
+                    }
+                }
+                // Add the special glow class only for Blue or Purple tiers
+                if (qualityPercentage >= 74) {
+                    qualityCircle.classList.add('has-special-glow');
+                } else {
+                    qualityCircle.classList.remove('has-special-glow');
+                }
+                
+                // Animate quality score circle fill
+                const qualityDasharray = (qualityPercentage / 100) * 415; // Animate over the 415-unit visible arc
+                setTimeout(() => {
+                    qualityCircle.style.strokeDasharray = `${qualityDasharray} 553`;
+                }, 500);
+
+                // Populate Quality Score sub-components
+                const subScoresContainer = document.getElementById('quality-sub-scores-container');
+                const groupScores = llmResearch.Total_scores_group.Group_Scores;
+                const subScoreData = [
+                    { name: 'Financials', score: groupScores.Financials_Group_Score, max: 17 },
+                    { name: 'Moat', score: groupScores.Moat_Group_Score, max: 20 },
+                    { name: 'Potential', score: groupScores.Potential_Group_Score, max: 45 },
+                    { name: 'Culture', score: groupScores.Culture_and_Pastperformance_Group_Score, max: 25 },
+                    { name: 'Gauntlet', score: groupScores.Gauntlet_Group_Score, min: -30 } // Special deduction case
+                ];
+                
+                let subScoresHtml = '';
+                subScoreData.forEach(item => {
+                    subScoresHtml += '<div class="flex items-center justify-between text-sm gap-4">';
+
+                    if (item.name === 'Gauntlet') {
+                        // Special styling for the deduction score
+                        const penaltyPercentage = item.score ? (item.score / item.min) * 100 : 0;
+                        // The color is always red for penalties, so we pass 0 to getScoreColor
+                        const gradient = getGradientFill(0, true); // Pass true for reversed gradient
+                        subScoresHtml += `
+                            <span class="text-gray-300">${item.name}</span>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="micro-bar is-negative">
+                                    <div class="micro-bar-fill" style="width: ${penaltyPercentage}%; background: ${gradient};"></div>
+                                </div>
+                                <span class="font-mono text-red-400 w-20 text-right font-medium">${item.score}</span>
+                            </div>
+                        `;
+                    } else {
+                        // Standard styling for positive scores
+                        const percentage = (item.score / item.max) * 100;
+                        const gradient = getGradientFill(percentage);
+                        subScoresHtml += `
+                            <span class="text-gray-300">${item.name}</span>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="micro-bar">
+                                    <div class="micro-bar-fill" style="width: ${percentage}%; background: ${gradient};"></div>
+                                </div>
+                                <span class="font-mono text-gray-500 w-20 text-right">
+                                    <span class="text-white font-medium">${formatNumber(item.score)}</span> / ${item.max}
+                                </span>
+                            </div>
+                        `;
+                    }
+                    subScoresHtml += '</div>';
+                });
+                // Wrap the generated HTML in the max-width container for centering
+                subScoresContainer.innerHTML = `<div class="max-w-xs mx-auto">${subScoresHtml}</div>`;
+            }
+    
+            // --- 2b. Innovation & Disruption Quotient (IDQ) Card ---
+            if (llmReports?.IDQ_Report) {
+                const idqCard = document.getElementById('idq-card');
+                const idqScore = parseFloat(llmReports.IDQ_Report.idqScore);
+                
+                // Get new grade details from our updated custom function
+                const gradeDetails = getIdqDetails(idqScore);
+                const idqColor = gradeDetails.color;
+
+                // Update score value text
+                const idqValueEl = document.getElementById('idq-score-value');
+                animateValue(idqValueEl, 0, idqScore, 1000, '', true); // Force no decimal
+                
+                // Set the color for the SVG and score text
+                const idqVisualContainer = document.getElementById('idq-visual-container');
+                if (idqVisualContainer) {
+                    idqVisualContainer.style.color = idqColor;
+                }
+
+                // --- Pointer, Glow, and Animation Logic ---
+                // Convert the grade index (0-4) to a percentage for visual effects
+                const idqPercentage = (gradeDetails.index / 4) * 100;
+
+                // Conditional score glow
+                if (idqPercentage >= 50) { // 50% corresponds to the green grade (index 2)
+                    idqValueEl.classList.add('score-is-glowing');
+                } else {
+                    idqValueEl.classList.remove('score-is-glowing');
+                }
+
+                // Set the card's hover glow using the new unified logic
+                const idqTierName = getTierName(idqPercentage);
+                const dynamicGlowValue = getHoverGlowStyle(idqTierName, idqColor);
+                idqCard.style.setProperty('--card-dynamic-glow', dynamicGlowValue);
+                
+                idqCard.classList.remove('card-is-animated');
+                if (idqPercentage >= 50) { // Animate for Green and above
+                    idqCard.classList.add('card-is-animated');
+                    // Set intensity: higher for blue/purple
+                    idqCard.style.setProperty('--pulse-scale', idqPercentage >= 75 ? '1.03' : '1.02');
+                }
+
+                // Build the Grade Bar with new colors and dimming effect
+                const gradeBar = document.getElementById('idq-grade-bar');
+                const gradeColors = [getIdqDetails(0).color, getIdqDetails(3).color, getIdqDetails(6).color, getIdqDetails(9).color, getIdqDetails(11).color];
+                gradeBar.innerHTML = gradeColors.map((color, index) => {
+                    const opacity = (index === gradeDetails.index) ? 1 : 0.3;
+                    return `<div class="grade-segment" style="width: 20%; background-color: ${color}; opacity: ${opacity}; transition: opacity 0.5s;"></div>`;
+                }).join('');
+                
+                // Position the Grade Pointer in the CENTER of the correct segment
+                const pointerPosition = (gradeDetails.index * 20) + 10; // e.g., Green (index 2) -> (2*20)+10=50%
+                const gradeIndicatorContainer = document.getElementById('idq-grade-indicator-container');
+                gradeIndicatorContainer.innerHTML = `
+                    <div class="grade-indicator" style="left: ${pointerPosition}%;">
+                        <div class="grade-indicator-pointer" style="border-bottom-color: ${idqColor};"></div>
+                        <div class="grade-indicator-label" style="color: ${idqColor};">${gradeDetails.gradeName}</div>
+                    </div>`;
+
+                // Add tiered "Flow" animation for top grades
+                idqCard.classList.remove('idq-flow-green', 'idq-flow-blue', 'idq-flow-purple');
+                switch (gradeDetails.gradeName) {
+                    case 'Pioneer':
+                        idqCard.classList.add('idq-flow-purple');
+                        break;
+                    case 'Leader':
+                        idqCard.classList.add('idq-flow-blue');
+                        break;
+                    case 'Integrator':
+                        idqCard.classList.add('idq-flow-green'); 
+                        break;
+                }
+
+                // Populate AI Adoption Summary
+                const longIdqSummary = llmResearch.Summaries_Group?.idqSummary;
+                if (longIdqSummary) {
+                    const regex = /1\. AI Adoption & Leadership.*?:\*\*\n([\s\S]*?)(?=\n\n\*\*|$)/;
+                    const match = longIdqSummary.match(regex);
+                    if (match && match[1]) {
+                        document.getElementById('idq-summary-text').textContent = match[1].trim();
+                    }
+                }
+            }
+    
+            // --- 2c. Anti-Fragile Score Card ---
+            const antiFragileScore = parseFloat(antiFragile.totalScore);
+            const antiFragileColors = getAntiFragileColor(antiFragileScore); // Use our new function
+            
+            // Update gradient colors
+            document.querySelector('.antifragile-gradient-start').setAttribute('style', `stop-color:${antiFragileColors.color};stop-opacity:1`);
+            document.querySelector('.antifragile-gradient-end').setAttribute('style', `stop-color:${antiFragileColors.color}cc;stop-opacity:1`);
+            
+            // Update score value
+            const antiFragileValueEl = document.getElementById('antifragile-score-value');
+            animateValue(antiFragileValueEl, -7, antiFragileScore, 1000);
+            antiFragileValueEl.style.color = 'white';
+            if (antiFragileScore >= 12) { // Glow for Blue and Purple scores
+                antiFragileValueEl.classList.add('score-is-glowing');
+            }
+            // Dynamically adjust font size for decimal values
+            if (antiFragileScore % 1 !== 0) {
+                antiFragileValueEl.classList.remove('text-5xl');
+                antiFragileValueEl.classList.add('text-3xl'); // Changed to 5xl
+            } else {
+                antiFragileValueEl.classList.remove('text-3xl');
+                antiFragileValueEl.classList.add('text-5xl');
+            }
+            
+            // Set the non-hover glow for the expanded panel
+            document.getElementById('antifragile-card').style.setProperty('--card-glow', antiFragileColors.glow);
+            
+            // Logic for Anti-Fragile Evolving Shield visual
+            const visualContainer = document.getElementById('antifragile-visual-container');
+            if (visualContainer) {
+                const tier = getAntiFragileTier(antiFragileScore);
+                const card = document.getElementById('antifragile-card');
+                
+                // Reset container classes
+                visualContainer.className = 'w-48 h-48 mx-auto mb-4 relative antifragile-visual-container';
+                visualContainer.classList.add(`show-${tier}`);
+                
+                // Set the card's hover glow using the new unified logic
+                const antiFragilePercentage = ((antiFragileScore - (-7)) / (17 - (-7))) * 100;
+                const antiFragileTierName = getTierName(antiFragilePercentage);
+                const dynamicGlowValue = getHoverGlowStyle(antiFragileTierName, antiFragileColors.color);
+                card.style.setProperty('--card-dynamic-glow', dynamicGlowValue);
+
+                // Add subtle card pulse animation for higher tiers
+                card.classList.remove('card-is-animated');
+                if (tier === 'strong' || tier === 'unbreakable') {
+                    card.classList.add('card-is-animated');
+                }
+            }
+            
+            // Sub-metrics with horizontal progress bars
+            const componentsContainer = document.getElementById('antifragile-components');
+            const subScoreData = [
+                { name: 'Strategic Core', score: antiFragile.groupScores.barbellMethodScore, min: -1, max: 13 },
+                { name: 'Financial Fortitude', score: antiFragile.groupScores.financialFortitudeScore, min: -4, max: 1 },
+                { name: 'Skin in the Game', score: antiFragile.groupScores.skinInTheGameScore, min: -1, max: 3 }
+            ];
+
+            let componentsHtml = '<div class="space-y-4 max-w-[16rem] mx-auto">';
+            subScoreData.forEach(item => {
+                let percentage = 0;
+                let barClass = "micro-bar";
+                let gradient; // Define gradient variable
+            
+                if (item.score < 0) {
+                    // --- Negative Score Logic ---
+                    percentage = item.min !== 0 ? (item.score / item.min) * 100 : 0;
+                    barClass += " is-negative";
+                    // Get a REVERSED red gradient
+                    gradient = getGradientFill(0, true);
+                } else {
+                    // --- Positive Score Logic ---
+                    const range = item.max - item.min;
+                    const normalizedPercentageForColor = range > 0 ? ((item.score - item.min) / range) * 100 : 0;
+                    percentage = item.max !== 0 ? (item.score / item.max) * 100 : 0;
+                    // Get a STANDARD gradient
+                    gradient = getGradientFill(normalizedPercentageForColor, false);
+                }
+            
+                if (percentage > 100) percentage = 100;
+            
+                componentsHtml += `
+                    <div>
+                        <div class="flex items-baseline justify-between text-sm mb-1">
+                            <span class="text-gray-300 font-medium">${item.name}</span>
+                            <span class="font-mono text-gray-500 text-right">
+                                <span class="font-bold text-white">${formatNumber(item.score)}</span>
+                                <span class="text-xs text-gray-500"> / ${item.max}</span>
+                            </span>
+                        </div>
+                        <div class="${barClass}" style="width: 100%;">
+                            <div class="micro-bar-fill" style="width: ${percentage}%; background: ${gradient};"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            componentsHtml += '</div>';
+            
+            componentsContainer.className = 'text-left';
+            componentsContainer.innerHTML = componentsHtml;
+    
+            // ========================================================================
+            // SECTION 3: POPULATE ALL OTHER PAGE SECTIONS (This part was working)
+            // ========================================================================
+            const tierCalc = calculateCompanyTier();
+            const badgeHtml = `<div class="px-4 py-2 rounded-full text-sm font-bold inline-block backdrop-blur-sm border magnetic ${tierCalc.class}" style="background: ${tierCalc.color}20; border-color: ${tierCalc.color}; text-shadow: 0 0 10px ${tierCalc.color};"><span>${tierCalc.score.toFixed(1)}</span> <span style="color: #8B949E; font-size: 0.85em;">/ 100</span> • ${tierCalc.name}</div>`;
+            document.getElementById('overall-assessment-badge').innerHTML = badgeHtml;
+            
+            // Mobile-specific elements
+            const mobileMarketCap = document.getElementById('mobile-market-cap');
+            if (mobileMarketCap) {
+                const marketCapEl = document.querySelector('#details-line-1 .font-medium');
+                if (marketCapEl) {
+                    mobileMarketCap.textContent = marketCapEl.textContent;
+                }
+            }
+            
+            const mobileExchange = document.getElementById('mobile-exchange');
+            if (mobileExchange) {
+                mobileExchange.textContent = financials?.General?.stockExchange || 'N/A';
+            }
+            
+            const mobileBadge = document.getElementById('mobile-badge');
+            if (mobileBadge) {
+                const isLightTheme = document.body.classList.contains('light-theme');
+            
+                // Create the score part with a theme-aware color and bold style
+                const scoreText = `<span style="color: ${isLightTheme ? '#0b0d0e' : 'white'}; font-weight: 600;">${tierCalc.score.toFixed(1)}</span>`;
+            
+                // Set the badge content using the new score span
+                mobileBadge.innerHTML = `${scoreText} • ${tierCalc.name}`;
+            
+                // Restore the original logic for the background, border, and tier name color
+                mobileBadge.style.background = `${tierCalc.color}20`;
+                mobileBadge.style.borderColor = tierCalc.color;
+                mobileBadge.style.color = tierCalc.color;
+            }
+            
+            // Call all the individual populator functions
+            populateQualityExpanded();
+            populateIDQExpanded();
+            populateAntiFragileExpanded();
+            populateAnalysis();
+            populateFinancials();
+            populateDetailedFinancials();
+            
+            // Initialize chart
+            setTimeout(() => {
+                createEarningsChart('eps'); 
+                const chartTabs = document.getElementById('chart-tabs');
+                if (chartTabs) {
+                    chartTabs.addEventListener('click', (e) => {
+                        if (e.target.matches('.chart-tab')) {
+                            chartTabs.querySelector('.active-tab')?.classList.remove('active-tab');
+                            e.target.classList.add('active-tab');
+                            const metric = e.target.dataset.metric;
+                            createEarningsChart(metric);
+                        }
+                    });
+                }
+            }, 500);
+        }
+
+        // This function has been completely rewritten to include all your requested UI optimizations
+        function populateQualityExpanded() {
+            const llmResearch = currentStockData.LLM_Research_and_Comments;
+            const groupScores = llmResearch.Total_scores_group.Group_Scores;
+            const qualityScore = parseFloat(currentStockData.Portfolio.qualityScore);
+            const qualityPercentage = (qualityScore / 109) * 100;
+            const qualityColors = getScoreColor(qualityPercentage);
+    
+            let html = '<h3 class="text-xl font-bold mb-6">Enterprise Quality Breakdown</h3>';
+    
+            html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">';
+    
+            // Added max scores to this map
+            const groupDataMap = {
+                'Financials': { name: 'Financials', score: groupScores.Financials_Group_Score, max: 17 },
+                'Moat': { name: 'Moat', score: groupScores.Moat_Group_Score, max: 20 },
+                'Potential': { name: 'Potential', score: groupScores.Potential_Group_Score, max: 45 },
+                'Culture': { name: 'Culture', score: groupScores.Culture_and_Pastperformance_Group_Score, max: 25 }
+            };
+    
+            for (const key in groupDataMap) {
+                const group = groupDataMap[key];
+                const groupNameLower = group.name.toLowerCase();
+    
+                html += `
+                    <div class="summary-metric-card bg-gradient-to-br from-[#161B22] to-[#1C2128] rounded-lg p-4 border border-[#30363D] flex flex-col text-center transition-all duration-300">
+                        <h4 class="font-medium text-secondary">${group.name}</h4>
+                        <div class="text-4xl font-bold text-gray-200 my-2">${formatNumber(group.score)}<span class="text-lg text-gray-500"> / ${group.max}</span></div>
+                        <div class="mt-auto">
+                            <button 
+                                class="summary-button mt-2 w-full" 
+                                data-group="${groupNameLower}"
+                                style="--card-color: ${qualityColors.color}" 
+                                onclick="showGroupDetails('${groupNameLower}')">
+                                <span class="relative z-10">View Details</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+    
+            const gauntletScore = groupScores.Gauntlet_Group_Score;
+            html += `
+                <div class="summary-metric-card bg-gradient-to-br from-[#1C2128] to-[#242B33] rounded-lg p-3 border border-[#30363D] flex items-center justify-between transition-all duration-300 mb-8">
+                    <h4 class="font-medium text-red-400">Gauntlet Score</h4>
+                    <div class="flex items-center gap-4">
+                        <div class="text-2xl font-bold text-red-400">${gauntletScore}</div>
+                        <button 
+                            class="summary-button" 
+                            data-group="gauntlet"
+                            style="--card-color: var(--color-red); padding: 6px 12px; font-size: 12px;" 
+                            onclick="showGroupDetails('gauntlet')">
+                            <span class="relative z-10">View Details</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+    
+            html += '<div id="shared-summary-panel" class="summary-content my-6" style="grid-column: 1 / -1;"></div>';
+    
+            document.getElementById('quality-expanded').innerHTML = html;
+        }
+        function populateIDQExpanded() {
+            const idqReport = currentStockData.LLM_Reports?.IDQ_Report;
+            const detailedAnalysisText = currentStockData.LLM_Research_and_Comments?.Summaries_Group?.idqSummary;
+            
+            if (!idqReport || !detailedAnalysisText) {
+                document.getElementById('idq-expanded').innerHTML = '<p>IDQ data is currently unavailable.</p>';
+                return;
+            }
+
+            const scoringTooltipText = "The final IDQ score is a holistic judgment based on five key facets. Significant weight is given to Disruptive Innovation & Core Technology Moat and Market Opportunity for Disruption, as these are primary engines of transformative potential.";
+
+            let html = `
+                <div class="flex items-center gap-2 mb-6">
+                    <h3 class="text-xl font-bold">Innovation Disruption Quotient (IDQ)</h3>
+                    <span class="has-reasoning" data-tooltip="${scoringTooltipText}">
+                         <span class="reasoning-icon text-lg">💡</span>
+                    </span>
+                </div>
+            `;
+            
+            // Overall Summary Section
+            html += `
+                <div class="idq-section">
+                    <h4 class="idq-section-title">Overall Summary</h4>
+                    <p class="text-gray-400 leading-relaxed">${idqReport.idqSummary || 'No summary available.'}</p>
+                </div>
+            `;
+            
+            // Detailed Facet Analysis Section
+            if (detailedAnalysisText.includes('--- DETAILED FACET ANALYSIS ---')) {
+                html += `
+                    <div class="idq-section">
+                        <h4 class="idq-section-title">Facet Breakdown</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                `;
+                
+                const analysisBlock = detailedAnalysisText.split('--- DETAILED FACET ANALYSIS ---')[1] || '';
+                const facetItems = analysisBlock.split('**').filter(s => s.trim() && s.includes('.')).map(s => s.trim());
+
+                for (let i = 0; i < facetItems.length; i += 2) {
+                    const titleAndScore = facetItems[i];
+                    const description = facetItems[i+1] || 'No description available.';
+                    
+                    const scoreMatch = titleAndScore.match(/\(Facet Score: (\d+\.?\d*)\/(\d+)\)/);
+                    const title = titleAndScore.replace(/\(Facet Score:.*\):?/, '').trim();
+                    
+                    if (scoreMatch) {
+                        const score = parseFloat(scoreMatch[1]);
+                        const maxScore = parseInt(scoreMatch[2], 10);
+                        const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
+                        
+                        // New logic for color and shimmer
+                        const barColor = getIdqFacetColor(score);
+                        const shimmerClass = score === 5 ? 'shimmer-effect' : '';
+
+                        html += `
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm font-medium text-gray-300">${title}</span>
+                                    <span class="text-sm font-mono"><span class="font-bold text-white">${score}</span>/${maxScore}</span>
+                                </div>
+                                <div class="metric-bar mb-2">
+                                    <div class="metric-fill ${shimmerClass}" style="width: ${percentage}%; background: ${barColor};"></div>
+                                </div>
+                                <p class="text-xs text-gray-400 leading-relaxed">${description}</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += '</div></div>';
+            }
+            
+            // Catalyst Watch Section
+            if (idqReport.catalystWatch) {
+                html += `
+                    <div class="idq-section">
+                        <h4 class="idq-section-title">Catalyst Watch</h4>
+                        <div class="text-xs text-gray-500 mb-3">Last Updated: ${idqReport.lastUpdated || 'N/A'}</div>
+                        <div class="border-l-2 border-gray-600 pl-4 space-y-2">
+                            ${idqReport.catalystWatch.split('•').filter(line => line.trim()).map(line => `<p class="text-gray-400 leading-relaxed">${line.trim()}</p>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('idq-expanded').innerHTML = html;
+        }
+
+        // Populate Anti-Fragile expanded content with enhanced visuals
+        // Populate Anti-Fragile expanded content with enhanced visuals
+        function populateAntiFragileExpanded() {
+            const antiFragile = currentStockData.Anti_Fragile_Score;
+            const llmResearch = currentStockData.LLM_Research_and_Comments;
+    
+            const tooltipText = "Anti-Fragile scores are derived from Quality Score metrics using specific formulas. Click on metrics below to see their reasoning.";
+    
+            let html = `
+                <div class="flex items-center gap-2 mb-8">
+                    <h3 class="text-xl font-bold">Anti-Fragile Score Breakdown</h3>
+                    <span class="has-reasoning" data-tooltip="${tooltipText}">
+                         <span class="reasoning-icon text-lg">💡</span>
+                    </span>
+                </div>
+            `;
+    
+            // --- Card Grid Layout ---
+            html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">';
+    
+            const groupData = [
+                { name: 'Strategic Core', score: antiFragile.groupScores.barbellMethodScore, max: 13 },
+                { name: 'Financial Fortitude', score: antiFragile.groupScores.financialFortitudeScore, max: 1 },
+                { name: 'Skin in the Game', score: antiFragile.groupScores.skinInTheGameScore, max: 3 }
+            ];
+    
+            groupData.forEach(group => {
+                html += `
+                    <div class="summary-metric-card bg-gradient-to-br from-[#161B22] to-[#1C2128] rounded-lg p-4 border border-[#30363D] flex flex-col text-center">
+                        <h4 class="font-medium text-gray-400">${group.name}</h4>
+                        <div class="text-4xl font-bold text-gray-200 my-2">${formatNumber(group.score)}<span class="text-lg text-gray-500"> / ${group.max}</span></div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+    
+            // --- Detailed Breakdown ---
+            html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">';
+    
+            // Helper function to render a single metric, now with a color override option
+            const renderMetric = (name, score, max, reasoning, isPenalty = false, colorPercentageOverride = null) => {
+                let metricHtml = '';
+                const hasReasoning = reasoning ? 'has-reasoning' : '';
+                const tooltip = reasoning || '';
+                const reasoningIcon = reasoning ? '<span class="reasoning-icon">💡</span>' : '';
+    
+                if (isPenalty) {
+                    metricHtml += `
+                        <div class="metric-item ${hasReasoning}" data-tooltip="${tooltip}">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">${name}${reasoningIcon}</span>
+                                <span class="text-sm font-mono"><span class="font-bold ${score < 0 ? 'text-red-400' : 'text-white'}">${formatNumber(score, 0)}</span> / 0</span>
+                            </div>
+                        </div>`;
+                } else {
+                    const percentageForWidth = max > 0 ? (score / max) * 100 : 0;
+                    const percentageForColor = colorPercentageOverride !== null ? colorPercentageOverride : percentageForWidth;
+                    const gradient = getGradientFill(percentageForColor);
+                    const shimmerClass = percentageForWidth >= 80 ? 'shimmer-effect' : '';
+                    metricHtml += `
+                        <div class="metric-item ${hasReasoning}" data-tooltip="${tooltip}">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm text-gray-400">${name}${reasoningIcon}</span>
+                                <span class="text-sm font-mono"><span class="font-bold text-white">${formatNumber(score)}</span>/${max}</span>
+                            </div>
+                            <div class="metric-bar">
+                                <div class="metric-fill ${shimmerClass}" style="width: ${percentageForWidth}%; background: ${gradient};"></div>
+                            </div>
+                        </div>`;
+                }
+                return metricHtml;
+            };
+    
+            // Strategic Core Metrics
+            const sc = antiFragile.metricScores.barbellMethod;
+            html += '<div><h4 class="font-semibold text-gray-300 mb-3">Strategic Core</h4><div class="space-y-4">';
+    
+            // Special logic for Mission Statement color
+            let missionColorPercentage = null;
+            if (sc.missionStatement === 1) {
+                missionColorPercentage = 55; // Force Yellow tier color
+            } else if (sc.missionStatement === 2) {
+                missionColorPercentage = 80; // Force Purple tier color
+            }
+            html += renderMetric('Mission Statement', sc.missionStatement, 2, llmResearch.Culture_and_Pastperformance_Group?.missionStatementReasoning, false, missionColorPercentage);
+    
+            const moatSummary = llmResearch.Summaries_Group?.moatSummary || 'Derived from multiple Moat Group metrics. See Moat section for detailed reasoning.';
+            html += renderMetric('Moat', sc.moat, 8, moatSummary);
+            html += renderMetric('Optionality', sc.optionality, 3, llmResearch.Potential_Group?.optionalityReasoning);
+            html += '</div></div>';
+    
+            // Financial Fortitude Metrics
+            const ff = antiFragile.metricScores.financialFortitude;
+            html += '<div><h4 class="font-semibold text-gray-300 mb-3">Financial Fortitude</h4><div class="space-y-4">';
+            html += renderMetric('Cash, Debt, FCF', ff.cashDebtFreeCashFlow, 1, llmResearch.Financials_Group?.financialResilienceReasoning);
+            html += renderMetric('Concentration Penalty', ff.concentration, 0, llmResearch.Gauntlet_Group?.customerConcentrationReasoning, true);
+            html += '</div></div>';
+    
+            // Skin in the Game Metrics
+            const sitg = antiFragile.metricScores.skinInTheGame;
+            html += '<div class="md:col-span-2"><h4 class="font-semibold text-gray-300 mb-3 mt-4">Skin in the Game</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">';
+            html += renderMetric('Glassdoor', sitg.glassdoor, 1, llmResearch.Culture_and_Pastperformance_Group?.glassdoorRatingsReasoning, sitg.glassdoor < 0);
+            html += renderMetric('Founder-Led', sitg.founder, 1, llmResearch.Culture_and_Pastperformance_Group?.soulInTheGameReasoning);
+            html += renderMetric('Ownership', sitg.ownership, 1, llmResearch.Culture_and_Pastperformance_Group?.insideOwnershipReasoning, sitg.ownership < 0);
+            html += '</div></div>';
+    
+            html += '</div>'; // Close grid
+    
+            document.getElementById('antifragile-expanded').innerHTML = html;
+        }
+
+        // FIX 2: Added function to calculate company tier
+        function calculateCompanyTier() {
+            const qualityScore = parseFloat(currentStockData.Portfolio.qualityScore);
+            const idqScore = parseFloat(currentStockData.LLM_Reports?.IDQ_Report?.idqScore || 0);
+            const antiFragileScore = parseFloat(currentStockData.Anti_Fragile_Score.totalScore);
+            
+            // Normalize scores to 0-100 scale
+            const qualityNorm = (qualityScore / 109) * 100;
+            const idqNorm = ((idqScore + 3) / 15) * 100; // IDQ range is -3 to 12
+            const antiFragileNorm = ((antiFragileScore + 7) / 24) * 100; // Anti-Fragile range is -7 to 17
+            
+            // Weighted average: Quality 40%, IDQ 35%, Anti-Fragile 25%
+            const overallScore = (qualityNorm * 0.4) + (idqNorm * 0.35) + (antiFragileNorm * 0.25);
+            
+            let tier = {};
+            if (overallScore >= 85) {
+                tier = { name: 'Apex Performer', color: 'var(--color-purple)', class: 'text-purple-500', description: 'Elite companies with exceptional fundamentals, pioneering innovation, and fortress-like resilience' };
+            } else if (overallScore >= 78) {
+                tier = { name: 'Industry Powerhouse', color: 'var(--color-blue)', class: 'text-blue-500', description: 'Strong companies leading their industries with robust competitive advantages' };
+            } else if (overallScore >= 65) {
+                tier = { name: 'Quality Compounder', color: 'var(--color-green)', class: 'text-green-500', description: 'Solid companies with good fundamentals and steady growth potential' };
+            } else if (overallScore >= 55) {
+                tier = { name: 'Mixed Signals', color: 'var(--color-yellow)', class: 'text-yellow-500', description: 'Companies with mixed signals showing both promise and challenges' };
+            } else if (overallScore >= 32) {
+                tier = { name: 'Positionally challenged', color: 'var(--color-orange)', class: 'text-orange-500', description: 'Challenged companies that may offer turnaround potential (and risk)' };
+            } else {
+                tier = { name: 'High Risk', color: 'var(--color-red)', class: 'text-red-500', description: 'Companies facing significant operational or financial headwinds' };
+            }
+            
+            tier.score = overallScore;
+            window.companyTier = tier; // Store globally if needed elsewhere
+            return tier;
+        }
+
+        // Calculate percentile rankings for scores
+        async function calculateScoreRankings() {
+            try {
+                // Fetch all stocks to calculate rankings
+                const querySnapshot = await db.collection("stocks").get();
+                const allScores = {
+                    quality: [],
+                    idq: [],
+                    antiFragile: []
+                };
+                
+                // Collect all scores with their values
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.Portfolio?.qualityScore) {
+                        allScores.quality.push(parseFloat(data.Portfolio.qualityScore));
+                    }
+                    if (data.LLM_Reports?.IDQ_Report?.idqScore) {
+                        allScores.idq.push(parseFloat(data.LLM_Reports.IDQ_Report.idqScore));
+                    }
+                    if (data.Anti_Fragile_Score?.totalScore) {
+                        allScores.antiFragile.push(parseFloat(data.Anti_Fragile_Score.totalScore));
+                    }
+                });
+                
+                // Sort arrays in descending order (highest first)
+                allScores.quality.sort((a, b) => b - a);
+                allScores.idq.sort((a, b) => b - a);
+                allScores.antiFragile.sort((a, b) => b - a);
+                
+                // Calculate current stock's position
+                if (currentStockData) {
+                    const qualityScore = parseFloat(currentStockData.Portfolio.qualityScore);
+                    const idqScore = parseFloat(currentStockData.LLM_Reports?.IDQ_Report?.idqScore || 0);
+                    const antiFragileScore = parseFloat(currentStockData.Anti_Fragile_Score.totalScore);
+                    
+                    // Find position (1-based)
+                    const qualityRank = allScores.quality.findIndex(s => s <= qualityScore) + 1;
+                    const idqRank = allScores.idq.findIndex(s => s <= idqScore) + 1;
+                    const antiFragileRank = allScores.antiFragile.findIndex(s => s <= antiFragileScore) + 1;
+                    
+                    // Update the UI
+                    const qualityRankEl = document.getElementById('quality-rank');
+                    const idqRankEl = document.getElementById('idq-rank-placeholder');
+                    const antiFragileRankEl = document.getElementById('antifragile-rank-placeholder');
+                    
+                    if (qualityRankEl) {
+                        qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length}`;
+                        qualityRankEl.setAttribute('data-tooltip', `This company ranks ${qualityRank} out of ${allScores.quality.length} companies in Enterprise Quality`);
+                    }
+                    if (idqRankEl) {
+                        idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length}`;
+                        idqRankEl.setAttribute('data-tooltip', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in Innovation & Disruption Quotient`);
+                    }
+                    if (antiFragileRankEl) {
+                        antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length}`;
+                        antiFragileRankEl.setAttribute('data-tooltip', `This company ranks ${antiFragileRank} out of ${allScores.antiFragile.length} companies in Anti-Fragile Score`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error calculating score rankings:', error);
+            }
+        }
+        
+        // Helper function to calculate percentile
+        function getPercentile(value, sortedArray) {
+            if (sortedArray.length === 0) return 50;
+            
+            let count = 0;
+            for (let i = 0; i < sortedArray.length; i++) {
+                if (sortedArray[i] < value) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            
+            return Math.round((count / sortedArray.length) * 100);
+        }
+        
+        // Add tooltip for thesis tiers
+        function setupThesisTooltip() {
+            const trigger = document.getElementById('thesis-tooltip-trigger');
+            if (!trigger) return;
+            
+            const tooltipText = `Overall Assessment Tiers:\n• Apex Performer (85+): Elite companies with exceptional fundamentals\n• Industry Powerhouse (78-84.9): Strong companies leading their industries with robust advantages\n• Quality Compounder (65-77.9): Solid companies with good fundamentals and steady growth\n• Mixed Signals (55-64.9): Companies with mixed signals showing both promise and challenges\n• Positionally challenged (32-54.9): Challenged companies that may offer turnaround potential\n• High Risk (0-31.9): Companies facing significant operational or financial headwinds\n\nCalculated using: Quality Score (40%), IDQ Score (35%), Anti-Fragile Score (25%)`;
+            
+            trigger.setAttribute('data-tooltip', tooltipText);
+        }

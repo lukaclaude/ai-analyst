@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Financial Analysis Platform</title>
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Favicons -->
+    <link rel="icon" href="/assets/favicons/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg">
+    <link rel="apple-touch-icon" href="/assets/favicons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#0D1117" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    
+    <!-- Critical Inline Styles (prevent flash of unstyled content) -->
+    <style>
+        :root {
+            --color-bg-primary: #0D1117;
+            --color-text-primary: #E6EDF3;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+        }
+        
+        .app-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        
+        .app-loading.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(230, 237, 243, 0.1);
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Hide app until loaded */
+        #app {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        #app.loaded {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading State -->
+    <div class="app-loading" id="app-loading">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Main Application Container -->
+    <div id="app">
+        <!-- Navigation Sidebar -->
+        <nav id="navigation-sidebar" class="navigation-sidebar"></nav>
+        
+        <!-- Main Content Area -->
+        <main id="main-content" class="main-content">
+            <!-- Header -->
+            <header id="main-header" class="main-header"></header>
+            
+            <!-- Dynamic Content Area -->
+            <div id="content-view" class="content-view"></div>
+        </main>
+        
+        <!-- Global Tooltip -->
+        <div id="global-tooltip" class="tooltip"></div>
+        
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+            <svg class="theme-icon theme-icon--dark" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+            </svg>
+            <svg class="theme-icon theme-icon--light" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-functions-compat.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Main Application -->
+    <script type="module" src="/js/main.js"></script>
+    
+    <!-- Initialize Theme (prevent flash) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</body>
+</html>

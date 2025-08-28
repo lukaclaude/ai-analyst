@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test NVDA Data</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #e0e0e0; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #1a4d2e; color: #4ade80; }
+        .error { background: #4d1a1a; color: #f87171; }
+        .info { background: #1a3d4d; color: #60a5fa; }
+        pre { background: #2a2a2a; padding: 10px; overflow-x: auto; border-radius: 4px; }
+        a { color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <h1>Testing NVDA Data Access</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script type="module">
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+        
+        function addStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            statusDiv.appendChild(div);
+        }
+        
+        async function test() {
+            try {
+                addStatus('Initializing Firebase...', 'info');
+                
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAjllbzGx8QK3L7mePVk0uZ0R-ccenxElA",
+                    authDomain: "sheets-to-firestore-sync-v2.firebaseapp.com",
+                    projectId: "sheets-to-firestore-sync-v2",
+                    storageBucket: "sheets-to-firestore-sync-v2.firebasestorage.app",
+                    messagingSenderId: "1035123111291",
+                    appId: "1:1035123111291:web:30c0f5ee30f001c1a739de",
+                    measurementId: "G-QQW25R6FB8"
+                };
+                
+                firebase.initializeApp(firebaseConfig);
+                const db = firebase.firestore();
+                
+                addStatus('Firebase initialized!', 'success');
+                addStatus('Fetching NVDA data...', 'info');
+                
+                const querySnapshot = await db.collection("stocks")
+                    .where("Portfolio.ticker", "==", "NVDA")
+                    .get();
+                
+                if (!querySnapshot.empty) {
+                    const data = querySnapshot.docs[0].data();
+                    addStatus('Data received!', 'success');
+                    
+                    const info = {
+                        'Company': data.Portfolio?.companyName,
+                        'Ticker': data.Portfolio?.ticker,
+                        'Price': data.Portfolio?.stockPriceNow,
+                        'Target': data.Portfolio?.targetPrice,
+                        'Quality': data.Portfolio?.qualityScore,
+                        'IDQ': data.LLM_Reports?.IDQ_Report?.score,
+                        'Anti-Fragile': data.Anti_Fragile_Score?.Total_Score
+                    };
+                    
+                    resultsDiv.innerHTML = '<h2>NVDA Data:</h2><pre>' + JSON.stringify(info, null, 2) + '</pre>';
+                    resultsDiv.innerHTML += '<p><a href="./company-card.html?ticker=NVDA">Open Company Card</a></p>';
+                } else {
+                    addStatus('NVDA not found!', 'error');
+                }
+            } catch (error) {
+                addStatus('Error: ' + error.message, 'error');
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

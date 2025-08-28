@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Financial Analysis Platform</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="./main.css">
+    <link rel="stylesheet" href="./css/company-card.css">
+    <link rel="stylesheet" href="./css/company-sections.css">
+    
+    <style>
+        .debug-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border-primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .debug-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--color-text-primary);
+        }
+        .debug-info {
+            background: var(--color-bg-tertiary);
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+        .status-ok { color: #22c55e; }
+        .status-error { color: #ef4444; }
+        .test-button {
+            padding: 10px 20px;
+            background: var(--color-score-purple);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>Debug Dashboard</h1>
+        
+        <div class="debug-section">
+            <div class="debug-title">CSS Files Loading Status</div>
+            <div id="css-status" class="debug-info">Checking...</div>
+        </div>
+        
+        <div class="debug-section">
+            <div class="debug-title">Firebase Status</div>
+            <div id="firebase-status" class="debug-info">Checking...</div>
+        </div>
+        
+        <div class="debug-section">
+            <div class="debug-title">Test Firebase Query</div>
+            <button class="test-button" onclick="testFirebase()">Test AAPL Data</button>
+            <button class="test-button" onclick="testFirebase('MSFT')">Test MSFT Data</button>
+            <div id="firebase-result" class="debug-info">Click a button to test</div>
+        </div>
+        
+        <div class="debug-section">
+            <div class="debug-title">Available Tickers</div>
+            <button class="test-button" onclick="listAllTickers()">List All Tickers</button>
+            <div id="ticker-list" class="debug-info">Click to load ticker list</div>
+        </div>
+        
+        <div class="debug-section">
+            <div class="debug-title">Test Links</div>
+            <a href="./company-card.html?ticker=AAPL" class="test-button" style="text-decoration: none; display: inline-block;">Open AAPL</a>
+            <a href="./company-card.html?ticker=MSFT" class="test-button" style="text-decoration: none; display: inline-block;">Open MSFT</a>
+            <a href="./company-card.html?ticker=GOOGL" class="test-button" style="text-decoration: none; display: inline-block;">Open GOOGL</a>
+        </div>
+    </div>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Check CSS loading
+        function checkCSS() {
+            const cssFiles = [
+                './main.css',
+                './css/company-card.css',
+                './css/company-sections.css'
+            ];
+            
+            let statusHTML = '';
+            cssFiles.forEach(file => {
+                const link = document.querySelector(`link[href="${file}"]`);
+                if (link) {
+                    statusHTML += `<div class="status-ok">✓ ${file} loaded</div>`;
+                } else {
+                    statusHTML += `<div class="status-error">✗ ${file} not found</div>`;
+                }
+            });
+            
+            document.getElementById('css-status').innerHTML = statusHTML;
+        }
+        
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjllbzGx8QK3L7mePVk0uZ0R-ccenxElA",
+            authDomain: "sheets-to-firestore-sync-v2.firebaseapp.com",
+            projectId: "sheets-to-firestore-sync-v2",
+            storageBucket: "sheets-to-firestore-sync-v2.firebasestorage.app",
+            messagingSenderId: "1035123111291",
+            appId: "1:1035123111291:web:30c0f5ee30f001c1a739de",
+            measurementId: "G-QQW25R6FB8"
+        };
+        
+        let db;
+        
+        try {
+            const app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            document.getElementById('firebase-status').innerHTML = '<div class="status-ok">✓ Firebase initialized successfully</div>';
+        } catch (error) {
+            document.getElementById('firebase-status').innerHTML = `<div class="status-error">✗ Firebase error: ${error.message}</div>`;
+        }
+        
+        // Test Firebase query
+        async function testFirebase(ticker = 'AAPL') {
+            const resultDiv = document.getElementById('firebase-result');
+            resultDiv.innerHTML = `<div>Testing ${ticker}...</div>`;
+            
+            try {
+                const querySnapshot = await db.collection("stocks")
+                    .where("Portfolio.ticker", "==", ticker)
+                    .get();
+                
+                if (!querySnapshot.empty) {
+                    const data = querySnapshot.docs[0].data();
+                    resultDiv.innerHTML = `
+                        <div class="status-ok">✓ Found ${ticker}</div>
+                        <div>Company: ${data.Portfolio.companyName}</div>
+                        <div>Quality Score: ${data.Portfolio.qualityScore}</div>
+                        <div>Price: ${data.Portfolio.stockPriceNow} ${data.Portfolio.stockpricecurrency}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="status-error">✗ No data found for ${ticker}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status-error">✗ Query error: ${error.message}</div>`;
+            }
+        }
+        
+        // List all available tickers
+        async function listAllTickers() {
+            const listDiv = document.getElementById('ticker-list');
+            listDiv.innerHTML = '<div>Loading tickers...</div>';
+            
+            try {
+                const querySnapshot = await db.collection("stocks").get();
+                const tickers = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.Portfolio?.ticker) {
+                        tickers.push({
+                            ticker: data.Portfolio.ticker,
+                            name: data.Portfolio.companyName
+                        });
+                    }
+                });
+                
+                if (tickers.length > 0) {
+                    listDiv.innerHTML = `
+                        <div class="status-ok">✓ Found ${tickers.length} stocks</div>
+                        <div style="max-height: 200px; overflow-y: auto; margin-top: 10px;">
+                            ${tickers.map(t => `
+                                <div>
+                                    <a href="./company-card.html?ticker=${t.ticker}" style="color: var(--color-score-blue);">
+                                        ${t.ticker}
+                                    </a> - ${t.name}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    listDiv.innerHTML = '<div class="status-error">✗ No stocks found</div>';
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<div class="status-error">✗ Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Run checks on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkCSS();
+        });
+    </script>
+</body>
+</html>

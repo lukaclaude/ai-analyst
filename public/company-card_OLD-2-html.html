@@ -1,0 +1,488 @@
+<body class="min-h-screen">
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-functions-compat.js"></script>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar fixed left-0 top-0 w-56 h-screen flex flex-col z-50">
+        <!-- Main scrollable content area -->
+        <div class="flex-1 overflow-y-auto py-4">
+            <div class="px-4">
+                <div id="home-btn" class="nav-item magnetic relative flex items-center px-4 py-3 rounded-lg cursor-pointer active" data-section="header">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
+                    <span class="ml-4 text-sm font-medium">Home</span>
+                </div>
+                
+                <div class="mt-3 sidebar-search-container">
+                    <div class="relative">
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 sidebar-search-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path>
+                        </svg>
+                        <input type="text" id="sidebar-search" placeholder="Go to stock..."
+                            class="form-element w-full pl-9 pr-3 py-2 rounded-md text-sm">
+                    </div>
+                    <div id="search-results" class="hidden mt-2 bg-[#161B22] border border-[#30363D] rounded-md max-h-60 overflow-y-auto"></div>
+                </div>
+            </div>
+            
+            <hr class="border-t border-[#30363D] my-4">
+            
+            <div class="space-y-2">
+                <div class="nav-item magnetic relative flex items-center rounded-lg cursor-pointer" data-section="scores">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"></path></svg>
+                    <span class="ml-4 text-sm font-medium">Scores</span>
+                </div>
+                <div class="nav-item magnetic relative flex items-center rounded-lg cursor-pointer" data-section="analysis">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"></path></svg>
+                    <span class="ml-4 text-sm font-medium">Analysis</span>
+                </div>
+                <div class="nav-item magnetic relative flex items-center rounded-lg cursor-pointer" data-section="key-financials-metrics">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 7h-4V5c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 5h4v2h-4V5zm1 13.5c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"></path></svg>
+                    <span class="ml-4 text-sm font-medium">Key Financial Metrics</span>
+                </div>
+                <div class="nav-item magnetic relative flex items-center rounded-lg cursor-pointer" data-section="financials-data">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1.93.66 1.64 2.08 1.64 1.51 0 2.1-.64 2.1-1.42 0-.83-.49-1.41-2.24-1.81-2.06-.49-3.45-1.21-3.45-3.11 0-1.66 1.26-2.9 3.04-3.27V5h2.67v1.71c1.51.33 2.73 1.31 2.82 3.03h-1.96c-.05-.81-.45-1.51-1.61-1.51-1.13 0-1.8.5-1.8 1.29 0 .71.45 1.16 2.1 1.51 1.87.41 3.6 1.15 3.6 3.21 0 1.84-1.42 3.01-3.37 3.39z"></path></svg>
+                    <span class="ml-4 text-sm font-medium">Financials Data</span>
+                </div>
+            </div>
+        </div>
+        <!-- Recently Visited Companies -->
+        <div class="recent-companies-section mt-auto px-4 py-3 border-t border-[#30363D]">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <span class="recent-companies-text">Recent Companies</span>
+            </h3>
+            <div id="recent-companies" class="space-y-1">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        <!-- Fixed bottom section -->
+        <div class="py-4 border-t border-[#30363D]">
+            <div class="px-4">
+                <button id="theme-toggle" class="nav-item magnetic relative flex items-center px-4 py-3 rounded-lg cursor-pointer w-full">
+                    <svg id="theme-icon-dark" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                    <svg id="theme-icon-light" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="ml-4 text-sm font-medium">Theme</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <!-- Sidebar toggle button OUTSIDE the nav -->
+    <button id="sidebar-toggle" title="Toggle Sidebar">
+        <svg class="sidebar-toggle-icon w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19.5L8.25 12l7.5-7.5"></path>
+        </svg>
+    </button>
+    <div class="mt-auto p-4">
+</div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="ml-56 min-h-screen">
+        <div class="max-w-7xl mx-auto border-l border-r border-[#30363D]">
+        <!-- Breadcrumb Navigation -->
+        <div id="breadcrumb" class="px-6 py-2 text-sm text-gray-500 border-b border-[#30363D] hidden">
+            <span class="hover:text-gray-300 cursor-pointer" onclick="navigateToBreadcrumb('home')">Home</span>
+            <span class="mx-2">/</span>
+            <span id="breadcrumb-section" class="text-gray-300"></span>
+        </div>
+        <!-- Header -->
+        <header id="header" class="sticky top-0 z-40 bg-[#0D1117] border-b border-[#30363D] backdrop-blur-lg bg-opacity-90">
+            <div class="px-6 py-4">
+            <!-- Mobile Header -->
+                <div class="mobile-header hidden">
+                    <div class="mobile-header-wrapper">
+                        <div class="mobile-header-top">
+                            <img class="mobile-header-logo bg-white p-1" id="mobile-logo" alt="Logo">
+                            <div class="mobile-header-names">
+                                <div class="mobile-header-company" id="mobile-company-name"></div>
+                                <span class="mobile-header-ticker" id="mobile-ticker"></span>
+                            </div>
+                        </div>
+                        <div class="mobile-header-tier-section">
+                            <span class="mobile-tier-score" id="mobile-tier-score"></span>
+                            <span class="mobile-tier-label" id="mobile-tier-label"></span>
+                        </div>
+                    </div>
+                    <div class="mobile-header-price-section">
+                        <div class="mobile-header-price-row">
+                            <div class="mobile-header-price-item">
+                                <span class="mobile-header-price-value" id="mobile-price"></span>
+                                <span class="mobile-header-currency" id="mobile-currency"></span>
+                            </div>
+                            <div class="mobile-header-target-item">
+                                <span class="mobile-header-target-label">1Y Target</span>
+                                <div class="mobile-header-target-value" id="mobile-target"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mobile-header-details">
+                        <div class="mobile-header-details-left">
+                            <span id="mobile-market-cap"></span> • 
+                            <span id="mobile-exchange"></span>
+                        </div>
+                        <div class="mobile-header-badge" id="mobile-badge"></div>
+                    </div>
+                </div>
+                <!-- Main Header Grid -->
+                <div class="grid grid-cols-[1fr_auto] lg:grid-cols-[auto_1fr_auto] gap-x-6 items-stretch">
+
+                    <div class="flex flex-col">
+                        <div class="mb-3">
+                            <h1 class="text-2xl font-bold flex items-start gap-3">
+                                <span class="flex-shrink-0 text-sm font-normal bg-[#161B22] px-3 py-1 rounded-full border border-[#30363D]" id="ticker"></span>
+                                <span id="company-name"></span>
+                            </h1>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:gap-x-6 gap-y-4">
+                            <div class="flex-shrink-0">
+                                <img id="company-logo" alt="Company logo" 
+                                     class="w-24 h-24 rounded-lg bg-white p-2 object-contain shadow-lg magnetic"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="w-24 h-24 rounded-lg bg-gradient-to-br from-gray-700 to-gray-800 hidden items-center justify-center font-bold text-4xl shadow-lg" id="logo-fallback"></div>
+                            </div>
+                            <div class="flex flex-col justify-between text-sm text-gray-400">
+                                <div class="space-y-1.5">
+                                    <div id="details-line-1"></div>
+                                    <div id="details-line-2"></div>
+                                    <div id="details-line-3"></div>
+                                </div>
+                                <div id="website-line"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hidden xl:block w-full min-h-[100px] relative">
+                        <canvas id="mini-price-chart"></canvas>
+                        <div id="chart-timeframe-buttons" class="absolute top-0 left-0 flex gap-1 bg-[#0D1117] bg-opacity-50 p-1 rounded-md"></div>
+                    </div>
+
+                    <div class="flex flex-col justify-between text-center md:text-right flex-shrink-0">
+                        <div>
+                            <div class="flex items-baseline justify-center md:justify-end gap-2">
+                                <div class="text-4xl font-bold font-mono text-gray-100" id="stock-price"></div>
+                                <div class="text-base text-gray-400" id="currency"></div>
+                            </div>
+                            <div id="analyst-price-target" class="text-xs text-center md:text-right mt-1"></div>
+                        </div>
+                       
+                        <div id="overall-assessment-badge" class="mt-2"></div>
+                        <div id="last-updated" class="text-xs text-gray-500 text-center md:text-right mt-1"></div>                       
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Score Dashboard -->
+        <section id="scores" class="px-6 py-8">
+            <!-- Score Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Quality Score Card -->
+                <div class="score-card rounded-xl p-6 data-loaded" id="quality-card">
+                    <div class="flex flex-col flex-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-semibold text-gray-400">Enterprise Quality</h3>
+                            <span class="text-xs text-gray-500" id="quality-rank">Top 15%</span>
+                        </div>
+
+                        <div class="text-center my-5">
+                            <div class="w-48 h-48 mx-auto relative">
+                                <svg viewBox="0 0 200 200" class="w-full h-full" style="transform: rotate(135deg);">
+                                    <defs>
+                                        <linearGradient id="qualityGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" class="quality-gradient-start" />
+                                            <stop offset="100%" class="quality-gradient-end" />
+                                        </linearGradient>
+                                        <filter id="qualityGlow">
+                                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    <circle cx="100" cy="100" r="88" class="progress-ring-bg" 
+                                            stroke-dasharray="415 553" pathLength="553" />
+                                    <circle cx="100" cy="100" r="88" 
+                                            stroke="url(#qualityGradient)"
+                                            class="progress-ring-fg progress-ring"
+                                            stroke-dasharray="0 553"
+                                            pathLength="553"
+                                            id="quality-circle"
+                                            filter="url(#qualityGlow)" />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                    <div class="text-6xl font-bold score-value" id="quality-score-value"></div>
+                                    <div class="absolute bottom-2 w-full flex justify-between px-5 text-sm text-gray-500 font-medium">
+                                        <span>0</span>
+                                        <span>109</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="quality-sub-scores-container" class="space-y-3 mt-[16px]">
+                            </div>
+                    </div>
+
+                    <div class="mt-auto pt-4 text-center cursor-pointer group magnetic" onclick="toggleScoreExpansion('quality')">
+                        <svg class="w-6 h-6 text-gray-400 expand-icon mx-auto group-hover:text-gray-300 transition-colors" id="quality-expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                        <button class="mobile-expand-button" onclick="event.stopPropagation(); openMobileOverlay('quality')">View Details</button>
+                    </div>
+                </div>
+                <!-- IDQ Score Card -->
+                <div class="score-card rounded-xl p-6 data-loaded" id="idq-card">
+                    <div class="flex flex-col flex-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-semibold text-gray-400">Innovation & Disruption Quotient</h3>
+                            <span class="text-xs text-gray-500" id="idq-rank-placeholder"></span>
+                        </div>
+
+                        <div <div class="text-center my-2">
+                            <div class="w-40 h-40 mx-auto relative" id="idq-visual-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="17.5 20 29 26" class="w-full h-full">
+                                    <defs>
+                                        <filter id="idqGlow-new">
+                                            <feGaussianBlur stdDeviation="0.7" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                        <filter id="score-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-color="#010409" flood-opacity="0.5"/>
+                                        </filter>
+                                        <!-- This new path is ONLY for the animation -->
+                                        <path id="animation-ring" fill="none" d="M26.962,23.149h10.077c2.23,0,4.038,1.808,4.038,4.038v8.077c0,2.23-1.808,4.038-4.038,4.038h-10.077c-2.23,0-4.038-1.808-4.038-4.038v-8.077C22.923,24.957,24.731,23.149,26.962,23.149z"/>
+
+                                        <g id="chip-paths" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <g stroke-width="0.8">
+                                                <use href="#animation-ring" /> <!-- Re-use the path for drawing -->
+                                                <line x1="26.602" y1="23.386" x2="26.602" y2="21.87"/> <line x1="26.602" y1="39.117" x2="26.602" y2="42.149"/>
+                                                <line x1="22.923" y1="27.995" x2="19.079" y2="27.995"/> <line x1="22.923" y1="34.457" x2="19.079" y2="34.457"/>
+                                                <line x1="37.396" y1="23.386" x2="37.396" y2="21.87"/> <line x1="37.396" y1="39.117" x2="37.396" y2="42.149"/>
+                                                <line x1="41.075" y1="27.995" x2="44.919" y2="27.995"/> <line x1="41.075" y1="34.457" x2="44.919" y2="34.457"/>
+                                            </g>
+                                            <g stroke-width="0.6" transform="translate(-4.8 -4.875) scale(1.15)">
+                                                <path d="M28.97,27.166h6.06c1.121,0,2.03,0.909,2.03,2.03v4.06c0,1.121-0.909,2.03-2.03,2.03h-6.06c-1.121,0-2.03-0.909-2.03-2.03v-4.06C26.94,28.075,27.849,27.166,28.97,27.166z"/>
+                                            </g>
+                                        </g>
+                                    </defs>
+                                    <use href="#chip-paths" stroke="currentColor" filter="url(#idqGlow-new)"/>
+                                    <use href="#animation-ring" stroke="currentColor" stroke-width="1.2" class="idq-animated-dots"/>
+                                     <text id="idq-score-value" x="32" y="31.8" dominant-baseline="middle" font-size="7" font-weight="bold" text-anchor="middle" fill="currentColor" filter="url(#score-shadow)"></text>
+                                </svg>
+                            </div>
+                        </div>                        <div class="space-y-3 mt-0">
+                            <div id="idq-grade-bar" class="grade-bar max-w-56 mx-auto"></div>
+                            <div id="idq-grade-indicator-container" class="grade-indicator-container max-w-56 mx-auto"></div>
+                            <p class="text-xs text-gray-300 leading-relaxed pt-2 text-left max-w-xs mx-auto" id="idq-summary-text"></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-4 text-center cursor-pointer group magnetic" onclick="toggleScoreExpansion('idq')">
+                        <svg class="w-6 h-6 text-gray-400 expand-icon mx-auto group-hover:text-gray-300 transition-colors" id="idq-expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                        <button class="mobile-expand-button" onclick="event.stopPropagation(); openMobileOverlay('idq')">View Details</button>
+                    </div>
+                </div>
+                <!-- Anti-Fragile Score Card -->
+                <div class="score-card rounded-xl p-6 data-loaded" id="antifragile-card">
+                    <div class="flex flex-col flex-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-sm font-semibold text-gray-400">Anti-Fragile Score</h3>
+                            <span class="text-xs text-gray-500" id="antifragile-rank-placeholder"></span>
+                        </div>
+                        
+                        <div class="text-center my-auto">
+                            <div class="w-48 h-48 mx-auto mb-4 relative antifragile-visual-container" id="antifragile-visual-container">
+                                <svg viewBox="0 15 200 200" class="w-full h-full" overflow="visible">
+                                    <defs>
+                                        <linearGradient id="antiFragileGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" class="antifragile-gradient-start" />
+                                            <stop offset="100%" class="antifragile-gradient-end" />
+                                        </linearGradient>
+                            
+                                        <filter id="animatedGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feTurbulence type="fractalNoise" baseFrequency="0.02 0.05" numOctaves="3" seed="0" result="noise">
+                                                <animate attributeName="seed" from="0" to="100" dur="10s" repeatCount="indefinite" />
+                                            </feTurbulence>
+                                            <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" />
+                                            <feGaussianBlur stdDeviation="12" />
+                                        </filter>
+                            
+                                        <path id="shieldPath" d="M40,40 L100,25 L160,40 L160,100 C160,120 100,165 100,165 C100,165 40,120 40,100 Z" />
+                            
+                                        <path id="shieldPathModifiedTop" d="M40,40 C50,45 80,45 100,30 C120,45 150,45 160,40 L160,100 C160,120 100,165 100,165 C100,165 40,120 40,100 Z" />
+                                    </defs>
+                            
+                                    <g class="shield-tier shield-weak" fill="none" stroke="url(#antiFragileGradient)" stroke-linecap="round">
+                                        <use href="#shieldPath" stroke-width="4" />
+                                        <path d="M90,75 L110,105" stroke-width="4.5" />
+                                    </g>
+                            
+                                    <g class="shield-tier shield-mid" fill="none" stroke="url(#antiFragileGradient)">
+                                        <use href="#shieldPath" fill="currentColor" fill-opacity="0.1" />
+                                        <use href="#shieldPath" stroke-width="5" />
+                                        <g stroke-width="4" stroke-linecap="round">
+                                            <path d="M160,65 L180,75 L160,85" />
+                                            <path d="M40,65 L20,75 L40,85" />
+                                        </g>
+                                    </g>
+                            
+                                    <g class="shield-tier shield-strong">
+                                        <use href="#shieldPathModifiedTop" fill="none" stroke="url(#antiFragileGradient)" stroke-width="20" filter="url(#animatedGlow)" opacity="0.6" transform="translate(0, 5)" />
+                                        <use href="#shieldPathModifiedTop" fill="#0D1117" stroke="none" />
+                                        <g fill="none" stroke="url(#antiFragileGradient)" stroke-linecap="round">
+                                            <use href="#shieldPathModifiedTop" stroke-width="6" />
+                                            <g stroke-width="4">
+                                                <path d="M160,65 L180,75 L160,85" />
+                                                <path d="M40,65 L20,75 L40,85" />
+                                            </g>
+                                        </g>
+                                    </g>
+                            
+                                    <g class="shield-tier shield-unbreakable">
+                                        <use href="#shieldPathModifiedTop" fill="none" stroke="url(#antiFragileGradient)" stroke-width="22" filter="url(#animatedGlow)" opacity="0.7" transform="translate(0, 5)" />
+                                        <use href="#shieldPathModifiedTop" fill="#0D1117" stroke="none" />
+                                        <g fill="none" stroke="url(#antiFragileGradient)" stroke-linecap="round">
+                                            <use href="#shieldPathModifiedTop" stroke-width="7" />
+                                            <g stroke-width="4.5">
+                                            <path d="M160,65 L180,75 L160,85" />
+                                            <path d="M40,65 L20,75 L40,85" />
+                                            <path d="M45,37 C50,27 55,27 55,37" />
+                                            <path d="M145,37 C150,27 155,27 155,37" />
+                                        </g>
+                                        </g>
+                                    </g>
+                            
+                                    <text id="antifragile-score-value" x="100" y="95" text-anchor="middle" dominant-baseline="middle" class="text-7xl font-bold score-value" fill="currentColor"></text>
+                                    <text x="100" y="128" text-anchor="middle" dominant-baseline="middle" class="text-sm text-gray-500 font-medium"> of 17 </text>
+                                </svg>
+                            </div>                            
+                            <div class="grid grid-cols-3 gap-2 text-center" id="antifragile-components"></div>
+                        </div>
+                    </div>
+                    <div class="mt-auto pt-4 text-center cursor-pointer group magnetic" onclick="toggleScoreExpansion('antifragile')">
+                        <svg class="w-6 h-6 text-gray-400 expand-icon mx-auto group-hover:text-gray-300 transition-colors" id="antifragile-expand-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                        <button class="mobile-expand-button" onclick="event.stopPropagation(); openMobileOverlay('antifragile')">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expanded Content Panels (hidden by default) -->
+            <div class="expanded-content mt-6" id="quality-expanded"></div>
+            <div class="expanded-content mt-6" id="idq-expanded"></div>
+            <div class="expanded-content mt-6" id="antifragile-expanded"></div>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis" class="px-6 py-8">
+            <h2 class="text-2xl font-bold mb-6 data-loaded">Company Analysis</h2>
+            <!-- Investment Thesis -->
+            <div class="bg-gradient-to-r from-purple-900/20 to-blue-900/20 rounded-xl p-6 mb-6 border border-purple-500/30">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 100 4h2a2 2 0 100-4h2a1 1 0 100-2 2 2 0 00-2 2v11a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H6z" clip-rule="evenodd"></path>
+                        </svg>
+                        AI-Generated Investment Thesis
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400">Based on comprehensive analysis</span>
+                        <!-- FIX 1: This is the new tooltip trigger from your request -->
+                        <span class="has-reasoning cursor-help" id="thesis-tooltip-trigger">
+                            <span class="reasoning-icon text-base">💡</span>
+                        </span>
+                    </div>
+                </div>
+                <div id="investment-thesis" class="text-sm text-gray-400 leading-relaxed space-y-3"></div>
+            </div>
+            
+            <div id="analysis-content" class="data-loaded"></div>
+        </section>
+
+        <!-- Key Financial Metrics -->
+        <section id="key-financials-metrics" class="px-6 py-8">
+            <h2 class="text-2xl font-bold mb-6 data-loaded">Key Financial Metrics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gradient-to-br from-[#0D1117] to-[#161B22] rounded-lg p-6 border border-[#30363D] text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2 flex items-center justify-center gap-2">
+                        Piotroski F-Score
+                        <span class="has-reasoning cursor-help" data-tooltip="A measure of financial strength from 0-9. Higher scores (8-9) indicate very strong financial health and are often value investment targets. Scores below 3 indicate significant financial risk.">
+                            <span class="reasoning-icon text-base">💡</span>
+                        </span>
+                    </h3>
+                    <div class="text-3xl font-bold" id="piotroski-score">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Financial Strength (0-9)</div>
+                </div>
+                <div class="bg-gradient-to-br from-[#0D1117] to-[#161B22] rounded-lg p-6 border border-[#30363D] text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2 flex items-center justify-center gap-2">
+                        Altman Z-Score
+                        <span class="has-reasoning cursor-help" data-tooltip="Predicts bankruptcy probability. Below 1.8 = high risk (distress zone). 1.8-3.0 = moderate risk (grey zone). Above 3.0 = low risk (safe zone). Higher scores indicate stronger financial safety.">
+                            <span class="reasoning-icon text-base">💡</span>
+                        </span>
+                    </h3>
+                    <div class="text-3xl font-bold" id="altman-score">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Bankruptcy Risk</div>
+                </div>
+                <div class="bg-gradient-to-br from-[#0D1117] to-[#161B22] rounded-lg p-6 border border-[#30363D] text-center">
+                    <h3 class="text-sm font-medium text-gray-400 mb-2 flex items-center justify-center gap-2">
+                        Working Capital
+                        <span class="has-reasoning cursor-help" data-tooltip="Current assets minus current liabilities. Positive working capital means the company can pay its short-term obligations. Negative indicates potential liquidity issues.">
+                            <span class="reasoning-icon text-base">💡</span>
+                        </span>
+                    </h3>
+                    <div class="text-3xl font-bold" id="working-capital">-</div>
+                    <div class="text-xs text-gray-500 mt-1">Liquidity Position</div>
+                </div>
+            </div>
+            
+            <div class="card rounded-xl overflow-hidden mb-8 data-loaded" id="financial-metrics-table"></div>
+            
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-4">Earnings Per Share (EPS) Trajectory</h3>
+                <div class="bg-gradient-to-br from-[#0D1117] to-[#161B22] rounded-xl p-6 border border-[#30363D]">
+                    <div id="chart-tabs" class="flex justify-start gap-2 mb-4">
+                        <button data-metric="revenue" class="chart-tab px-4 py-2 text-xs font-semibold rounded-md transition-colors">Revenue</button>
+                        <button data-metric="netIncome" class="chart-tab px-4 py-2 text-xs font-semibold rounded-md transition-colors">Net Income</button>
+                        <button data-metric="eps" class="chart-tab px-4 py-2 text-xs font-semibold rounded-md transition-colors active-tab">EPS</button>
+                    </div>
+                    <canvas id="earnings-chart" class="w-full" height="200"></canvas>
+                    <div id="currency-note" class="text-xs text-gray-500 mt-2 text-center"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="financials-data" class="px-6 py-8">
+            <h2 class="text-2xl font-bold mb-6 data-loaded">Detailed Financial Data</h2>
+            <div class="financial-table bg-gradient-to-br from-[#0D1117] to-[#161B22] border border-[#30363D] rounded-xl p-4 data-loaded" id="detailed-financials"></div>
+        </section>
+    </div> </div> <div class="tooltip" id="tooltip"></div>
+    <!-- Mobile Overlay Container -->
+    <div id="mobile-overlay" class="mobile-overlay">
+        <div class="mobile-overlay-close" onclick="closeMobileOverlay()">
+            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </div>
+        <div id="mobile-overlay-content" class="mobile-overlay-content"></div>
+    </div>
+    
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
