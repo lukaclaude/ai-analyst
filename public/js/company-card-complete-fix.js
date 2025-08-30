@@ -488,20 +488,39 @@ async function populateCompanyCard() {
     document.getElementById('company-name').textContent = portfolio.companyName;
     document.getElementById('ticker').textContent = portfolio.ticker;
     
-    // Logo
+    // Logo with multi-provider fallback
     if (financials?.General?.companyWebsite) {
-        const logoUrl = `https://logo.clearbit.com/${new URL(financials.General.companyWebsite).hostname}`;
+        const hostname = new URL(financials.General.companyWebsite).hostname;
         const logoEl = document.getElementById('company-logo');
+        const fallbackEl = document.getElementById('logo-fallback');
+        
         if (logoEl) {
-            logoEl.src = logoUrl;
-            logoEl.onerror = function() {
-                this.style.display = 'none';
-                const fallback = document.getElementById('logo-fallback');
-                if (fallback) {
-                    fallback.style.display = 'flex';
-                    fallback.textContent = portfolio.ticker[0];
-                }
-            };
+            // Check cache first
+            const cachedLogos = JSON.parse(localStorage.getItem('cachedCompanyLogos') || '{}');
+            const ticker = portfolio.ticker;
+            
+            if (cachedLogos[ticker]) {
+                // Use cached logo URL
+                logoEl.src = cachedLogos[ticker];
+                logoEl.onload = function() {
+                    this.style.display = 'block';
+                    if (fallbackEl) fallbackEl.style.display = 'none';
+                };
+                logoEl.onerror = function() {
+                    // Cached URL failed, try fresh fetch
+                    delete cachedLogos[ticker];
+                    localStorage.setItem('cachedCompanyLogos', JSON.stringify(cachedLogos));
+                    tryMultipleLogoProviders(logoEl, fallbackEl, hostname, ticker);
+                };
+            } else {
+                // No cache, try multiple providers
+                tryMultipleLogoProviders(logoEl, fallbackEl, hostname, ticker);
+            }
+            
+            // Set fallback text
+            if (fallbackEl) {
+                fallbackEl.textContent = portfolio.ticker[0];
+            }
         }
     }
     
@@ -932,15 +951,16 @@ async function populateCompanyCard() {
     const afSubScoresContainer = document.getElementById('antifragile-sub-scores-container');
     if (afSubScoresContainer && antiFragile?.groupScores) {
         const subScores = [
-            { label: 'Strategic Core', value: antiFragile.groupScores.barbellMethodScore || 0, max: 13 },
-            { label: 'Financial Fortitude', value: antiFragile.groupScores.financialFortitudeScore || 0, max: 7 },
-            { label: 'Skin in the Game', value: antiFragile.groupScores.skinInTheGameScore || 0, max: 5 }
+            { label: 'Strategic Core', value: antiFragile.groupScores.barbellMethodScore || 0, max: 13, min: -1 },
+            { label: 'Financial Fortitude', value: antiFragile.groupScores.financialFortitudeScore || 0, max: 1, min: -4 },
+            { label: 'Skin in the Game', value: antiFragile.groupScores.skinInTheGameScore || 0, max: 3, min: -2 }
         ];
         
         // Use the unified renderMetricBar function for consistent styling
         afSubScoresContainer.innerHTML = subScores.map(score => 
             renderMetricBar(score.label, score.value, score.max, { 
-                isNegative: false 
+                isNegative: false,
+                min: score.min 
             })
         ).join('');
     }
@@ -1485,6 +1505,62 @@ function updateRecentCompanies(ticker, companyName, website = null) {
     displayRecentCompanies();
 }
 
+// Helper function to try multiple logo providers
+function tryMultipleLogoProviders(logoEl, fallbackEl, hostname, ticker) {
+    const providers = [
+        {
+            name: 'Clearbit',
+            url: `https://logo.clearbit.com/${hostname}`,
+            size: 'high'
+        },
+        {
+            name: 'Google Favicons',
+            url: `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`,
+            size: 'medium'
+        },
+        {
+            name: 'DuckDuckGo',
+            url: `https://icons.duckduckgo.com/ip3/${hostname}.ico`,
+            size: 'low'
+        }
+    ];
+    
+    let providerIndex = 0;
+    const cachedLogos = JSON.parse(localStorage.getItem('cachedCompanyLogos') || '{}');
+    
+    function tryNextProvider() {
+        if (providerIndex >= providers.length) {
+            // All providers failed
+            console.log(`All logo providers failed for ${ticker}`);
+            logoEl.style.display = 'none';
+            if (fallbackEl) fallbackEl.style.display = 'flex';
+            return;
+        }
+        
+        const provider = providers[providerIndex];
+        console.log(`Trying ${provider.name} for ${ticker}: ${provider.url}`);
+        
+        logoEl.src = provider.url;
+        logoEl.onload = function() {
+            console.log(`${provider.name} loaded successfully for ${ticker}`);
+            this.style.display = 'block';
+            if (fallbackEl) fallbackEl.style.display = 'none';
+            
+            // Cache the successful URL
+            cachedLogos[ticker] = provider.url;
+            localStorage.setItem('cachedCompanyLogos', JSON.stringify(cachedLogos));
+        };
+        
+        logoEl.onerror = function() {
+            console.log(`${provider.name} failed for ${ticker}`);
+            providerIndex++;
+            tryNextProvider();
+        };
+    }
+    
+    tryNextProvider();
+}
+
 function displayRecentCompanies() {
     const container = document.getElementById('recent-companies');
     if (!container) return;
@@ -1527,20 +1603,28 @@ function displayRecentCompanies() {
         if (logoEl && company.website) {
             try {
                 const hostname = new URL(company.website).hostname;
-                const logoUrl = `https://logo.clearbit.com/${hostname}`;
-                console.log(`Logo URL for ${company.ticker}: ${logoUrl}`);
                 
-                logoEl.src = logoUrl;
-                logoEl.onload = function() {
-                    console.log(`Logo loaded successfully for ${company.ticker}`);
-                    this.style.display = 'block';
-                    if (fallbackEl) fallbackEl.style.display = 'none';
-                };
-                logoEl.onerror = function() {
-                    console.log(`Logo load failed for ${company.ticker}`);
-                    this.style.display = 'none';
-                    if (fallbackEl) fallbackEl.style.display = 'flex';
-                };
+                // Check if we have a cached logo URL
+                const cachedLogos = JSON.parse(localStorage.getItem('cachedCompanyLogos') || '{}');
+                
+                if (cachedLogos[company.ticker]) {
+                    // Use cached logo URL
+                    console.log(`Using cached logo for ${company.ticker}: ${cachedLogos[company.ticker]}`);
+                    logoEl.src = cachedLogos[company.ticker];
+                    logoEl.onload = function() {
+                        this.style.display = 'block';
+                        if (fallbackEl) fallbackEl.style.display = 'none';
+                    };
+                    logoEl.onerror = function() {
+                        // Cached URL failed, try fresh fetch
+                        delete cachedLogos[company.ticker];
+                        localStorage.setItem('cachedCompanyLogos', JSON.stringify(cachedLogos));
+                        tryMultipleLogoProviders(logoEl, fallbackEl, hostname, company.ticker);
+                    };
+                } else {
+                    // No cache, try multiple providers
+                    tryMultipleLogoProviders(logoEl, fallbackEl, hostname, company.ticker);
+                }
             } catch (e) {
                 console.log(`Invalid URL for ${company.ticker}: ${company.website}`, e);
             }
@@ -2306,13 +2390,23 @@ function renderMetricBar(label, value, max, options = {}) {
         isNegative = false, 
         showReasoning = false, 
         reasoning = '',
-        customClass = ''
+        customClass = '',
+        min = 0  // Add min parameter for handling negative ranges
     } = options;
     
-    // Calculate percentage
-    const percentage = isNegative ? 
-        Math.abs(value / max * 100) : 
-        (value / max * 100);
+    // Calculate percentage for metrics with negative ranges
+    let percentage;
+    if (min < 0) {
+        // For metrics with negative range, calculate percentage from the full range
+        const range = max - min;
+        const adjustedValue = value - min;
+        percentage = (adjustedValue / range) * 100;
+    } else {
+        // Original calculation for positive-only ranges
+        percentage = isNegative ? 
+            Math.abs(value / max * 100) : 
+            (value / max * 100);
+    }
     
     // Get color data based on percentage
     const scoreData = getScoreColor(percentage);
@@ -2323,10 +2417,10 @@ function renderMetricBar(label, value, max, options = {}) {
     const barColor = (isNegative && value < 0) ? 
         'linear-gradient(90deg, #ef4444, #dc2626)' : gradient;
     
-    // Format value display
-    const valueDisplay = isNegative && value < 0 ? 
+    // Format value display - show actual range for negative min
+    const valueDisplay = min < 0 ? 
         value.toString() : 
-        `${value}/${max}`;
+        (isNegative && value < 0 ? value.toString() : `${value}/${max}`);
     
     return `
         <div class="subscore-item metric-item ${customClass} ${showReasoning ? 'has-reasoning' : ''}" 
@@ -2336,8 +2430,12 @@ function renderMetricBar(label, value, max, options = {}) {
                     ${label}
                     ${showReasoning ? '<span class="reasoning-icon">ⓘ</span>' : ''}
                 </span>
-                <span class="text-xs font-semibold" style="color: ${scoreData.color}">
-                    ${valueDisplay}
+                <span class="text-xs font-semibold">
+                    <span style="color: ${scoreData.color}">${value}</span>
+                    ${min < 0 ? 
+                        `<span class="text-xs subtle-text"> (${min} to ${max})</span>` : 
+                        `<span class="subtle-text">/${max}</span>`
+                    }
                 </span>
             </div>
             <div class="metric-bar">

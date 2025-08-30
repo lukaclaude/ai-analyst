@@ -54,7 +54,7 @@ These combine to form an Overall Assessment that categorizes companies into tier
 - Industry Powerhouse (75-89)
 - Growth Compounder (65-74)
 - Mixed Conviction (45-64)
-- Proceed with Caution (<45)
+- Risk implied  (<45)
 
 ### Evolution History
 1. **Original**: `company-card_OLD.html` - 5000+ line monolith that worked perfectly
