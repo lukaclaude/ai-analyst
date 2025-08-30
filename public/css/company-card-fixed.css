@@ -1067,12 +1067,13 @@ body.light-theme .glass-morphism {
    ============================================ */
 .metric-bar {
     background: linear-gradient(90deg, #161B22 0%, #1C2128 100%);
-    height: 8px;
-    border-radius: 4px;
+    height: 10px;
+    border-radius: 5px;
     overflow: hidden;
     position: relative;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-    margin-top: 4px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    margin-top: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .metric-fill {
@@ -1081,6 +1082,10 @@ body.light-theme .glass-morphism {
     position: relative;
     overflow: hidden;
     border-radius: 4px;
+    /* Add depth with inner shadow */
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .metric-fill-negative {
@@ -1090,9 +1095,32 @@ body.light-theme .glass-morphism {
     overflow: hidden;
     border-radius: 4px;
     float: right;
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
-/* Shimmer effect for excellent scores (80%+) */
+/* Enhanced shimmer effect for excellent scores (80%+) */
+.shimmer-effect {
+    position: relative;
+}
+
+.shimmer-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 100%
+    );
+    opacity: 0.8;
+}
+
 .shimmer-effect::after {
     content: '';
     position: absolute;
@@ -1103,10 +1131,10 @@ body.light-theme .glass-morphism {
     background: linear-gradient(
         90deg,
         transparent,
-        rgba(255, 255, 255, 0.2),
+        rgba(255, 255, 255, 0.3),
         transparent
     );
-    animation: shimmer 2s infinite;
+    animation: shimmer 3s infinite;
 }
 
 @keyframes shimmer {
@@ -1115,10 +1143,24 @@ body.light-theme .glass-morphism {
     }
 }
 
+/* Subscore items in main cards */
+.subscore-item {
+    padding: 8px 0;
+}
+
+.subscore-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 /* Light theme adjustments for metric bars */
 .light-theme .metric-bar {
-    background: #e9ecef;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 100%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.light-theme .subscore-item:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Metric item styling */
@@ -1709,11 +1751,6 @@ body.light-theme .glass-morphism {
 }
 
 
-#chart-timeframe-buttons button.active {
-    background: var(--color-accent-purple);
-    color: white;
-}
-
 /* Performance Tabs */
 .performance-tabs {
     display: flex;
@@ -1737,9 +1774,10 @@ body.light-theme .glass-morphism {
 }
 
 .tab-button.active {
-    background: var(--tier-color, var(--color-score-purple)) !important;
-    color: white !important;
+    background: var(--glass-bg-active) !important;
+    color: var(--color-text-primary) !important;
     border-color: var(--tier-color, var(--color-score-purple)) !important;
+    font-weight: 600;
 }
 
 /* Removed conflicting min-height rule that was affecting header chart */
@@ -1767,22 +1805,25 @@ body.light-theme .glass-morphism {
 }
 
 .data-tab-button.active {
-    background: var(--tier-color, var(--color-score-purple)) !important;
-    color: white !important;
+    background: var(--glass-bg-active) !important;
+    color: var(--color-text-primary) !important;
     border-color: var(--tier-color, var(--color-score-purple)) !important;
+    font-weight: 600;
 }
 
-/* Light theme fixes for tab buttons */
+/* Light theme fixes for tab buttons - glassmorphic style matching chart buttons */
 .light-theme .tab-button.active {
-    background: var(--tier-color, var(--color-score-purple)) !important;
-    color: white !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: var(--color-text-primary) !important;
     border-color: var(--tier-color, var(--color-score-purple)) !important;
+    font-weight: 600;
 }
 
 .light-theme .data-tab-button.active {
-    background: var(--tier-color, var(--color-score-purple)) !important;
-    color: white !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: var(--color-text-primary) !important;
     border-color: var(--tier-color, var(--color-score-purple)) !important;
+    font-weight: 600;
 }
 
 /* Financial Tables */

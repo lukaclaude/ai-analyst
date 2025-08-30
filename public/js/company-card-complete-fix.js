@@ -843,27 +843,12 @@ async function populateCompanyCard() {
             { label: 'Gauntlet', value: parseFloat(groupScores.Gauntlet_Group_Score) || 0, max: -30, isNegative: true }
         ];
         
-        subScoresContainer.innerHTML = subScores.map(score => {
-            const percentage = score.isNegative ? 
-                Math.abs(score.value / score.max * 100) : 
-                (score.value / score.max * 100);
-            const barColor = score.isNegative && score.value < 0 ? '#ef4444' : qualityColors.color;
-            
-            return `
-                <div class="subscore-item">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs muted-heading">${score.label}</span>
-                        <span class="text-xs font-semibold" style="color: ${barColor}">
-                            ${score.value}${score.isNegative ? '' : `/${score.max}`}
-                        </span>
-                    </div>
-                    <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-1000 ease-out"
-                             style="width: ${percentage}%; background: ${barColor}"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        // Use the unified renderMetricBar function for consistent styling
+        subScoresContainer.innerHTML = subScores.map(score => 
+            renderMetricBar(score.label, score.value, score.max, { 
+                isNegative: score.isNegative || false 
+            })
+        ).join('');
     }
     
     // ========================================================================
@@ -952,25 +937,12 @@ async function populateCompanyCard() {
             { label: 'Skin in the Game', value: antiFragile.groupScores.skinInTheGameScore || 0, max: 5 }
         ];
         
-        afSubScoresContainer.innerHTML = subScores.map(score => {
-            const percentage = Math.abs(score.value / score.max * 100);
-            const barColor = score.value < 0 ? '#ef4444' : afColors.color;
-            
-            return `
-                <div class="subscore-item">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs muted-heading">${score.label}</span>
-                        <span class="text-xs font-semibold" style="color: ${barColor}">
-                            ${score.value}/${score.max}
-                        </span>
-                    </div>
-                    <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-1000 ease-out"
-                             style="width: ${percentage}%; background: ${barColor}"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        // Use the unified renderMetricBar function for consistent styling
+        afSubScoresContainer.innerHTML = subScores.map(score => 
+            renderMetricBar(score.label, score.value, score.max, { 
+                isNegative: false 
+            })
+        ).join('');
     }
     
     // ========================================================================
@@ -2326,6 +2298,57 @@ function getGradientFill(percentage) {
     if (percentage >= 55) return 'linear-gradient(90deg, #eab308, #f59e0b)'; // Yellow (Average)
     if (percentage >= 32) return 'linear-gradient(90deg, #f97316, #ea580c)'; // Orange (Below Average)
     return 'linear-gradient(90deg, #ef4444, #dc2626)'; // Red (Poor)
+}
+
+// Unified function to render metric bars with consistent styling
+function renderMetricBar(label, value, max, options = {}) {
+    const { 
+        isNegative = false, 
+        showReasoning = false, 
+        reasoning = '',
+        customClass = ''
+    } = options;
+    
+    // Calculate percentage
+    const percentage = isNegative ? 
+        Math.abs(value / max * 100) : 
+        (value / max * 100);
+    
+    // Get color data based on percentage
+    const scoreData = getScoreColor(percentage);
+    const gradient = getGradientFill(percentage);
+    const shimmerClass = percentage >= 80 ? 'shimmer-effect' : '';
+    
+    // Determine bar color (red for negative values, gradient for positive)
+    const barColor = (isNegative && value < 0) ? 
+        'linear-gradient(90deg, #ef4444, #dc2626)' : gradient;
+    
+    // Format value display
+    const valueDisplay = isNegative && value < 0 ? 
+        value.toString() : 
+        `${value}/${max}`;
+    
+    return `
+        <div class="subscore-item metric-item ${customClass} ${showReasoning ? 'has-reasoning' : ''}" 
+             ${showReasoning ? `data-tooltip="${reasoning}"` : ''}>
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-xs muted-heading">
+                    ${label}
+                    ${showReasoning ? '<span class="reasoning-icon">ⓘ</span>' : ''}
+                </span>
+                <span class="text-xs font-semibold" style="color: ${scoreData.color}">
+                    ${valueDisplay}
+                </span>
+            </div>
+            <div class="metric-bar">
+                <div class="metric-fill ${shimmerClass}" 
+                     style="width: ${percentage}%; 
+                            background: ${barColor};
+                            box-shadow: ${percentage >= 80 ? `0 0 8px ${scoreData.glow}` : 'none'};">
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Helper function to get score color
