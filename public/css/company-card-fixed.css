@@ -1145,7 +1145,7 @@ body.light-theme .glass-morphism {
 
 /* Subscore items in main cards */
 .subscore-item {
-    padding: 8px 0;
+    padding: 4px 0;
 }
 
 .subscore-item:not(:last-child) {
@@ -1166,7 +1166,7 @@ body.light-theme .glass-morphism {
 /* Metric item styling */
 .metric-item {
     position: relative;
-    padding: 8px 0;
+    padding: 4px 0;
 }
 
 .metric-item.has-reasoning {
@@ -1232,7 +1232,7 @@ body.light-theme .glass-morphism {
     position: relative;
     overflow: visible;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 400px;
+    min-height: 450px;
     display: flex;
     flex-direction: column;
     box-shadow: 
@@ -1242,8 +1242,11 @@ body.light-theme .glass-morphism {
 }
 
 .score-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 
+        0 24px 48px rgba(0, 0, 0, 0.4),
+        0 0 40px var(--tier-glow, rgba(168, 85, 247, 0.1));
+    border-color: var(--tier-color, var(--glass-border-hover));
 }
 
 .score-card.expanded {
@@ -1280,9 +1283,9 @@ body.light-theme .glass-morphism {
 
 /* Quality Score Gauge */
 .quality-visual {
-    width: 200px;
-    height: 200px;
-    margin: var(--space-8) auto;
+    width: 180px;
+    height: 180px;
+    margin: var(--space-6) auto;
     position: relative;
 }
 
@@ -1310,8 +1313,56 @@ body.light-theme .glass-morphism {
 .idq-visual-container {
     width: 160px;
     height: 160px;
-    margin: var(--space-8) auto;
+    margin: var(--space-6) auto;
     position: relative;
+}
+
+/* IDQ Position Bar */
+.idq-position-bar {
+    position: relative;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.idq-position-bar .gradient-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(
+        to right,
+        #ef4444 0%,      /* Red */
+        #f97316 20%,     /* Orange */
+        #eab308 40%,     /* Yellow */
+        #22c55e 60%,     /* Green */
+        #3b82f6 80%,     /* Blue */
+        #a855f7 100%     /* Purple */
+    );
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.idq-position-bar .position-indicator {
+    position: absolute;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 12px solid currentColor;
+    transform: translateX(-50%);
+    transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.idq-tier-label {
+    position: absolute;
+    top: 18px;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .idq-animated-dots {
@@ -1329,8 +1380,46 @@ body.light-theme .glass-morphism {
 .antifragile-visual-container {
     width: 160px;
     height: 180px;
-    margin: var(--space-8) auto;
+    margin: var(--space-6) auto;
     position: relative;
+}
+
+/* Shield gradient stops - dynamic based on score tier */
+.shield-gradient-start {
+    stop-color: var(--tier-color, #3b82f6);
+}
+
+.shield-gradient-end {
+    stop-color: var(--tier-color-dark, #2563eb);
+}
+
+/* Shield states based on score */
+.antifragile-visual-container.shield-weak .shield-gradient-start {
+    stop-color: #ef4444;
+}
+.antifragile-visual-container.shield-weak .shield-gradient-end {
+    stop-color: #dc2626;
+}
+
+.antifragile-visual-container.shield-basic .shield-gradient-start {
+    stop-color: #f97316;
+}
+.antifragile-visual-container.shield-basic .shield-gradient-end {
+    stop-color: #ea580c;
+}
+
+.antifragile-visual-container.shield-strong .shield-gradient-start {
+    stop-color: #22c55e;
+}
+.antifragile-visual-container.shield-strong .shield-gradient-end {
+    stop-color: #16a34a;
+}
+
+.antifragile-visual-container.shield-legendary .shield-gradient-start {
+    stop-color: #a855f7;
+}
+.antifragile-visual-container.shield-legendary .shield-gradient-end {
+    stop-color: #9333ea;
 }
 
 .antifragile-shield-path {
@@ -1344,7 +1433,7 @@ body.light-theme .glass-morphism {
 
 /* Sub-scores */
 .subscore-item {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .subscore-item span {
@@ -1437,6 +1526,23 @@ body.light-theme .glass-morphism {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+/* Staggered animation for cards */
+.score-cards-grid > .score-card:nth-child(1) { animation-delay: 0.1s; }
+.score-cards-grid > .score-card:nth-child(2) { animation-delay: 0.2s; }
+.score-cards-grid > .score-card:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .score-card::after {
@@ -2707,70 +2813,114 @@ body.light-theme .glass-morphism {
    RANK BADGES & TOOLTIPS
    ============================================ */
 .rank-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: var(--radius-sm);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    display: inline-flex !important;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 10px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 11px;
-    font-weight: var(--weight-medium);
-    color: var(--color-text-muted);
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    color: white;
     position: relative;
     cursor: help;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+}
+
+/* Special styles for top 3 */
+.rank-badge.rank-gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 193, 7, 0.05) 100%);
+    border-color: rgba(255, 215, 0, 0.3);
+    color: #ffc107;
+    font-weight: 700;
+}
+
+.rank-badge.rank-gold::before {
+    content: '👑';
+    font-size: 10px;
+}
+
+.rank-badge.rank-silver {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.12) 0%, rgba(169, 169, 169, 0.05) 100%);
+    border-color: rgba(192, 192, 192, 0.3);
+    color: #b8b8b8;
+    font-weight: 700;
+}
+
+.rank-badge.rank-silver::before {
+    content: '⭐';
+    font-size: 10px;
+}
+
+.rank-badge.rank-bronze {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.12) 0%, rgba(184, 115, 51, 0.05) 100%);
+    border-color: rgba(205, 127, 50, 0.3);
+    color: #d4822f;
+    font-weight: 700;
+}
+
+.rank-badge.rank-bronze::before {
+    content: '🥉';
+    font-size: 10px;
 }
 
 .rank-badge:hover {
     background: var(--glass-bg-hover);
     color: var(--color-text-primary);
-    border-color: var(--color-accent-purple);
-    transform: scale(1.05);
+    border-color: var(--tier-color, var(--color-accent-purple));
+    transform: scale(1.08) translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Tooltip for rank badges */
-.rank-badge[data-tooltip]::after {
-    content: attr(data-tooltip);
+.rank-badge {
+    position: relative;
+    z-index: 1000;
+}
+
+.rank-badge[data-tooltip]:hover::after {
+    content: attr(data-tooltip) "\A" attr(data-percentile);
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.95);
-    color: white;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, 
+        rgba(20, 20, 30, 0.85) 0%, 
+        rgba(10, 10, 20, 0.95) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-md);
     font-size: 12px;
     font-weight: normal;
-    white-space: nowrap;
+    line-height: 1.5;
+    white-space: normal;
+    width: 260px;
     pointer-events: none;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: all 0.2s ease;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-
-.rank-badge[data-percentile]::before {
-    content: attr(data-percentile);
-    position: absolute;
-    top: calc(100% + 28px);
-    right: 0;
-    padding: 4px 8px;
-    background: var(--color-accent-purple);
-    color: white;
-    border-radius: var(--radius-sm);
-    font-size: 10px;
-    font-weight: var(--weight-bold);
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: all 0.2s ease;
-    z-index: 1000;
-}
-
-.rank-badge:hover::after,
-.rank-badge:hover::before {
     opacity: 1;
-    transform: translateY(0);
+    z-index: 999999;
+    box-shadow: 
+        0 0 1px rgba(255, 255, 255, 0.5),
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme tooltip background */
+.light-theme .rank-badge[data-tooltip]:hover::after {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.92) 0%, 
+        rgba(250, 250, 252, 0.98) 100%);
+    color: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 
+        0 0 1px rgba(0, 0, 0, 0.1),
+        0 4px 8px rgba(0, 0, 0, 0.08),
+        0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 /* Light theme adjustments for rank badges */

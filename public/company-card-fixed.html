@@ -154,7 +154,7 @@
                         <div class="score-card glass-morphism" id="quality-card" data-score="quality">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="text-sm font-semibold text-gray-400">Enterprise Quality</h3>
-                                <span class="text-xs text-gray-500" id="quality-rank"></span>
+                                <span class="text-xs text-gray-500 rank-badge" id="quality-rank">Loading...</span>
                             </div>
                             
                             <div class="quality-visual mx-auto">
@@ -164,20 +164,35 @@
                                             <stop offset="0%" class="quality-gradient-start" stop-color="#a855f7"/>
                                             <stop offset="100%" class="quality-gradient-end" stop-color="#9333ea"/>
                                         </linearGradient>
+                                        <filter id="quality-glow">
+                                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
                                     </defs>
                                     <circle cx="100" cy="100" r="88" class="progress-ring-bg"/>
                                     <circle cx="100" cy="100" r="88" 
                                             stroke="url(#qualityGradient)"
                                             class="progress-ring-fg"
                                             stroke-dasharray="0 553"
-                                            id="quality-circle"/>
+                                            id="quality-circle"
+                                            filter="url(#quality-glow)"/>
                                 </svg>
-                                <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
                                     <span id="quality-score-value" class="text-5xl font-bold">0</span>
+                                    <!-- Min/Max labels positioned at gauge endpoints -->
+                                    <div class="absolute" style="bottom: 15px; left: 20px;">
+                                        <span class="text-xs opacity-50">0</span>
+                                    </div>
+                                    <div class="absolute" style="bottom: 15px; right: 20px;">
+                                        <span class="text-xs opacity-50">109</span>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div id="quality-sub-scores-container" class="mt-6"></div>
+                            <div id="quality-sub-scores-container" style="margin-top: 12px;"></div>
                             
                             <button onclick="revealScoreDetails('quality')" class="reveal-btn mt-auto pt-4 w-full">
                                 <span class="reveal-text text-xs text-gray-400">View Details</span>
@@ -188,7 +203,7 @@
                         <div class="score-card glass-morphism" id="idq-card" data-score="idq">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="text-sm font-semibold text-gray-400">Innovation & Disruption</h3>
-                                <span class="text-xs text-gray-500" id="idq-rank"></span>
+                                <span class="text-xs text-gray-500 rank-badge" id="idq-rank-placeholder">Loading...</span>
                             </div>
                             
                             <div class="idq-visual-container">
@@ -225,7 +240,18 @@
                                 </svg>
                             </div>
                             
-                            <p id="idq-summary-text" class="text-xs secondary-text mt-4"></p>
+                            <!-- IDQ Gradient Position Bar -->
+                            <div class="idq-position-bar mt-4 mb-3">
+                                <div class="gradient-bar"></div>
+                                <div class="position-indicator" id="idq-position-indicator"></div>
+                                <div class="idq-tier-label" id="idq-tier-label"></div>
+                                <div class="flex justify-between text-xs opacity-50 mt-1">
+                                    <span>-3</span>
+                                    <span>12</span>
+                                </div>
+                            </div>
+                            
+                            <p id="idq-summary-text" class="text-xs secondary-text mt-2"></p>
                             
                             <button onclick="revealScoreDetails('idq')" class="reveal-btn mt-auto pt-4 w-full">
                                 <span class="reveal-text text-xs text-gray-400">View Details</span>
@@ -236,25 +262,52 @@
                         <div class="score-card glass-morphism" id="antifragile-card" data-score="antifragile">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="text-sm font-semibold text-gray-400">Anti-Fragile Score</h3>
-                                <span class="text-xs text-gray-500" id="antifragile-rank"></span>
+                                <span class="text-xs text-gray-500 rank-badge" id="antifragile-rank-placeholder">Loading...</span>
                             </div>
                             
                             <div class="antifragile-visual-container">
                                 <svg viewBox="0 0 200 200" class="w-full h-full">
                                     <defs>
-                                        <linearGradient id="shield-gradient">
-                                            <stop offset="0%" stop-color="#22c55e"/>
-                                            <stop offset="100%" stop-color="#16a34a"/>
+                                        <linearGradient id="shield-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" class="shield-gradient-start"/>
+                                            <stop offset="100%" class="shield-gradient-end"/>
                                         </linearGradient>
+                                        <filter id="shield-glow">
+                                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
                                     </defs>
-                                    <path class="antifragile-shield-path" fill="url(#shield-gradient)" 
-                                          d="M100 20 L150 50 L150 120 Q150 180 100 190 Q50 180 50 120 L50 50 Z"/>
-                                    <text id="antifragile-score-value" x="100" y="110" text-anchor="middle" 
-                                          font-size="48" font-weight="bold" fill="white">0</text>
+                                    <!-- Shield background (darker for contrast) -->
+                                    <path class="antifragile-shield-bg" 
+                                          d="M100 30 L145 55 L145 115 Q145 170 100 185 Q55 170 55 115 L55 55 Z"
+                                          fill="rgba(0, 0, 0, 0.3)"/>
+                                    <!-- Shield main shape -->
+                                    <path class="antifragile-shield-path" 
+                                          d="M100 30 L145 55 L145 115 Q145 170 100 185 Q55 170 55 115 L55 55 Z"
+                                          fill="none" 
+                                          stroke="url(#shield-gradient)" 
+                                          stroke-width="3"
+                                          filter="url(#shield-glow)"/>
+                                    <!-- Score text with shadow for visibility -->
+                                    <text id="antifragile-score-value" x="100" y="100" 
+                                          text-anchor="middle" 
+                                          font-size="46" 
+                                          font-weight="bold" 
+                                          fill="currentColor"
+                                          style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5))">0</text>
+                                    <!-- "of 17" label -->
+                                    <text x="100" y="135" 
+                                          text-anchor="middle" 
+                                          font-size="14" 
+                                          fill="currentColor"
+                                          opacity="0.7">of 17</text>
                                 </svg>
                             </div>
                             
-                            <div id="antifragile-sub-scores-container" class="mt-6"></div>
+                            <div id="antifragile-sub-scores-container" style="margin-top: 12px;"></div>
                             
                             <button onclick="revealScoreDetails('antifragile')" class="reveal-btn mt-auto pt-4 w-full">
                                 <span class="reveal-text text-xs text-gray-400">View Details</span>

@@ -884,6 +884,36 @@ async function populateCompanyCard() {
         idqValueEl.setAttribute('fill', idqColors.color);
     }
     
+    // Calculate position percentage (IDQ ranges from -3 to 12, total range of 15)
+    const position = ((idqScore + 3) / 15) * 100;
+    
+    // Update position indicator on gradient bar
+    const positionIndicator = document.getElementById('idq-position-indicator');
+    if (positionIndicator) {
+        positionIndicator.style.left = `${Math.max(0, Math.min(100, position))}%`;
+        positionIndicator.style.color = idqColors.color;
+    }
+    
+    // Add IDQ tier label below the indicator
+    const tierLabel = document.getElementById('idq-tier-label');
+    if (tierLabel) {
+        let tierName = '';
+        if (idqScore >= 11) {
+            tierName = 'Pioneer';
+        } else if (idqScore >= 9) {
+            tierName = 'Leader';
+        } else if (idqScore >= 6) {
+            tierName = 'Integrator';
+        } else if (idqScore >= 3) {
+            tierName = 'Optimizer';
+        } else {
+            tierName = 'Laggard';
+        }
+        tierLabel.textContent = tierName;
+        tierLabel.style.color = idqColors.color;
+        tierLabel.style.left = `${Math.max(0, Math.min(100, position))}%`;
+    }
+    
     // Update chip color
     const chipPaths = document.querySelector('#chip-paths');
     if (chipPaths) {
@@ -908,11 +938,11 @@ async function populateCompanyCard() {
         idqCard.style.setProperty('--score-color-rgb', idqColors.rgb);
     }
     
-    // Update summary text
+    // Update summary text - show full text, no truncation
     const idqSummaryEl = document.getElementById('idq-summary-text');
     if (idqSummaryEl && idqReport?.idqSummary) {
         const fullText = idqReport.idqSummary.replace(/\*\*/g, '');
-        idqSummaryEl.textContent = fullText.length > 200 ? fullText.substring(0, 197) + '...' : fullText;
+        idqSummaryEl.textContent = fullText;
     }
     
     // ========================================================================
@@ -925,14 +955,33 @@ async function populateCompanyCard() {
     const afValueEl = document.getElementById('antifragile-score-value');
     if (afValueEl) {
         animateValue(afValueEl, 0, antiFragileScore, 1000);
-        afValueEl.style.fill = afColors.color;
+        // Use currentColor so it inherits from card's text color
+        afValueEl.style.fill = '';
     }
     
-    // Update shield color
-    const shield = document.querySelector('.antifragile-shield-path');
-    if (shield) {
-        shield.style.fill = afColors.color;
-        shield.style.filter = `drop-shadow(0 4px 12px ${afColors.glow})`;
+    // Update shield visualization based on score tier
+    const shieldContainer = document.querySelector('.antifragile-visual-container');
+    if (shieldContainer) {
+        // Remove all existing shield state classes
+        shieldContainer.classList.remove('shield-weak', 'shield-basic', 'shield-strong', 'shield-legendary');
+        
+        // Add appropriate class based on score
+        if (antiFragileScore < 0) {
+            shieldContainer.classList.add('shield-weak');
+        } else if (antiFragileScore <= 5) {
+            shieldContainer.classList.add('shield-basic');
+        } else if (antiFragileScore <= 11) {
+            shieldContainer.classList.add('shield-strong');
+        } else {
+            shieldContainer.classList.add('shield-legendary');
+        }
+        
+        // Set CSS variable for tier color
+        const cardEl = document.getElementById('antifragile-card');
+        if (cardEl) {
+            cardEl.style.setProperty('--tier-color', afColors.color);
+            cardEl.style.setProperty('--tier-color-dark', afColors.class.replace('text-', '#'));
+        }
     }
     
     // Card glow, border, and set CSS variables for active state
@@ -1540,8 +1589,10 @@ async function fetchAndDisplayCompanyData(ticker) {
         // Populate everything
         await populateCompanyCard();
         
-        // Calculate rankings after scores are loaded
-        await calculateScoreRankings();
+        // Calculate rankings now that data is loaded
+        calculateScoreRankings().catch(err => {
+            console.error('Failed to calculate rankings:', err);
+        });
         
         hideLoadingState();
         
@@ -2976,7 +3027,7 @@ function renderMetricBar(label, value, max, options = {}) {
                     ${showReasoning ? '<span class="reasoning-icon">ⓘ</span>' : ''}
                 </span>
                 <span class="text-xs font-semibold">
-                    <span style="color: ${scoreData.color}">${value}</span>
+                    <span style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && value !== 0) || value < 0 ? '#ef4444' : 'white'}; font-weight: bold;">${value}</span>
                     ${min < 0 ? 
                         `<span class="text-xs subtle-text"> (${min} to ${max})</span>` : 
                         `<span class="subtle-text">/${max}</span>`
@@ -3014,7 +3065,6 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
     const reasoningIcon = reasoning ? '<span class="reasoning-icon">💡</span>' : '';
     
     if (isPenalty) {
-        const scoreColor = score < 0 ? '#ef4444' : '#10b981';
         // For penalty metrics, show a red bar from right if negative
         if (score < 0) {
             const penaltyPercentage = Math.min(Math.abs(score) * 10, 100); // Scale for visibility
@@ -3023,7 +3073,7 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                         <span class="text-sm font-mono">
-                            <span class="font-bold" style="color: ${scoreColor}">${formatNumber(score, 0)}</span>
+                            <span class="font-bold" style="color: ${score < 0 ? '#ef4444' : 'white'};">${formatNumber(score, 0)}</span>
                             <span class="subtle-text"> / 0</span>
                         </span>
                     </div>
@@ -3037,7 +3087,7 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
                     <div class="flex justify-between items-center">
                         <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                         <span class="text-sm font-mono">
-                            <span class="font-bold" style="color: ${scoreColor}">${formatNumber(score, 0)}</span>
+                            <span class="font-bold" style="color: ${score < 0 ? '#ef4444' : 'white'};">${formatNumber(score, 0)}</span>
                             <span class="subtle-text"> / 0</span>
                         </span>
                     </div>
@@ -3047,7 +3097,6 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
         const percentage = max > 0 ? (score / max) * 100 : 0;
         const colorPercentage = colorOverride !== null ? colorOverride : percentage;
         const gradient = getGradientFill(colorPercentage);
-        const textColor = getScoreTextColor(colorPercentage);
         const shimmerClass = percentage >= 80 ? 'shimmer-effect' : '';
         
         metricHtml = `
@@ -3055,7 +3104,7 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
                 <div class="flex justify-between items-center mb-1">
                     <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                     <span class="text-sm font-mono">
-                        <span class="font-bold" style="color: ${textColor}">${formatNumber(score)}</span>
+                        <span class="font-bold" style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && score !== 0) ? '#ef4444' : 'white'};">${formatNumber(score)}</span>
                         <span class="subtle-text">/${max}</span>
                     </span>
                 </div>
@@ -3558,17 +3607,22 @@ function showGroupDetails(groupName) {
 
 async function calculateScoreRankings() {
     try {
-        console.log('Calculating score rankings...');
+        // Get current company scores from state.currentStockData
+        if (!state.currentStockData) {
+            console.log('No stock data available yet');
+            return;
+        }
         
-        // Get current company scores
-        const currentTicker = state.ticker;
-        const qualityScore = parseFloat(document.getElementById('quality-score-value')?.textContent) || 0;
-        const idqScore = parseFloat(document.getElementById('idq-score-value')?.textContent) || 0;
-        const antiFragileScore = parseFloat(document.getElementById('antifragile-score-value')?.textContent) || 0;
+        const currentStockData = state.currentStockData;
+        const qualityScore = parseFloat(currentStockData.Portfolio?.qualityScore || 0);
+        const idqScore = parseFloat(currentStockData.LLM_Reports?.IDQ_Report?.idqScore || 0);
+        const antiFragileScore = parseFloat(currentStockData.Anti_Fragile_Score?.totalScore || 0);
+        
+        console.log('Current scores from state:', { qualityScore, idqScore, antiFragileScore });
         
         // Fetch all stocks to calculate rankings
         const db = firebase.firestore();
-        const stocksSnapshot = await db.collection('stocks').get();
+        const querySnapshot = await db.collection("stocks").get();
         
         const allScores = {
             quality: [],
@@ -3576,45 +3630,57 @@ async function calculateScoreRankings() {
             antiFragile: []
         };
         
-        // Collect all scores
-        stocksSnapshot.forEach(doc => {
+        // Collect all scores with their values
+        querySnapshot.forEach((doc) => {
             const data = doc.data();
-            
-            // Calculate Quality Score
-            if (data.Scores?.EnterpriseQualityScore?.overall_score) {
-                allScores.quality.push(data.Scores.EnterpriseQualityScore.overall_score);
+            if (data.Portfolio?.qualityScore) {
+                allScores.quality.push(parseFloat(data.Portfolio.qualityScore));
             }
-            
-            // Calculate IDQ Score
-            if (data.Scores?.IDQScore?.overall_score) {
-                allScores.idq.push(data.Scores.IDQScore.overall_score);
+            if (data.LLM_Reports?.IDQ_Report?.idqScore) {
+                allScores.idq.push(parseFloat(data.LLM_Reports.IDQ_Report.idqScore));
             }
-            
-            // Calculate Anti-Fragile Score
-            if (data.Scores?.AntiFragileScore?.overall_score) {
-                allScores.antiFragile.push(data.Scores.AntiFragileScore.overall_score);
+            if (data.Anti_Fragile_Score?.totalScore) {
+                allScores.antiFragile.push(parseFloat(data.Anti_Fragile_Score.totalScore));
             }
         });
         
-        // Sort scores in descending order (highest first)
+        // Sort arrays in descending order (highest first)
         allScores.quality.sort((a, b) => b - a);
         allScores.idq.sort((a, b) => b - a);
         allScores.antiFragile.sort((a, b) => b - a);
         
-        // Find rankings (1-based)
+        // Calculate current stock's position (1-based)
         const qualityRank = allScores.quality.findIndex(s => s <= qualityScore) + 1;
         const idqRank = allScores.idq.findIndex(s => s <= idqScore) + 1;
         const antiFragileRank = allScores.antiFragile.findIndex(s => s <= antiFragileScore) + 1;
         
         // Update UI with rankings and tooltips
         const qualityRankEl = document.getElementById('quality-rank');
-        const idqRankEl = document.getElementById('idq-rank');
-        const antiFragileRankEl = document.getElementById('antifragile-rank');
+        const idqRankEl = document.getElementById('idq-rank-placeholder');
+        const antiFragileRankEl = document.getElementById('antifragile-rank-placeholder');
+        
+        console.log('Rank elements found:', {
+            qualityRankEl: !!qualityRankEl,
+            idqRankEl: !!idqRankEl,
+            antiFragileRankEl: !!antiFragileRankEl
+        });
+        
+        console.log('Rankings:', { qualityRank, idqRank, antiFragileRank });
         
         if (qualityRankEl && qualityRank > 0) {
-            qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length}`;
+            // For non-medal ranks, make the rank number bold white
+            if (qualityRank > 30) {
+                qualityRankEl.innerHTML = `<span style="font-weight: bold; color: white;">#${qualityRank}</span> of ${allScores.quality.length}`;
+            } else {
+                qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length}`;
+            }
             qualityRankEl.setAttribute('data-tooltip', `This company ranks ${qualityRank} out of ${allScores.quality.length} companies in Enterprise Quality`);
             qualityRankEl.classList.add('rank-badge');
+            
+            // Add special class for top rankings
+            if (qualityRank <= 10) qualityRankEl.classList.add('rank-gold');
+            else if (qualityRank <= 20) qualityRankEl.classList.add('rank-silver');
+            else if (qualityRank <= 30) qualityRankEl.classList.add('rank-bronze');
             
             // Add percentile for context
             const percentile = Math.round(((allScores.quality.length - qualityRank + 1) / allScores.quality.length) * 100);
@@ -3622,18 +3688,38 @@ async function calculateScoreRankings() {
         }
         
         if (idqRankEl && idqRank > 0) {
-            idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length}`;
-            idqRankEl.setAttribute('data-tooltip', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in Innovation & Disruption Quotient`);
+            // For non-medal ranks, make the rank number bold white
+            if (idqRank > 30) {
+                idqRankEl.innerHTML = `<span style="font-weight: bold; color: white;">#${idqRank}</span> of ${allScores.idq.length}`;
+            } else {
+                idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length}`;
+            }
+            idqRankEl.setAttribute('data-tooltip', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in IDQ Ranking`);
             idqRankEl.classList.add('rank-badge');
+            
+            // Add special class for top rankings
+            if (idqRank <= 10) idqRankEl.classList.add('rank-gold');
+            else if (idqRank <= 20) idqRankEl.classList.add('rank-silver');
+            else if (idqRank <= 30) idqRankEl.classList.add('rank-bronze');
             
             const percentile = Math.round(((allScores.idq.length - idqRank + 1) / allScores.idq.length) * 100);
             idqRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
         }
         
         if (antiFragileRankEl && antiFragileRank > 0) {
-            antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length}`;
+            // For non-medal ranks, make the rank number bold white
+            if (antiFragileRank > 30) {
+                antiFragileRankEl.innerHTML = `<span style="font-weight: bold; color: white;">#${antiFragileRank}</span> of ${allScores.antiFragile.length}`;
+            } else {
+                antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length}`;
+            }
             antiFragileRankEl.setAttribute('data-tooltip', `This company ranks ${antiFragileRank} out of ${allScores.antiFragile.length} companies in Anti-Fragile Score`);
             antiFragileRankEl.classList.add('rank-badge');
+            
+            // Add special class for top rankings
+            if (antiFragileRank <= 10) antiFragileRankEl.classList.add('rank-gold');
+            else if (antiFragileRank <= 20) antiFragileRankEl.classList.add('rank-silver');
+            else if (antiFragileRank <= 30) antiFragileRankEl.classList.add('rank-bronze');
             
             const percentile = Math.round(((allScores.antiFragile.length - antiFragileRank + 1) / allScores.antiFragile.length) * 100);
             antiFragileRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
@@ -3643,6 +3729,59 @@ async function calculateScoreRankings() {
         
     } catch (error) {
         console.error('Error calculating score rankings:', error);
+        
+        // Use estimated rankings based on score percentiles as fallback
+        if (!state.currentStockData) return;
+        
+        const qualityScore = parseFloat(state.currentStockData.Portfolio?.qualityScore || 0);
+        const idqScore = parseFloat(state.currentStockData.LLM_Reports?.IDQ_Report?.idqScore || 0);
+        const antiFragileScore = parseFloat(state.currentStockData.Anti_Fragile_Score?.totalScore || 0);
+        
+        // Estimate rankings based on typical distributions
+        const totalCompanies = 118; // Known total from your data
+        
+        // Quality Score: 0-109, estimate rank based on percentile
+        const qualityPercentile = qualityScore / 109;
+        const qualityRank = Math.max(1, Math.round((1 - qualityPercentile) * totalCompanies));
+        
+        // IDQ Score: -3 to 12, estimate rank
+        const idqPercentile = (idqScore + 3) / 15;
+        const idqRank = Math.max(1, Math.round((1 - idqPercentile) * totalCompanies));
+        
+        // Anti-Fragile Score: -7 to 17, estimate rank
+        const afPercentile = (antiFragileScore + 7) / 24;
+        const antiFragileRank = Math.max(1, Math.round((1 - afPercentile) * totalCompanies));
+        
+        // Update UI with estimated rankings
+        const qualityRankEl = document.getElementById('quality-rank');
+        const idqRankEl = document.getElementById('idq-rank-placeholder');
+        const antiFragileRankEl = document.getElementById('antifragile-rank-placeholder');
+        
+        if (qualityRankEl) {
+            qualityRankEl.textContent = `~#${qualityRank} of ${totalCompanies}`;
+            qualityRankEl.setAttribute('data-tooltip', `Estimated rank ${qualityRank} out of ${totalCompanies} companies in Enterprise Quality`);
+            if (qualityRank <= 10) qualityRankEl.classList.add('rank-gold');
+            else if (qualityRank <= 20) qualityRankEl.classList.add('rank-silver');
+            else if (qualityRank <= 30) qualityRankEl.classList.add('rank-bronze');
+        }
+        
+        if (idqRankEl) {
+            idqRankEl.textContent = `~#${idqRank} of ${totalCompanies}`;
+            idqRankEl.setAttribute('data-tooltip', `Estimated rank ${idqRank} out of ${totalCompanies} companies in IDQ Ranking`);
+            if (idqRank <= 10) idqRankEl.classList.add('rank-gold');
+            else if (idqRank <= 20) idqRankEl.classList.add('rank-silver');
+            else if (idqRank <= 30) idqRankEl.classList.add('rank-bronze');
+        }
+        
+        if (antiFragileRankEl) {
+            antiFragileRankEl.textContent = `~#${antiFragileRank} of ${totalCompanies}`;
+            antiFragileRankEl.setAttribute('data-tooltip', `Estimated rank ${antiFragileRank} out of ${totalCompanies} companies in Anti-Fragile Score`);
+            if (antiFragileRank <= 10) antiFragileRankEl.classList.add('rank-gold');
+            else if (antiFragileRank <= 20) antiFragileRankEl.classList.add('rank-silver');
+            else if (antiFragileRank <= 30) antiFragileRankEl.classList.add('rank-bronze');
+        }
+        
+        console.log('Using estimated rankings due to Firebase error');
     }
 }
 
