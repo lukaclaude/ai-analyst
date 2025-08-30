@@ -1040,15 +1040,15 @@ function calculateCompanyTier(qualityScore, idqScore, antiFragileScore) {
         };
     } else if (overallScore >= 32) {
         tier = { 
-            name: 'Turnaround Candidate', 
+            name: 'Positionally Challenged', 
             color: '#f97316', 
             class: 'text-orange-500', 
-            description: 'Companies requiring significant improvements but with potential for recovery',
+            description: 'Companies requiring significant improvements but with turnaround potential',
             score: overallScore
         };
     } else {
         tier = { 
-            name: 'Deep Value Play', 
+            name: 'High Risk', 
             color: '#ef4444', 
             class: 'text-red-500', 
             description: 'High-risk companies that may offer value for contrarian investors',
@@ -1148,31 +1148,90 @@ function populateAnalysis() {
         coreDebate = parts[1]?.trim() || '';
     }
     
-    analysisContainer.innerHTML = `
-        <div class="analysis-grid">
-            <div class="analysis-card glass-morphism">
-                <div class="analysis-header">
-                    <h3 class="analysis-title">Investment Thesis</h3>
+    // Get antiFragile data from state
+    const antiFragileData = state.currentStockData?.Anti_Fragile_Score;
+    
+    // Create more intelligent, concise thesis
+    const thesisSummary = generateSmartThesis(qualityScore, idqScore, antiFragileScore, portfolio, llmResearch);
+    
+    // Find exceptional metrics to highlight
+    const exceptionalMetrics = findExceptionalMetrics(llmResearch, antiFragileData);
+    
+    // Create Investment Synthesis Card
+    const investmentSynthesis = document.createElement('section');
+    investmentSynthesis.className = 'investment-synthesis-section';
+    investmentSynthesis.innerHTML = `
+        <div class="investment-synthesis-card">
+            <div class="synthesis-container" style="--tier-color: ${companyTier.color}; --tier-glow: ${companyTier.color}40;">
+                <div class="synthesis-header">
+                    <svg class="synthesis-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                    </svg>
+                    <span class="synthesis-title">AI-Powered Investment Synthesis</span>
+                    <span class="synthesis-subtitle">Based on comprehensive analysis</span>
                 </div>
-                <div class="analysis-content">
-                    ${thesisElements.map(element => `<p class="mb-3">${element}</p>`).join('')}
+                
+                <div class="synthesis-content">
+                    <div class="synthesis-narrative">
+                        ${thesisSummary.map((sentence, index) => 
+                            `<p>${sentence}</p>`
+                        ).join('')}
+                    </div>
                     
-                    <div class="mt-4 pt-4 border-t border-gray-700">
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm muted-heading">Overall Assessment:</span>
-                            <span class="font-bold text-lg ${companyTier.class}" style="text-shadow: 0 0 10px ${companyTier.color};">
-                                ${companyTier.name}
-                            </span>
-                            <span class="thesis-score">
-                                <span class="thesis-score-value">${companyTier.score.toFixed(1)}</span>
-                                <span class="thesis-score-total">/100</span>
-                            </span>
+                    <div class="synthesis-visualization">
+                        <canvas id="score-breakdown-chart" class="score-breakdown-chart" width="140" height="140"></canvas>
+                        <span class="score-breakdown-label">Score Composition</span>
+                    </div>
+                </div>
+                
+                <div class="synthesis-highlights">
+                    <div class="tier-badge-compact">
+                        <span class="tier-name">${companyTier.name}</span>
+                        <div class="tier-score">
+                            <span class="tier-score-value">${companyTier.score.toFixed(1)}</span>
+                            <span class="tier-score-total">/100</span>
                         </div>
-                        <p class="text-xs muted-heading mt-1">${companyTier.description}</p>
+                        <div class="tier-tooltip">
+                            <h4>Overall Assessment Tiers:</h4>
+                            <div class="tier-list">
+                                <div class="tier-list-item"><strong>Apex Performer (85+):</strong> Elite companies with exceptional fundamentals</div>
+                                <div class="tier-list-item"><strong>Industry Powerhouse (78-84.9):</strong> Strong companies leading their industries</div>
+                                <div class="tier-list-item"><strong>Quality Compounder (65-77.9):</strong> Solid companies with steady growth</div>
+                                <div class="tier-list-item"><strong>Mixed Signals (55-64.9):</strong> Companies showing both promise and challenges</div>
+                                <div class="tier-list-item"><strong>Positionally Challenged (32-54.9):</strong> Turnaround potential</div>
+                                <div class="tier-list-item"><strong>High Risk (0-31.9):</strong> Significant headwinds</div>
+                            </div>
+                            <div class="tier-formula">Calculated: Quality (40%) + IDQ (35%) + Anti-Fragile (25%)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="synthesis-metrics">
+                        ${exceptionalMetrics.map(metric => `
+                            <div class="metric-highlight ${metric.isNegative ? 'metric-highlight-negative' : ''}">
+                                <span class="metric-highlight-icon">${metric.isNegative ? '⚠' : '✓'}</span>
+                                <span class="metric-highlight-text">
+                                    <span class="metric-highlight-value">${metric.value}</span> ${metric.label}
+                                </span>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             </div>
-            
+        </div>
+    </section>`;
+    
+    // Insert Synthesis Card after scores section
+    const scoresSection = document.querySelector('.scores-section');
+    if (scoresSection && scoresSection.nextSibling) {
+        scoresSection.parentNode.insertBefore(investmentSynthesis, scoresSection.nextSibling);
+    }
+    
+    // Draw the score breakdown chart
+    setTimeout(() => drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier), 100);
+    
+    // Generate the rest of the analysis sections (without Investment Thesis)
+    analysisContainer.innerHTML = `
+        <div class="analysis-grid">
             ${bigPicture ? `
             <div class="analysis-card glass-morphism border-l-4 border-green-500">
                 <div class="analysis-header">
@@ -2128,9 +2187,16 @@ function setupEventListeners() {
             document.body.classList.toggle('light-theme');
             state.theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
             localStorage.setItem('theme', state.theme);
-            // Redraw chart with new theme colors
+            // Redraw charts with new theme colors
             if (state.currentStockData) {
                 createEarningsChart(currentChartMetric);
+                
+                // Also redraw the score breakdown chart with correct text color
+                const qualityScore = state.currentStockData?.Portfolio?.Quality_Score || 0;
+                const idqScore = state.currentStockData?.LLM_Reports?.IDQ_Report?.totalIDQScore || 0;
+                const antiFragileScore = state.currentStockData?.Anti_Fragile_Score?.totalScore || 0;
+                const companyTier = calculateCompanyTier(qualityScore, idqScore, antiFragileScore);
+                drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier);
             }
         });
     }
@@ -2371,6 +2437,485 @@ function formatNumber(value, decimals = 1) {
     const num = parseFloat(value);
     if (isNaN(num)) return '0';
     return num.toFixed(decimals);
+}
+
+// Generate smarter, more substantial thesis
+function generateSmartThesis(qualityScore, idqScore, antiFragileScore, portfolio, llmResearch) {
+    const thesis = [];
+    const companyName = portfolio.companyName;
+    
+    // Analyze all three scores
+    const qualityPercentile = (qualityScore / 109) * 100;
+    const idqPercentile = ((idqScore + 3) / 15) * 100;
+    const afPercentile = ((antiFragileScore + 7) / 24) * 100;
+    
+    // Calculate overall score for sentiment determination
+    const qualityNorm = (qualityScore / 109) * 100;
+    const idqNorm = ((idqScore + 3) / 15) * 100;
+    const antiFragileNorm = ((antiFragileScore + 7) / 24) * 100;
+    const overallScore = (qualityNorm * 0.4) + (idqNorm * 0.35) + (antiFragileNorm * 0.25);
+    
+    // Find the standout characteristic
+    const scores = [
+        { name: 'quality', value: qualityScore, percentile: qualityPercentile, threshold: 85, label: 'operational excellence' },
+        { name: 'innovation', value: idqScore, percentile: idqPercentile, threshold: 9, label: 'innovation leadership' },
+        { name: 'resilience', value: antiFragileScore, percentile: afPercentile, threshold: 12, label: 'anti-fragile characteristics' }
+    ].sort((a, b) => b.percentile - a.percentile);
+    
+    const leadScore = scores[0];
+    const secondScore = scores[1];
+    const weakestScore = scores[2];
+    
+    // First sentence: Be objective based on actual scores
+    if (overallScore < 32) {
+        // High Risk tier - be clear about challenges
+        thesis.push(`${companyName} faces significant operational challenges with a Quality Score of ${qualityScore.toFixed(1)}/109 (${qualityPercentile.toFixed(0)}th percentile), limited innovation capacity (IDQ: ${idqScore}/12), and concerning resilience metrics (Anti-Fragile: ${antiFragileScore}/17).`);
+    } else if (overallScore < 55) {
+        // Positionally Challenged tier - acknowledge problems while noting any positives
+        if (leadScore.percentile >= 50) {
+            thesis.push(`${companyName} shows ${leadScore.label} (${leadScore.value}/${leadScore.name === 'quality' ? '109' : leadScore.name === 'innovation' ? '12' : '17'}) but faces material headwinds with ${weakestScore.percentile < 30 ? 'particularly weak' : 'lagging'} ${weakestScore.label} and operational challenges requiring significant improvement.`);
+        } else {
+            thesis.push(`${companyName} presents a challenged investment profile with below-median scores across quality (${qualityScore.toFixed(1)}/109), innovation (IDQ: ${idqScore}/12), and resilience (${antiFragileScore}/17) metrics, indicating structural issues requiring resolution.`);
+        }
+    } else if (overallScore < 65) {
+        // Mixed Signals tier - balanced perspective
+        thesis.push(`${companyName} exhibits mixed fundamentals with a Quality Score of ${qualityScore.toFixed(1)}/109, ${idqScore >= 6 ? 'moderate' : 'developing'} innovation capacity (IDQ: ${idqScore}/12), and ${antiFragileScore >= 7 ? 'adequate' : 'improving'} resilience metrics (${antiFragileScore}/17).`);
+    } else if (leadScore.name === 'quality' && qualityScore >= 85) {
+        thesis.push(`${companyName} achieves an exceptional Quality Score of ${qualityScore.toFixed(1)}/109, demonstrating best-in-class operational excellence and financial discipline that places it among the elite operators.`);
+    } else if (leadScore.name === 'innovation' && idqScore >= 9) {
+        const grade = state.currentStockData.LLM_Reports?.IDQ_Report?.grade || 'Pioneer';
+        thesis.push(`As an innovation "${grade}" with an IDQ of ${idqScore}/12, ${companyName} stands at the forefront of technological disruption, actively shaping rather than following industry trends.`);
+    } else if (leadScore.name === 'resilience' && antiFragileScore >= 12) {
+        thesis.push(`With a remarkable Anti-Fragile Score of ${antiFragileScore}/17, ${companyName} exhibits rare resilience characteristics - positioned to strengthen during market turbulence rather than merely survive.`);
+    } else {
+        // Good but not exceptional
+        thesis.push(`${companyName} demonstrates solid fundamentals with a Quality Score of ${qualityScore.toFixed(1)}/109, ${idqScore >= 6 ? 'meaningful' : 'developing'} innovation capacity (IDQ: ${idqScore}), and ${antiFragileScore >= 7 ? 'strong' : 'improving'} resilience metrics.`);
+    }
+    
+    // Second sentence: Highlight concerns for low scores or strengths for high scores
+    const moatDirection = parseFloat(llmResearch?.Moat_Group?.moatDirection || 0);
+    const financialResilience = parseFloat(llmResearch?.Financials_Group?.financialResilience || 0);
+    const cultureFactor = parseFloat(llmResearch?.Culture_Group?.cultureFactor || 0);
+    
+    if (overallScore < 32) {
+        // Focus on key concerns
+        if (financialResilience < 2) {
+            thesis.push(`Critical financial weaknesses (resilience: ${financialResilience}/5) combined with ${moatDirection < 2 ? 'eroding competitive position' : 'unclear moat dynamics'} raise substantial viability concerns requiring immediate management action.`);
+        } else if (moatDirection < 2) {
+            thesis.push(`The deteriorating competitive position (moat direction: ${moatDirection}/5) and ${cultureFactor < 2 ? 'weak organizational culture' : 'execution challenges'} suggest continued market share losses and margin pressure ahead.`);
+        } else {
+            thesis.push(`Multiple red flags including ${qualityScore < 40 ? 'poor operational metrics' : 'weak fundamentals'}, ${idqScore < 0 ? 'negative innovation trajectory' : 'limited R&D capacity'}, and ${antiFragileScore < 0 ? 'fragile balance sheet' : 'inadequate risk management'} warrant extreme caution.`);
+        }
+    } else if (overallScore < 55) {
+        // Highlight main concern but note any positive
+        if (moatDirection >= 3) {
+            thesis.push(`Despite improving competitive dynamics (moat: ${moatDirection}/5), persistent operational challenges and ${financialResilience < 3 ? 'weak' : 'modest'} financial resilience (${financialResilience}/5) limit near-term recovery potential.`);
+        } else {
+            thesis.push(`The combination of ${moatDirection < 2 ? 'eroding' : 'stagnant'} competitive position and ${financialResilience < 3 ? 'concerning' : 'mediocre'} financial metrics suggests continued underperformance until structural issues are addressed.`);
+        }
+    } else if (moatDirection === 5 && financialResilience === 5) {
+        thesis.push(`The combination of maximum moat expansion and perfect financial resilience creates a rare competitive fortress with accelerating advantages.`);
+    } else if (qualityScore >= 85 && idqScore >= 9) {
+        thesis.push(`This rare blend of operational excellence and innovation leadership positions the company to both dominate current markets and capture emerging opportunities.`);
+    } else if (antiFragileScore >= 12 && financialResilience >= 4) {
+        thesis.push(`Strong balance sheet fundamentals combined with anti-fragile characteristics suggest exceptional downside protection with asymmetric upside potential.`);
+    } else if (moatDirection >= 4) {
+        thesis.push(`The expanding competitive moat (${moatDirection}/5) indicates strengthening market position and pricing power that should drive sustained outperformance.`);
+    } else if (secondScore.percentile >= 70) {
+        const label = secondScore.name === 'quality' ? 'solid fundamentals' : 
+                     secondScore.name === 'innovation' ? 'innovation capacity' : 
+                     'resilience factors';
+        thesis.push(`Supporting ${label} (${secondScore.value}/${secondScore.name === 'quality' ? '109' : secondScore.name === 'innovation' ? '12' : '17'}) provide ${overallScore >= 65 ? 'additional conviction' : 'some offset to current challenges'}.`);
+    }
+    
+    // Third sentence: Risk focus for low scores, opportunity for high scores
+    if (thesis.length < 3) {
+        if (overallScore < 32) {
+            thesis.push(`Investment requires extremely high risk tolerance and conviction in dramatic turnaround execution - suitable only for deep value specialists.`);
+        } else if (overallScore < 55) {
+            thesis.push(`Key monitoring points include evidence of operational improvement, margin recovery, and successful execution of strategic initiatives.`);
+        } else if (qualityScore < 60) {
+            thesis.push(`Focus areas include operational efficiency improvements and margin expansion initiatives to reach peer-level performance.`);
+        } else if (idqScore >= 10 && state.currentStockData.LLM_Reports?.Trend_Analysis?.nextQuarterProjection) {
+            thesis.push(`Innovation momentum suggests potential for positive earnings surprises in upcoming quarters.`);
+        } else if (antiFragileScore >= 15) {
+            thesis.push(`The exceptional anti-fragile profile makes this a compelling portfolio hedge during uncertain market conditions.`);
+        }
+    }
+    
+    // Return 2-3 most impactful sentences
+    return thesis.slice(0, 3);
+}
+
+// Find exceptional metrics to highlight (both positive and concerning)
+function findExceptionalMetrics(llmResearch, antiFragile) {
+    const metrics = [];
+    
+    // Check scores
+    const financialResilience = parseFloat(llmResearch?.Financials_Group?.financialResilience || 0);
+    const moatDirection = parseFloat(llmResearch?.Moat_Group?.moatDirection || 0);
+    const moatStability = parseFloat(llmResearch?.Moat_Group?.moatStability || 0);
+    const skinInGame = antiFragile?.groupScores?.skinInTheGameScore || 0;
+    const cultureFactor = parseFloat(llmResearch?.Culture_Group?.cultureFactor || 0);
+    const leadershipRating = parseFloat(llmResearch?.Culture_Group?.leadershipRating || 0);
+    const executionRating = parseFloat(llmResearch?.Culture_Group?.executionRating || 0);
+    
+    // Financial metrics from state
+    const financials = state.currentStockData?.API_Financials || {};
+    const profitMargin = financials.profitMargin;
+    const roeValue = financials.returnOnEquity;
+    const revenueGrowth = financials.revenueGrowth;
+    const debtToEquity = financials.debtToEquity;
+    
+    // Calculate overall score to determine general sentiment
+    const qualityScore = state.currentStockData?.Portfolio?.Quality_Score || 0;
+    const idqScore = state.currentStockData?.LLM_Reports?.IDQ_Report?.totalIDQScore || 0;
+    const antiFragileScore = antiFragile?.totalScore || 0;
+    
+    const qualityNorm = (qualityScore / 109) * 100;
+    const idqNorm = ((idqScore + 3) / 15) * 100;
+    const antiFragileNorm = ((antiFragileScore + 7) / 24) * 100;
+    const overallScore = (qualityNorm * 0.4) + (idqNorm * 0.35) + (antiFragileNorm * 0.25);
+    
+    // Evaluate ALL metrics regardless of overall score, then prioritize
+    // Check positive metrics
+    if (financialResilience >= 4.5) {
+        metrics.push({ value: 'Excellent', label: 'Financial Resilience', priority: 1, isPositive: true });
+    } else if (financialResilience >= 4) {
+        metrics.push({ value: 'Strong', label: 'Financial Resilience', priority: 2, isPositive: true });
+    } else if (financialResilience < 2) {
+        metrics.push({ value: 'Weak', label: 'Financial Health', priority: 1, isNegative: true });
+    }
+    
+    if (moatDirection >= 4.5) {
+        metrics.push({ value: 'Expanding', label: 'Competitive Moat', priority: 1, isPositive: true });
+    } else if (moatDirection >= 4) {
+        metrics.push({ value: 'Strong', label: 'Competitive Moat', priority: 2, isPositive: true });
+    } else if (moatDirection < 2) {
+        metrics.push({ value: 'Eroding', label: 'Competitive Position', priority: 1, isNegative: true });
+    } else if (moatDirection < 3 && overallScore < 55) {
+        metrics.push({ value: 'Stagnant', label: 'Market Position', priority: 3, isNegative: true });
+    }
+    
+    if (moatStability >= 4.5) {
+        metrics.push({ value: 'Fortress', label: 'Market Position', priority: 1, isPositive: true });
+    }
+    
+    if (skinInGame >= 4) {
+        metrics.push({ value: 'Very High', label: 'Insider Ownership', priority: 1, isPositive: true });
+    } else if (skinInGame >= 3) {
+        metrics.push({ value: 'High', label: 'Insider Ownership', priority: 2, isPositive: true });
+    } else if (skinInGame < 0 && overallScore < 55) {
+        metrics.push({ value: 'Minimal', label: 'Insider Ownership', priority: 3, isNegative: true });
+    }
+    
+    if (cultureFactor >= 4.5) {
+        metrics.push({ value: 'Elite', label: 'Corporate Culture', priority: 1, isPositive: true });
+    } else if (cultureFactor > 0 && cultureFactor < 2 && overallScore < 55) {
+        metrics.push({ value: 'Poor', label: 'Culture Score', priority: 2, isNegative: true });
+    }
+    
+    if (leadershipRating >= 4.5) {
+        metrics.push({ value: 'Visionary', label: 'Leadership', priority: 1, isPositive: true });
+    }
+    
+    if (executionRating >= 4.5) {
+        metrics.push({ value: 'Superior', label: 'Execution Track Record', priority: 1, isPositive: true });
+    }
+    
+    // Financial percentage metrics
+    if (profitMargin) {
+        if (profitMargin > 0.3) {
+            metrics.push({ value: `${(profitMargin * 100).toFixed(0)}%`, label: 'Profit Margin', priority: 1, isPositive: true });
+        } else if (profitMargin > 0.2) {
+            metrics.push({ value: `${(profitMargin * 100).toFixed(0)}%`, label: 'Profit Margin', priority: 2, isPositive: true });
+        } else if (profitMargin < 0) {
+            metrics.push({ value: 'Negative', label: 'Profit Margin', priority: 1, isNegative: true });
+        } else if (profitMargin < 0.05 && overallScore < 55) {
+            metrics.push({ value: `${(profitMargin * 100).toFixed(1)}%`, label: 'Profit Margin', priority: 3, isNegative: true });
+        }
+    }
+    
+    if (roeValue) {
+        if (roeValue > 0.3) {
+            metrics.push({ value: `${(roeValue * 100).toFixed(0)}%`, label: 'Return on Equity', priority: 1, isPositive: true });
+        } else if (roeValue > 0.2) {
+            metrics.push({ value: `${(roeValue * 100).toFixed(0)}%`, label: 'Return on Equity', priority: 2, isPositive: true });
+        } else if (roeValue < 0) {
+            metrics.push({ value: 'Negative', label: 'Return on Equity', priority: 1, isNegative: true });
+        }
+    }
+    
+    if (revenueGrowth) {
+        if (revenueGrowth > 0.25) {
+            metrics.push({ value: `${(revenueGrowth * 100).toFixed(0)}%`, label: 'Revenue Growth', priority: 1, isPositive: true });
+        } else if (revenueGrowth > 0.15) {
+            metrics.push({ value: `${(revenueGrowth * 100).toFixed(0)}%`, label: 'Revenue Growth', priority: 2, isPositive: true });
+        } else if (revenueGrowth < -0.1) {
+            metrics.push({ value: `${(revenueGrowth * 100).toFixed(0)}%`, label: 'Revenue Decline', priority: 1, isNegative: true });
+        }
+    }
+    
+    if (debtToEquity && debtToEquity > 2 && overallScore < 55) {
+        metrics.push({ value: `${debtToEquity.toFixed(1)}x`, label: 'Debt/Equity', priority: 2, isNegative: true });
+    } else if (debtToEquity && debtToEquity < 0.5 && debtToEquity > 0) {
+        metrics.push({ value: `${debtToEquity.toFixed(1)}x`, label: 'Low Debt/Equity', priority: 3, isPositive: true });
+    }
+    
+    // Smart selection logic:
+    // For high-scoring companies (>65), prioritize positives but include major negatives
+    // For mid-scoring companies (55-65), show balanced mix
+    // For low-scoring companies (<55), show negatives but include any standout positives
+    
+    let positiveMetrics = metrics.filter(m => m.isPositive);
+    let negativeMetrics = metrics.filter(m => m.isNegative);
+    
+    // Sort each group by priority
+    positiveMetrics.sort((a, b) => (a.priority || 3) - (b.priority || 3));
+    negativeMetrics.sort((a, b) => (a.priority || 3) - (b.priority || 3));
+    
+    let finalMetrics = [];
+    
+    if (overallScore >= 65) {
+        // High scoring: Show best positives, but include critical negatives if any
+        finalMetrics = positiveMetrics.slice(0, 3);
+        // Add a critical negative (priority 1) if exists and we have room
+        if (negativeMetrics.length > 0 && negativeMetrics[0].priority === 1 && finalMetrics.length < 4) {
+            finalMetrics.push(negativeMetrics[0]);
+        }
+    } else if (overallScore >= 55) {
+        // Mixed: Balance of best from both
+        finalMetrics = [
+            ...positiveMetrics.slice(0, 2),
+            ...negativeMetrics.slice(0, 2)
+        ].slice(0, 4);
+    } else {
+        // Low scoring: Show negatives but include exceptional positives
+        finalMetrics = negativeMetrics.slice(0, 3);
+        // Add an exceptional positive (priority 1) if exists
+        if (positiveMetrics.length > 0 && positiveMetrics[0].priority === 1 && finalMetrics.length < 4) {
+            finalMetrics.push(positiveMetrics[0]);
+        }
+    }
+    
+    // If we don't have enough metrics, fill with what we have
+    if (finalMetrics.length < 3) {
+        const allMetrics = [...positiveMetrics, ...negativeMetrics];
+        allMetrics.sort((a, b) => (a.priority || 3) - (b.priority || 3));
+        finalMetrics = allMetrics.slice(0, 4);
+    }
+    
+    return finalMetrics;
+}
+
+// Draw score breakdown chart
+function drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier) {
+    const canvas = document.getElementById('score-breakdown-chart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const centerX = 70;
+    const centerY = 70;
+    const radius = 50;
+    
+    // Normalize scores
+    const qualityNorm = (qualityScore / 109) * 100;
+    const idqNorm = ((idqScore + 3) / 15) * 100;
+    const antiFragileNorm = ((antiFragileScore + 7) / 24) * 100;
+    
+    // Calculate weighted contributions
+    const qualityContrib = qualityNorm * 0.4;
+    const idqContrib = idqNorm * 0.35;
+    const afContrib = antiFragileNorm * 0.25;
+    
+    // Data for the chart with raw scores
+    const data = [
+        { 
+            label: 'Quality', 
+            value: qualityContrib, 
+            color: '#a855f7',
+            rawScore: qualityScore,
+            maxScore: 109,
+            weight: 40,
+            percentage: qualityNorm
+        },
+        { 
+            label: 'IDQ', 
+            value: idqContrib, 
+            color: '#3b82f6',
+            rawScore: idqScore,
+            maxScore: 12,
+            minScore: -3,
+            weight: 35,
+            percentage: idqNorm
+        },
+        { 
+            label: 'Anti-Fragile', 
+            value: afContrib, 
+            color: '#22c55e',
+            rawScore: antiFragileScore,
+            maxScore: 17,
+            minScore: -7,
+            weight: 25,
+            percentage: antiFragileNorm
+        }
+    ];
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Store segment paths for hit detection
+    const segments = [];
+    let currentAngle = -Math.PI / 2;
+    
+    data.forEach((segment, index) => {
+        const angle = (segment.value / 100) * Math.PI * 2;
+        
+        // Store segment info for hover detection
+        segments.push({
+            startAngle: currentAngle,
+            endAngle: currentAngle + angle,
+            ...segment
+        });
+        
+        // Create gradient for segment
+        const gradient = ctx.createRadialGradient(centerX, centerY, radius * 0.6, centerX, centerY, radius);
+        gradient.addColorStop(0, segment.color + 'dd'); // Slightly transparent at center
+        gradient.addColorStop(0.7, segment.color);
+        gradient.addColorStop(1, segment.color + 'ee'); // Slightly lighter at edge
+        
+        // Draw segment with gradient
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + angle);
+        ctx.arc(centerX, centerY, radius * 0.6, currentAngle + angle, currentAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        
+        // Add subtle separator line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        currentAngle += angle;
+    });
+    
+    // Draw center text with proper color - MUCH darker for light theme
+    // Check multiple ways to detect theme
+    const htmlElement = document.documentElement;
+    const isLightTheme = htmlElement.getAttribute('data-theme') === 'light' || 
+                         htmlElement.classList.contains('light') ||
+                         localStorage.getItem('theme') === 'light';
+    
+    // Force black text for light theme, white for dark
+    ctx.fillStyle = isLightTheme ? '#000000' : '#e5e7eb';
+    ctx.font = 'bold 22px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Debug: log what we're using
+    console.log('Theme detection - isLightTheme:', isLightTheme, 'fillStyle:', ctx.fillStyle);
+    
+    ctx.fillText(companyTier.score.toFixed(1), centerX, centerY);
+    
+    // Create or get tooltip element
+    let tooltip = document.getElementById('chart-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'chart-tooltip';
+        tooltip.className = 'chart-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    
+    // Add mouse event listeners
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Calculate distance and angle from center
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Check if within donut bounds
+        if (distance >= radius * 0.6 && distance <= radius) {
+            // Calculate angle (adjust for canvas coordinate system)
+            let angle = Math.atan2(dy, dx);
+            // Normalize to start from top (-PI/2)
+            angle = angle + Math.PI / 2;
+            if (angle < 0) angle += Math.PI * 2;
+            
+            // Find which segment we're hovering over
+            const hoveredSegment = segments.find(seg => {
+                let startAngle = seg.startAngle + Math.PI / 2;
+                let endAngle = seg.endAngle + Math.PI / 2;
+                
+                // Normalize angles
+                if (startAngle < 0) startAngle += Math.PI * 2;
+                if (endAngle < 0) endAngle += Math.PI * 2;
+                
+                // Handle wrap-around
+                if (startAngle > endAngle) {
+                    return angle >= startAngle || angle <= endAngle;
+                }
+                return angle >= startAngle && angle <= endAngle;
+            });
+            
+            if (hoveredSegment) {
+                // Format score display
+                let scoreDisplay = hoveredSegment.rawScore;
+                if (hoveredSegment.minScore !== undefined && hoveredSegment.minScore < 0) {
+                    scoreDisplay = `${hoveredSegment.rawScore}/${hoveredSegment.maxScore}`;
+                } else {
+                    scoreDisplay = `${hoveredSegment.rawScore}/${hoveredSegment.maxScore}`;
+                }
+                
+                // Build tooltip content
+                tooltip.innerHTML = `
+                    <div style="color: ${hoveredSegment.color}; font-weight: bold; margin-bottom: 4px;">
+                        ${hoveredSegment.label} Score
+                    </div>
+                    <div style="color: var(--color-text-primary);">
+                        Score: ${scoreDisplay}
+                    </div>
+                    <div style="color: var(--color-text-secondary); font-size: 0.9em;">
+                        ${hoveredSegment.percentage.toFixed(1)}% of maximum
+                    </div>
+                    <div style="color: var(--color-text-secondary); font-size: 0.9em;">
+                        Contributes ${hoveredSegment.value.toFixed(1)}% to overall
+                    </div>
+                    <div style="color: var(--color-text-muted); font-size: 0.85em; margin-top: 4px;">
+                        Weight: ${hoveredSegment.weight}%
+                    </div>
+                `;
+                
+                // Position tooltip
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${e.clientX + 10}px`;
+                tooltip.style.top = `${e.clientY - 10}px`;
+                
+                // Adjust if tooltip goes off screen
+                const tooltipRect = tooltip.getBoundingClientRect();
+                if (tooltipRect.right > window.innerWidth) {
+                    tooltip.style.left = `${e.clientX - tooltipRect.width - 10}px`;
+                }
+                if (tooltipRect.bottom > window.innerHeight) {
+                    tooltip.style.top = `${e.clientY - tooltipRect.height - 10}px`;
+                }
+            } else {
+                tooltip.style.display = 'none';
+            }
+        } else {
+            tooltip.style.display = 'none';
+        }
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+    });
 }
 
 // Helper function to get gradient fill based on percentage
