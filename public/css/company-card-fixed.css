@@ -615,7 +615,7 @@ body {
 
 .light-theme .chart-timeframe-btn.active {
     background: rgba(0, 0, 0, 0.08);
-    color: var(--tier-color, var(--color-score-purple)) !important;
+    color: var(--color-text-primary) !important;
     border-color: var(--tier-color, var(--color-score-purple));
     font-weight: 600 !important;
 }
@@ -1063,6 +1063,100 @@ body.light-theme .glass-morphism {
 }
 
 /* ============================================
+   METRIC BARS - For Score Revelation Panels
+   ============================================ */
+.metric-bar {
+    background: linear-gradient(90deg, #161B22 0%, #1C2128 100%);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    margin-top: 4px;
+}
+
+.metric-fill {
+    height: 100%;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.metric-fill-negative {
+    height: 100%;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    float: right;
+}
+
+/* Shimmer effect for excellent scores (80%+) */
+.shimmer-effect::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        left: 100%;
+    }
+}
+
+/* Light theme adjustments for metric bars */
+.light-theme .metric-bar {
+    background: #e9ecef;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Metric item styling */
+.metric-item {
+    position: relative;
+    padding: 8px 0;
+}
+
+.metric-item.has-reasoning {
+    cursor: help;
+}
+
+.metric-item .reasoning-icon {
+    font-size: 12px;
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+.metric-item[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+    z-index: 1000;
+    margin-bottom: 8px;
+    max-width: 300px;
+    pointer-events: none;
+}
+
+/* ============================================
    SCORE CARDS - THE CROWN JEWELS
    ============================================ */
 .scores-section {
@@ -1327,12 +1421,7 @@ body.light-theme .glass-morphism {
     opacity: 1;
 }
 
-.score-card.active {
-    border-color: var(--tier-color);
-    box-shadow: 
-        0 20px 60px var(--tier-glow),
-        inset 0 0 20px var(--tier-glow);
-}
+/* Active state glow moved to consolidated rule below */
 
 .score-card.dimmed {
     opacity: 0.5;
@@ -1392,18 +1481,59 @@ body.light-theme .glass-morphism {
     color: var(--color-text-primary);
 }
 
-/* Score-specific color variables */
-.score-card[data-score="quality"] {
-    --score-color-rgb: 168, 85, 247;
+/* Summary buttons for sub-score details */
+.summary-button {
+    background: var(--glass-bg);
+    color: var(--color-text-primary);
+    border: 1px solid var(--glass-border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
 }
 
-.score-card[data-score="idq"] {
-    --score-color-rgb: 59, 130, 246;
+.summary-button:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--tier-color, var(--color-score-purple));
+    color: var(--tier-color, var(--color-score-purple));
 }
 
-.score-card[data-score="antifragile"] {
-    --score-color-rgb: 34, 197, 94;
+/* Light theme specific for summary buttons */
+.light-theme .summary-button {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
+    border: 1px solid rgba(0, 0, 0, 0.15);
 }
+
+.light-theme .summary-button:hover {
+    border-color: var(--tier-color, var(--color-score-purple));
+    color: var(--tier-color, var(--color-score-purple));
+    background: rgba(255, 255, 255, 1);
+}
+
+/* Light theme fixes for reveal buttons */
+.light-theme .reveal-btn {
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .reveal-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--color-text-primary);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+.light-theme .score-card.active .reveal-btn {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-primary);
+}
+
+/* Score-specific color variables are now set dynamically in JavaScript based on actual scores */
 
 /* Mobile Styles */
 @media (max-width: 768px) {
@@ -1465,7 +1595,10 @@ body.light-theme .glass-morphism {
 }
 
 .score-card.active {
-    box-shadow: 0 0 0 2px var(--card-color, #a855f7);
+    box-shadow: 
+        0 20px 60px var(--tier-glow),
+        inset 0 0 20px var(--tier-glow),
+        0 0 0 2px var(--tier-color);
     transform: scale(1.02);
 }
 
@@ -1604,9 +1737,9 @@ body.light-theme .glass-morphism {
 }
 
 .tab-button.active {
-    background: var(--color-accent-purple) !important;
+    background: var(--tier-color, var(--color-score-purple)) !important;
     color: white !important;
-    border-color: var(--color-accent-purple) !important;
+    border-color: var(--tier-color, var(--color-score-purple)) !important;
 }
 
 /* Removed conflicting min-height rule that was affecting header chart */
@@ -1634,9 +1767,22 @@ body.light-theme .glass-morphism {
 }
 
 .data-tab-button.active {
-    background: var(--color-accent-green) !important;
+    background: var(--tier-color, var(--color-score-purple)) !important;
     color: white !important;
-    border-color: var(--color-accent-green) !important;
+    border-color: var(--tier-color, var(--color-score-purple)) !important;
+}
+
+/* Light theme fixes for tab buttons */
+.light-theme .tab-button.active {
+    background: var(--tier-color, var(--color-score-purple)) !important;
+    color: white !important;
+    border-color: var(--tier-color, var(--color-score-purple)) !important;
+}
+
+.light-theme .data-tab-button.active {
+    background: var(--tier-color, var(--color-score-purple)) !important;
+    color: white !important;
+    border-color: var(--tier-color, var(--color-score-purple)) !important;
 }
 
 /* Financial Tables */

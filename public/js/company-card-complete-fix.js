@@ -364,10 +364,19 @@ function drawPriceChart(dates, prices) {
     }
 }
 
+// Helper function to convert hex to RGB values
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? 
+        `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : 
+        '168, 85, 247'; // fallback to purple
+}
+
 function getScoreColor(percentage) {
     if (percentage >= 80) return { 
         color: '#a855f7', 
-        glow: 'rgba(168, 85, 247, 0.3)', 
+        glow: 'rgba(168, 85, 247, 0.3)',
+        rgb: '168, 85, 247', 
         class: 'score-purple',
         tier: 'Apex',
         badge: 'EXCEPTIONAL',
@@ -376,6 +385,7 @@ function getScoreColor(percentage) {
     if (percentage >= 74) return { 
         color: '#3b82f6', 
         glow: 'rgba(59, 130, 246, 0.3)', 
+        rgb: '59, 130, 246',
         class: 'score-blue',
         tier: 'Powerhouse',
         badge: 'EXCELLENT',
@@ -384,6 +394,7 @@ function getScoreColor(percentage) {
     if (percentage >= 65) return { 
         color: '#22c55e', 
         glow: 'rgba(34, 197, 94, 0.3)', 
+        rgb: '34, 197, 94',
         class: 'score-green',
         tier: 'Compounder',
         badge: 'STRONG',
@@ -392,6 +403,7 @@ function getScoreColor(percentage) {
     if (percentage >= 55) return { 
         color: '#eab308', 
         glow: 'rgba(234, 179, 8, 0.3)', 
+        rgb: '234, 179, 8',
         class: 'score-yellow',
         tier: 'Mixed',
         badge: 'MODERATE',
@@ -400,6 +412,7 @@ function getScoreColor(percentage) {
     if (percentage >= 32) return { 
         color: '#f97316', 
         glow: 'rgba(249, 115, 22, 0.3)', 
+        rgb: '249, 115, 22',
         class: 'score-orange',
         tier: 'Challenged',
         badge: 'CHALLENGED',
@@ -408,6 +421,7 @@ function getScoreColor(percentage) {
     return { 
         color: '#ef4444', 
         glow: 'rgba(239, 68, 68, 0.3)', 
+        rgb: '239, 68, 68',
         class: 'score-red',
         tier: 'High Risk',
         badge: 'HIGH RISK',
@@ -735,11 +749,29 @@ async function populateCompanyCard() {
         }
     }
     
-    // Store company tier color for chart buttons
+    // Store company tier color for interactive buttons
     const chartContainer = document.querySelector('#chart-timeframe-buttons');
     if (chartContainer) {
         chartContainer.style.setProperty('--tier-color', companyTier.color);
     }
+    
+    // Set tier color for Performance Trends tabs
+    const performanceTabs = document.querySelector('.performance-tabs');
+    if (performanceTabs) {
+        performanceTabs.style.setProperty('--tier-color', companyTier.color);
+    }
+    
+    // Set tier color for Financial Data tabs
+    const financialTabs = document.querySelector('.financial-data-tabs');
+    if (financialTabs) {
+        financialTabs.style.setProperty('--tier-color', companyTier.color);
+    }
+    
+    // Set tier color for score revelation panels (for summary buttons)
+    const revelationPanels = document.querySelectorAll('.revelation-panel');
+    revelationPanels.forEach(panel => {
+        panel.style.setProperty('--tier-color', companyTier.color);
+    });
     
     // Fetch and draw price chart from API after a small delay to ensure DOM is ready
     setTimeout(() => {
@@ -787,11 +819,16 @@ async function populateCompanyCard() {
         gradientEnd.setAttribute('stop-color', qualityColors.gradient[1]);
     }
     
-    // Card glow
+    // Card glow, border, and set CSS variables for active state
     const qualityCard = document.getElementById('quality-card');
     if (qualityCard) {
         qualityCard.style.boxShadow = `0 4px 24px ${qualityColors.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`;
+        qualityCard.style.borderColor = qualityColors.color;
         qualityCard.classList.add(qualityColors.class);
+        // Set CSS variables for active state glow to use dynamic colors
+        qualityCard.style.setProperty('--tier-color', qualityColors.color);
+        qualityCard.style.setProperty('--tier-glow', qualityColors.glow);
+        qualityCard.style.setProperty('--score-color-rgb', qualityColors.rgb);
     }
     
     // Populate Quality sub-scores from actual data
@@ -855,11 +892,16 @@ async function populateCompanyCard() {
         animatedDots.style.stroke = idqColors.color;
     }
     
-    // Card glow
+    // Card glow, border, and set CSS variables for active state
     const idqCard = document.getElementById('idq-card');
     if (idqCard) {
         idqCard.style.boxShadow = `0 4px 24px ${idqColors.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`;
+        idqCard.style.borderColor = idqColors.color;
         idqCard.classList.add(idqColors.class);
+        // Set CSS variables for active state glow to use dynamic colors
+        idqCard.style.setProperty('--tier-color', idqColors.color);
+        idqCard.style.setProperty('--tier-glow', idqColors.glow);
+        idqCard.style.setProperty('--score-color-rgb', idqColors.rgb);
     }
     
     // Update summary text
@@ -889,11 +931,16 @@ async function populateCompanyCard() {
         shield.style.filter = `drop-shadow(0 4px 12px ${afColors.glow})`;
     }
     
-    // Card glow
+    // Card glow, border, and set CSS variables for active state
     const afCard = document.getElementById('antifragile-card');
     if (afCard) {
         afCard.style.boxShadow = `0 4px 24px ${afColors.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`;
+        afCard.style.borderColor = afColors.color;
         afCard.classList.add(afColors.class);
+        // Set CSS variables for active state glow to use dynamic colors
+        afCard.style.setProperty('--tier-color', afColors.color);
+        afCard.style.setProperty('--tier-glow', afColors.glow);
+        afCard.style.setProperty('--score-color-rgb', afColors.rgb);
     }
     
     // Populate Anti-Fragile sub-scores
@@ -1436,7 +1483,7 @@ async function fetchAndDisplayCompanyData(ticker) {
         state.currentTicker = ticker.toUpperCase();
         
         // Update recent companies with website if available
-        const website = stockData.Financials?.General?.companyWebsite || null;
+        const website = stockData.API_Financials?.General?.companyWebsite || null;
         updateRecentCompanies(ticker.toUpperCase(), stockData.Portfolio.companyName, website);
         
         // Populate everything
@@ -2164,6 +2211,9 @@ function revealScoreDetails(scoreType) {
         panel.classList.remove('revealed');
         allCards.forEach(card => {
             card.classList.remove('active', 'dimmed');
+            // Update button text back to "View Details"
+            const btn = card.querySelector('.reveal-text');
+            if (btn) btn.textContent = 'View Details';
         });
         currentRevealed = null;
         return;
@@ -2174,14 +2224,19 @@ function revealScoreDetails(scoreType) {
         activeSection.innerHTML = generateExpandedContent(scoreType);
     }
     
-    // Update card states
+    // Update card states and button text
     allCards.forEach(card => {
+        const btn = card.querySelector('.reveal-text');
         if (card === activeCard) {
             card.classList.add('active');
             card.classList.remove('dimmed');
+            // Update active card button to "Hide Details"
+            if (btn) btn.textContent = 'Hide Details';
         } else {
             card.classList.add('dimmed');
             card.classList.remove('active');
+            // Update other cards to "View Details"
+            if (btn) btn.textContent = 'View Details';
         }
     });
     
@@ -2687,11 +2742,47 @@ const metricDisplayNames = {
     obsoletionRisk: 'Obsoletion Risk'
 };
 
-// Function to show group details (called from quality expansion)
+// Track expanded state for group details
+const expandedGroups = new Set();
+
+// Function to toggle group details (called from quality expansion)
 function showGroupDetails(groupName) {
-    console.log('Show group details for:', groupName);
+    console.log('Toggle group details for:', groupName);
     const panel = document.getElementById('shared-summary-panel');
     if (!panel) return;
+    
+    // Get the button that was clicked
+    const button = document.querySelector(`button[data-group="${groupName.toLowerCase()}"]`);
+    
+    // Check if this group is already expanded
+    if (expandedGroups.has(groupName.toLowerCase())) {
+        // Collapse it
+        expandedGroups.delete(groupName.toLowerCase());
+        panel.innerHTML = '';
+        panel.style.display = 'none';
+        
+        // Update button text
+        if (button) {
+            const textSpan = button.querySelector('span');
+            if (textSpan) textSpan.textContent = 'View Details';
+        }
+        return;
+    }
+    
+    // Clear other expanded groups
+    expandedGroups.clear();
+    expandedGroups.add(groupName.toLowerCase());
+    
+    // Update all buttons to show "View Details"
+    document.querySelectorAll('.summary-button span').forEach(span => {
+        span.textContent = 'View Details';
+    });
+    
+    // Update clicked button to show "Hide Details"
+    if (button) {
+        const textSpan = button.querySelector('span');
+        if (textSpan) textSpan.textContent = 'Hide Details';
+    }
     
     const llmResearch = state.currentStockData.LLM_Research_and_Comments;
     let content = '';
