@@ -2168,6 +2168,37 @@ function createEarningsChart(metricType = 'revenue') {
 }
 
 // ============================================
+// TOOLTIP EDGE DETECTION
+// ============================================
+
+function setupTooltipEdgeDetection() {
+    // Use event delegation for dynamically created rank badges
+    document.addEventListener('mouseover', function(e) {
+        if (e.target.classList.contains('rank-badge') && e.target.hasAttribute('data-tooltip')) {
+            const badge = e.target;
+            const rect = badge.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            
+            // Check if badge is in the left third of viewport
+            if (rect.left < viewportWidth / 3) {
+                badge.classList.add('tooltip-right');
+                badge.classList.remove('tooltip-left', 'tooltip-center');
+            }
+            // Check if badge is in the right third of viewport
+            else if (rect.right > (viewportWidth * 2) / 3) {
+                badge.classList.add('tooltip-left');
+                badge.classList.remove('tooltip-right', 'tooltip-center');
+            }
+            // Badge is in the center
+            else {
+                badge.classList.add('tooltip-center');
+                badge.classList.remove('tooltip-left', 'tooltip-right');
+            }
+        }
+    });
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
@@ -2179,6 +2210,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (state.theme === 'light') {
         document.body.classList.add('light-theme');
     }
+    
+    // Setup dynamic tooltip positioning
+    setupTooltipEdgeDetection();
     
     // Load searchable stocks from Firestore
     await loadSearchableStocks();

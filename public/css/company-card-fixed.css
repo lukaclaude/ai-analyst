@@ -1216,6 +1216,9 @@ body.light-theme .glass-morphism {
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: var(--space-6);
     margin-bottom: var(--space-8);
+    position: relative;
+    z-index: 1;
+    overflow: visible;
 }
 
 .score-card {
@@ -1362,7 +1365,11 @@ body.light-theme .glass-morphism {
     letter-spacing: 0.5px;
     text-transform: uppercase;
     transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 
+        0 0 8px currentColor,
+        0 0 16px currentColor,
+        0 1px 2px rgba(0, 0, 0, 0.4);
+    opacity: 0.9;
 }
 
 .idq-animated-dots {
@@ -1526,6 +1533,7 @@ body.light-theme .glass-morphism {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
+    z-index: 1;
     animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
 
@@ -2815,8 +2823,9 @@ body.light-theme .glass-morphism {
 .rank-badge {
     display: inline-flex !important;
     align-items: center;
+    justify-content: center;
     gap: 3px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: var(--radius-md);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2829,6 +2838,8 @@ body.light-theme .glass-morphism {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(8px);
     white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
 }
 
 /* Special styles for top 3 */
@@ -2879,55 +2890,124 @@ body.light-theme .glass-morphism {
 /* Tooltip for rank badges */
 .rank-badge {
     position: relative;
-    z-index: 1000;
+    z-index: 10;
+}
+
+/* Z-index management for score cards and tooltips */
+.score-card {
+    z-index: 1;
+    position: relative;
+}
+
+/* When hovering a score card, elevate it slightly */
+.score-card:hover {
+    z-index: 10;
+}
+
+/* When hovering a rank badge, elevate the entire card to top */
+.score-card:has(.rank-badge:hover) {
+    z-index: 10000 !important;
+    position: relative;
+}
+
+/* Ensure rank badge is positioned correctly */
+.rank-badge {
+    position: relative;
+    z-index: 1;
+}
+
+.rank-badge[data-tooltip]:hover {
+    z-index: 10001 !important;
+    position: relative;
 }
 
 .rank-badge[data-tooltip]:hover::after {
     content: attr(data-tooltip) "\A" attr(data-percentile);
     position: absolute;
     top: calc(100% + 8px);
-    right: 0;
-    padding: 12px 16px;
+    left: 50%;
+    transform: translateX(max(-90%, min(-50%, calc(-50% - 20px))));
+    padding: 14px 18px;
     background: linear-gradient(135deg, 
-        rgba(20, 20, 30, 0.85) 0%, 
-        rgba(10, 10, 20, 0.95) 100%);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+        rgba(10, 10, 15, 0.96) 0%, 
+        rgba(5, 5, 10, 0.98) 100%);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
     color: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-md);
     font-size: 12px;
     font-weight: normal;
     line-height: 1.5;
-    white-space: normal;
-    width: 260px;
+    white-space: pre-line; /* Allow text wrapping */
+    word-wrap: break-word;
+    text-align: center;
+    width: max-content;
+    min-width: 200px;
+    max-width: min(350px, calc(100vw - 40px)); /* Prevent overflow on small screens */
     pointer-events: none;
     opacity: 1;
-    z-index: 999999;
+    z-index: 10002 !important;
     box-shadow: 
         0 0 1px rgba(255, 255, 255, 0.5),
-        0 4px 8px rgba(0, 0, 0, 0.3),
-        0 12px 32px rgba(0, 0, 0, 0.5);
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Dynamic tooltip positioning based on viewport position */
+.rank-badge.tooltip-left[data-tooltip]:hover::after {
+    left: auto;
+    right: 0;
+    transform: translateX(0);
+}
+
+.rank-badge.tooltip-right[data-tooltip]:hover::after {
+    left: 0;
+    transform: translateX(0);
+}
+
+.rank-badge.tooltip-center[data-tooltip]:hover::after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Special positioning for tooltips on edge cards */
+.score-card:first-child .rank-badge[data-tooltip]:hover::after {
+    left: 10px;
+    transform: translateX(0);
+}
+
+.score-card:last-child .rank-badge[data-tooltip]:hover::after {
+    left: auto;
+    right: 10px;
+    transform: translateX(0);
 }
 
 /* Light theme tooltip background */
 .light-theme .rank-badge[data-tooltip]:hover::after {
     background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.92) 0%, 
-        rgba(250, 250, 252, 0.98) 100%);
-    color: rgba(0, 0, 0, 0.85);
-    border: 1px solid rgba(0, 0, 0, 0.08);
+        rgba(255, 255, 255, 0.97) 0%, 
+        rgba(252, 252, 254, 0.99) 100%);
+    color: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.12);
     box-shadow: 
-        0 0 1px rgba(0, 0, 0, 0.1),
-        0 4px 8px rgba(0, 0, 0, 0.08),
-        0 12px 32px rgba(0, 0, 0, 0.12);
+        0 0 1px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        0 16px 40px rgba(0, 0, 0, 0.15);
+    z-index: 10002 !important;
 }
 
 /* Light theme adjustments for rank badges */
 .light-theme .rank-badge {
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.1);
-    color: var(--color-text-secondary);
+    color: rgba(0, 0, 0, 0.8); /* Dark text for readability */
+}
+
+/* Non-medal ranks in light theme need darker text */
+.light-theme .rank-badge:not(.rank-gold):not(.rank-silver):not(.rank-bronze) {
+    color: rgba(0, 0, 0, 0.85);
+    font-weight: 700;
 }
 
 .light-theme .rank-badge:hover {
