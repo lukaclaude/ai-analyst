@@ -14,6 +14,7 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="./css/theme.css">
+    <link rel="stylesheet" href="./css/components.css">
     <link rel="stylesheet" href="./css/company-card-fixed.css">
     
     <!-- Tailwind for utility classes -->
@@ -85,6 +86,9 @@
                 </button>
             </div>
         </nav>
+
+        <!-- Universal Sidebar Container (feature-flag mount) -->
+        <div class="navigation-sidebar" id="universal-sidebar-container" aria-label="Universal sidebar" style="display:none;"></div>
         
         <!-- Main Content Area -->
         <main class="main-content">
@@ -491,6 +495,8 @@
     <!-- UI Utilities -->
     <script src="./js/tooltip.js"></script>
     <script src="./js/services/ThemeService.js"></script>
+    <script src="./js/services/DataService.js"></script>
+    <script src="./js/universal-sidebar.js"></script>
     
     <!-- Application Scripts -->
     <script src="./js/universal-header.js"></script>

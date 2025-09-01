@@ -2204,6 +2204,7 @@ function setupTooltipEdgeDetection() {
 document.addEventListener('DOMContentLoaded', async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const ticker = urlParams.get('ticker') || 'NVDA';
+    const useNewSidebar = urlParams.get('useNewSidebar') === '1';
     
     // Load theme via ThemeService (centralized)
     if (window.ThemeService && typeof window.ThemeService.init === 'function') {
@@ -2219,6 +2220,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Setup search bar
     setupSearchBar();
+    
+    // Feature-flag: initialize universal sidebar into its container
+    try {
+        const legacySidebar = document.getElementById('navigation-sidebar');
+        const newSidebar = document.getElementById('universal-sidebar-container');
+        if (useNewSidebar && newSidebar && window.UniversalSidebar) {
+            if (legacySidebar) legacySidebar.style.display = 'none';
+            newSidebar.style.display = 'block';
+            // Load the sidebar skeleton markup
+            const resp = await fetch('/components/universal-sidebar.html');
+            const html = await resp.text();
+            newSidebar.innerHTML = html;
+            // Init behavior (context + recent companies)
+            window.UniversalSidebar.init();
+            // Wire close button
+            const closeBtn = newSidebar.querySelector('.sidebar-close-btn');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            if (closeBtn) closeBtn.addEventListener('click', () => {
+                newSidebar.classList.remove('active');
+                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+    } catch (e) {
+        console.warn('Universal sidebar init failed:', e);
+    }
     
     // Load recent companies
     displayRecentCompanies();
@@ -2236,7 +2263,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 function setupEventListeners() {
     // Mobile navigation toggle
     const mobileNavTrigger = document.getElementById('mobile-nav-trigger');
-    const sidebar = document.getElementById('navigation-sidebar');
+    let sidebar = document.getElementById('navigation-sidebar');
+    const altSidebar = document.getElementById('universal-sidebar-container');
+    if (altSidebar && altSidebar.style.display !== 'none') sidebar = altSidebar;
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     
     if (mobileNavTrigger) {
