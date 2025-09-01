@@ -2287,6 +2287,81 @@ function setupEventListeners() {
         }
     });
     
+    // Mobile bottom navigation functionality
+    const homeBtn = document.getElementById('mobile-nav-home');
+    const searchBtn = document.getElementById('mobile-nav-search');
+    const favBtn = document.getElementById('mobile-nav-favorites');
+    const menuBtn = document.getElementById('mobile-bottom-menu');
+
+    if (homeBtn) {
+        homeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Navigate to index page if available; fallback to root
+            window.location.href = window.location.origin + '/index.html';
+        });
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('global-search');
+            if (input) {
+                // Reveal header search on mobile
+                document.body.classList.add('show-mobile-search');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => input.focus(), 150);
+                const onBlur = () => {
+                    // Delay hiding so taps on results can navigate on mobile
+                    setTimeout(() => {
+                        document.body.classList.remove('show-mobile-search');
+                    }, 300);
+                    input.removeEventListener('blur', onBlur);
+                };
+                input.addEventListener('blur', onBlur);
+                const onEsc = (ev) => {
+                    if (ev.key === 'Escape') {
+                        document.body.classList.remove('show-mobile-search');
+                        document.removeEventListener('keydown', onEsc);
+                        input.blur();
+                    }
+                };
+                document.addEventListener('keydown', onEsc);
+            } else {
+                // Fallback: open sidebar and focus its search field
+                const sidebar = document.getElementById('navigation-sidebar');
+                const sidebarOverlay = document.getElementById('sidebar-overlay');
+                if (sidebar && sidebarOverlay) {
+                    sidebar.classList.add('active');
+                    sidebarOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    setTimeout(() => {
+                        const sbInput = document.getElementById('sidebar-search');
+                        if (sbInput) sbInput.focus();
+                    }, 150);
+                } else {
+                    showToast('Search field unavailable');
+                }
+            }
+        });
+    }
+
+    if (favBtn) {
+        favBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Placeholder: favorites page not implemented yet
+            showToast('Favorites coming soon');
+        });
+    }
+
+    if (menuBtn && sidebar && sidebarOverlay) {
+        menuBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
     // Setup chart tab switching
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -2321,11 +2396,32 @@ function setupEventListeners() {
         });
     });
     
-    // Search
-    const searchInput = document.getElementById('sidebar-search');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(handleSearch, 300));
-    }
+    // Search: handled centrally in setupSearchBar() to avoid duplicate handlers
+}
+
+// Lightweight toast helper (neutral)
+function showToast(message) {
+    const el = document.createElement('div');
+    el.textContent = message;
+    el.style.cssText = `
+        position: fixed;
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.75);
+        color: #fff;
+        font-size: 14px;
+        z-index: 999999;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => {
+        el.style.transition = 'opacity 300ms ease';
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 320);
+    }, 1400);
 }
 
 async function handleSearch(e) {
@@ -3902,6 +3998,7 @@ function setupSearchBar() {
         
         if (!query) {
             searchResults.classList.add('hidden');
+            searchResults.classList.remove('active');
             searchResults.innerHTML = '';
             return;
         }
@@ -3928,12 +4025,14 @@ function setupSearchBar() {
                         const ticker = item.dataset.ticker;
                         searchInput.value = '';
                         searchResults.classList.add('hidden');
+                        searchResults.classList.remove('active');
                         fetchAndDisplayCompanyData(ticker);
                     });
                 });
             }
             
             searchResults.classList.remove('hidden');
+            searchResults.classList.add('active');
         }, 300);
     });
     
@@ -3941,6 +4040,7 @@ function setupSearchBar() {
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
             searchResults.classList.add('hidden');
+            searchResults.classList.remove('active');
         }
     });
 }

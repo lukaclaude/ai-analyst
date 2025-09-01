@@ -17,7 +17,7 @@ You are inheriting a **functionally complete (100%)** but **visually improving (
 - ✅ **All light theme issues FIXED** - Buttons, tabs, text all visible
 - ✅ **Metric bars FIXED** - 6-tier color gradients working correctly
 - ✅ **Logo system ENHANCED** - Multi-provider fallback with caching
-- ⚠️ **Mobile bottom navigation** - UI exists but not functional
+- ⚠️ **Mobile bottom navigation** - Home and Search wired; Favorites placeholder; Menu opens sidebar but needs close control
 - ⚠️ **Universal header component** - Created but needs mobile adaptation
 - ❌ **Mobile responsiveness BROKEN** - Not optimized for phones/tablets
 - ❌ **Sidebar not universal** - Still page-specific
@@ -477,6 +477,12 @@ drawMiniPriceChart()           // Chart rendering
 - `ThemeService` (`js/services/ThemeService.js`) applies/persists theme and emits `themeChanged`
 - Components and charts subscribe to `themeChanged` and read vars from `document.body`
 - Legacy CSS pseudo-tooltips removed; universal tooltip (`js/tooltip.js`) is theme-aware
+ - Section backgrounds standardized via `.section-surface` (theme-aware glass panels) for consistent look across pages
+
+### Mobile Sidebar Status
+- On mobile, Menu opens a full-screen drawer; overlay close is limited because the drawer covers the page
+- Add an explicit close control in the sidebar header for mobile
+- Adjust drawer width/behavior per breakpoint and ensure ESC/overlay/close work consistently
 
 ### CSS Classes That Matter
 ```css

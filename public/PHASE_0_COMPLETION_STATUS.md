@@ -57,6 +57,7 @@ This document tracks the completion of Phase 0 (Foundation) and provides context
 - Charts read CSS variables dynamically from `document.body`
 - Glass morphism effects work in both themes
 - Theme toggling unified via ThemeService; components listen to `themeChanged`
+ - Section backgrounds standardized using `.section-surface` across major sections
 
 ### 3. Mobile-First Responsive Foundation ✅
 **Breakpoints Established**:

@@ -207,10 +207,12 @@ class UniversalHeader {
         resultsContainer.innerHTML = `
             <div class="search-results-list">
                 ${results.map(r => `
-                    <a href="?ticker=${r.ticker}" class="search-result-item">
-                        <div class="result-ticker">${r.ticker}</div>
-                        <div class="result-name">${r.name}</div>
-                        <div class="result-score">${r.score}</div>
+                    <a href="?ticker=${r.ticker}" class="search-result-item search-result-item--header">
+                        <div class="search-result-main">
+                            <div class="search-result-ticker">${r.ticker}</div>
+                            <div class="search-result-name">${r.name}</div>
+                        </div>
+                        ${r.score ? `<div class="search-result-score">${r.score}</div>` : ''}
                     </a>
                 `).join('')}
             </div>
