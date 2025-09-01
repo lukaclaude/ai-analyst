@@ -5,8 +5,9 @@
 /* Sidebar close button (for mobile drawer; not yet wired) */
 .sidebar-close-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
   width: 36px;
   height: 36px;
   display: flex;
@@ -31,6 +32,7 @@
 
 /* Universal sidebar layout */
 .universal-sidebar {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -44,3 +46,79 @@
 .universal-sidebar .sidebar-bottom {
   margin-top: auto;
 }
+
+/* Sidebar section title (e.g., Recent Companies) */
+.sidebar-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 16px; /* align with nav link left padding */
+}
+
+/* Sidebar nav with scrollspy indicator */
+.sidebar-nav {
+  position: relative;
+}
+.sidebar-nav .scrollspy-indicator {
+  position: absolute;
+  left: 4px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-score-purple);
+  box-shadow: 0 0 12px var(--glow-purple);
+  transition: top var(--transition-base), height var(--transition-base);
+}
+.sidebar-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 8px 16px;
+  border-radius: 8px;
+}
+.sidebar-nav .nav-link.active {
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
+}
+
+/* Close handle hover */
+.sidebar-close-btn:hover { background: var(--glass-bg-hover); }
+
+/* Desktop collapsed state (icon-only) */
+@media (min-width: 1024px) {
+  #universal-sidebar-container.collapsed {
+    width: 80px !important;
+  }
+  #universal-sidebar-container.collapsed .sidebar-nav .nav-link {
+    justify-content: center;
+    gap: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  #universal-sidebar-container.collapsed .sidebar-nav .nav-link > span:last-child {
+    display: none;
+  }
+  #universal-sidebar-container.collapsed .sidebar-section-title-text {
+    display: none;
+  }
+  #universal-sidebar-container.collapsed .sidebar-section-title {
+    justify-content: center;
+    padding-left: 0;
+  }
+  #universal-sidebar-container.collapsed #sidebar-recent-companies .company-text {
+    display: none;
+  }
+  #universal-sidebar-container.collapsed #sidebar-recent-companies .company-info-row {
+    justify-content: center;
+  }
+  #universal-sidebar-container.collapsed #universal-sidebar-theme-toggle .sidebar-theme-text {
+    display: none;
+  }
+}
+
+/* Sidebar theme toggle icon swapping (mirror header behavior) */
+#universal-sidebar-theme-toggle .moon-icon { display: none; }
+#universal-sidebar-theme-toggle .sun-icon { display: inline; }
+.light-theme #universal-sidebar-theme-toggle .sun-icon { display: none; }
+.light-theme #universal-sidebar-theme-toggle .moon-icon { display: inline; }
+
+/* Keep close handle visible on all viewports (mid-edge arrow); safe placement avoids header overlap */

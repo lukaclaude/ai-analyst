@@ -2234,13 +2234,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             newSidebar.innerHTML = html;
             // Init behavior (context + recent companies)
             window.UniversalSidebar.init();
-            // Wire close button
+            // Wire close/collapse button
             const closeBtn = newSidebar.querySelector('.sidebar-close-btn');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
             if (closeBtn) closeBtn.addEventListener('click', () => {
-                newSidebar.classList.remove('active');
-                if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-                document.body.style.overflow = '';
+                const isDesktop = window.innerWidth >= 1024;
+                const main = document.querySelector('.main-content');
+                if (isDesktop) {
+                    const collapsed = newSidebar.classList.toggle('collapsed');
+                    if (main) main.style.marginLeft = collapsed ? '80px' : '240px';
+                    closeBtn.textContent = collapsed ? '>' : '<';
+                } else {
+                    newSidebar.classList.remove('active');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
             });
         }
     } catch (e) {
@@ -2252,6 +2260,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Fetch and display company data
     await fetchAndDisplayCompanyData(ticker);
+    // Update universal sidebar top item (ticker/logo) after data is loaded
+    try {
+        if (useNewSidebar && window.UniversalSidebar && typeof window.UniversalSidebar.updateTopFromState === 'function') {
+            window.UniversalSidebar.updateTopFromState();
+        }
+    } catch (_) {}
     
     // Setup event listeners
     setupEventListeners();
@@ -2270,6 +2284,7 @@ function setupEventListeners() {
     
     if (mobileNavTrigger) {
         mobileNavTrigger.addEventListener('click', () => {
+            document.body.classList.remove('show-mobile-search');
             sidebar.classList.toggle('active');
             sidebarOverlay.classList.toggle('active');
             // Prevent body scroll when sidebar is open
@@ -2385,6 +2400,7 @@ function setupEventListeners() {
     if (menuBtn && sidebar && sidebarOverlay) {
         menuBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            document.body.classList.remove('show-mobile-search');
             sidebar.classList.add('active');
             sidebarOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
