@@ -445,6 +445,15 @@ function getScoreColor(percentage) {
     };
 }
 
+// Map raw IDQ score to tier color (not percentage-based)
+function getIdqTierColors(idqScore) {
+    if (idqScore >= 11) return { color: '#a855f7', glow: 'rgba(168,85,247,0.3)', rgb: '168,85,247', class: 'score-purple', tier: 'Pioneer' };
+    if (idqScore >= 9)  return { color: '#3b82f6', glow: 'rgba(59,130,246,0.3)',  rgb: '59,130,246',  class: 'score-blue',   tier: 'Leader' };
+    if (idqScore >= 6)  return { color: '#22c55e', glow: 'rgba(34,197,94,0.3)',   rgb: '34,197,94',   class: 'score-green',  tier: 'Integrator' };
+    if (idqScore >= 3)  return { color: '#eab308', glow: 'rgba(234,179,8,0.3)',   rgb: '234,179,8',   class: 'score-yellow', tier: 'Follower' };
+    return                { color: '#f97316', glow: 'rgba(249,115,22,0.3)',   rgb: '249,115,22',  class: 'score-orange', tier: 'Lagging' };
+}
+
 function animateValue(element, start, end, duration = 1000, suffix = '') {
     if (!element) return;
     
@@ -892,8 +901,8 @@ async function populateCompanyCard() {
     // POPULATE IDQ SCORE
     // ========================================================================
     const idqReport = llmReports?.IDQ_Report;
-    const idqPercentage = ((idqScore + 3) / 15) * 100;
-    const idqColors = getScoreColor(idqPercentage);
+    const idqPercentage = ((idqScore + 3) / 15) * 100; // still used for indicator position only
+    const idqColors = getIdqTierColors(idqScore);
     
     // Update score value in chip
     const idqValueEl = document.getElementById('idq-score-value');
@@ -932,8 +941,10 @@ async function populateCompanyCard() {
             tierName = 'Lagging';
         }
         tierLabel.textContent = tierName;
-        tierLabel.style.color = idqColors.color;
+        tierLabel.style.setProperty('--tier-color', idqColors.color);
         tierLabel.style.left = `${Math.max(0, Math.min(100, position))}%`;
+        const gradeCaption = document.getElementById('idq-grade-caption');
+        if (gradeCaption) gradeCaption.textContent = tierName;
     }
     
     // Update chip color
@@ -1565,6 +1576,7 @@ function populateFinancialMetrics() {
         return null;
     };
     const income = ttm.Income_Statement || {};
+    const cash = ttm.Cash_Flow || {};
     
     const currencyCode = ttm?.reportedCurrency || state.currentStockData?.Portfolio?.stockpricecurrency || 'USD';
     const metrics = [
@@ -1592,6 +1604,16 @@ function populateFinancialMetrics() {
             items: [
                 { label: 'Revenue', value: (() => {
                     const raw = income.revenue;
+                    const num = raw != null ? parseFloat(String(raw).replace(/,/g, '')) : NaN;
+                    return !isNaN(num) ? formatCurrency(num, 1, currencyCode) : 'N/A';
+                })() },
+                { label: 'Net Income', value: (() => {
+                    const raw = income.netIncome;
+                    const num = raw != null ? parseFloat(String(raw).replace(/,/g, '')) : NaN;
+                    return !isNaN(num) ? formatCurrency(num, 1, currencyCode) : 'N/A';
+                })() },
+                { label: 'Free Cash Flow', value: (() => {
+                    const raw = cash.freeCashflow;
                     const num = raw != null ? parseFloat(String(raw).replace(/,/g, '')) : NaN;
                     return !isNaN(num) ? formatCurrency(num, 1, currencyCode) : 'N/A';
                 })() },
@@ -1966,12 +1988,45 @@ function populateDetailedFinancials(viewType = 'income') {
     // Helper to build table HTML
     const buildTable = (title, periods, metrics) => {
         const tableTooltips = {
+            // Income Statement / Ratios
             'Revenue': 'What it is: Total sales revenue.\nWhy it matters: Shows top-line growth and demand.',
             'Net Income': "What it is: Total profit after all expenses.\nWhy it matters: The 'bottom line' indicating true profitability.",
             'EPS': "What it is: Earnings per share.\nWhy it matters: Key for shareholders; growing EPS supports higher prices.",
+            'Gross Profit': 'What it is: Revenue minus cost of revenue.\nWhy it matters: Core profitability before operating expenses.',
+            'Operating Expenses': 'What it is: R&D + SG&A and other operating costs.\nWhy it matters: Indicates cost discipline and scalability.',
+            'Operating Income': 'What it is: Profit from core operations (EBIT).\nWhy it matters: Measures operational efficiency.',
+            'EBITDA': 'What it is: Earnings before interest, taxes, depreciation, amortization.\nWhy it matters: Proxy for cash operating performance.',
+            'Cost of Revenue': 'What it is: Direct costs of producing goods/services.\nWhy it matters: Gross margin driver.',
             'Net Profit Margin': 'What it is: % of revenue left as profit.\nWhy it matters: Efficiency turning sales into profit.',
             'Net Margin': 'What it is: % of revenue left as profit.\nWhy it matters: Efficiency turning sales into profit.',
-            'Free Cash Flow': 'What it is: Cash after operations + investments.\nWhy it matters: Funds growth, buybacks, dividends.'
+            'EBITDA Margin': 'What it is: EBITDA / Revenue.\nWhy it matters: Cash generation ability from operations.',
+            // Balance Sheet
+            'Total Assets': 'What it is: Sum of all assets.\nWhy it matters: Scale and capital intensity.',
+            'Current Assets': 'What it is: Assets convertible to cash within a year.\nWhy it matters: Liquidity support.',
+            'Cash & Equivalents': 'What it is: Cash and near-cash items.\nWhy it matters: Immediate liquidity.',
+            'Short-term Investments': 'What it is: Marketable securities < 1 year.\nWhy it matters: Additional liquid resources.',
+            'Inventory': 'What it is: Goods held for sale/production.\nWhy it matters: Working capital health and demand.',
+            'Property Plant Equipment': 'What it is: Tangible operating assets (net).\nWhy it matters: Capacity and capital intensity.',
+            'Total Liabilities': 'What it is: All obligations owed.\nWhy it matters: Leverage and risk.',
+            'Current Liabilities': 'What it is: Obligations due within a year.\nWhy it matters: Near-term liquidity needs.',
+            'Total Debt': 'What it is: Short + long-term interest-bearing debt.\nWhy it matters: Financing structure and risk.',
+            'Long-term Debt': 'What it is: Debt due beyond one year.\nWhy it matters: Long‑term leverage.',
+            'Stockholder Equity': 'What it is: Net assets attributable to shareholders.\nWhy it matters: Capital base and solvency.',
+            'Retained Earnings': 'What it is: Cumulative undistributed profits.\nWhy it matters: Reinvestment capacity.',
+            // Ratios & Others
+            'Current Ratio': 'What it is: Current assets / current liabilities.\nWhy it matters: Ability to meet short-term obligations.',
+            'Quick Ratio': 'What it is: (Current assets − Inventory) / Current liabilities.\nWhy it matters: Stricter liquidity test.',
+            'Debt to Equity': 'What it is: Total debt / shareholders\' equity.\nWhy it matters: Leverage and balance sheet risk.',
+            // Cash Flow
+            'Operating Cash Flow': 'What it is: Cash generated by operations.\nWhy it matters: Core cash-earning power.',
+            'Capital Expenditures': 'What it is: Spending on long-term assets.\nWhy it matters: Investment and cash needs.',
+            'Free Cash Flow': 'What it is: Operating cash flow minus capex.\nWhy it matters: Funds growth, buybacks, dividends.',
+            'Depreciation & Amortization': 'What it is: Non-cash expense of assets.\nWhy it matters: Bridges accounting and cash.',
+            'Investing Cash Flow': 'What it is: Cash used for investments.\nWhy it matters: Capex, acquisitions, portfolio.',
+            'Financing Cash Flow': 'What it is: Cash from/to financing.\nWhy it matters: Debt, buybacks, dividends.',
+            'Dividends Paid': 'What it is: Cash returned to shareholders.\nWhy it matters: Capital return policy.',
+            'Stock Repurchased': 'What it is: Cash spent on buybacks.\nWhy it matters: Shareholder return mechanism.',
+            'Debt Repayment': 'What it is: Cash used to reduce debt.\nWhy it matters: Deleveraging and risk.'
         };
         let html = `
             <div class="financial-table-wrapper">
@@ -2484,6 +2539,16 @@ function setupEventListeners() {
         });
     }
 
+    // Keyboard: Enter toggles active card; Esc collapses
+    document.addEventListener('keydown', (e) => {
+        const focusedCard = document.activeElement && document.activeElement.closest && document.activeElement.closest('.score-card');
+        if (e.key === 'Enter' && focusedCard) {
+            const t = focusedCard.getAttribute('data-score');
+            if (t) revealScoreDetails(t);
+        } else if (e.key === 'Escape') {
+            if (typeof currentRevealed === 'string') revealScoreDetails(currentRevealed);
+        }
+    });
     // React to theme changes (from header, sidebar, or anywhere)
     window.addEventListener('themeChanged', () => {
         if (state.currentStockData) {
@@ -4069,6 +4134,8 @@ async function calculateScoreRankings() {
             // Add percentile for context
             const percentile = Math.round(((allScores.quality.length - qualityRank + 1) / allScores.quality.length) * 100);
             qualityRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+            // Show percentile inline for quick scanning
+            qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length} • Top ${percentile}%`;
             // Keyboard + a11y for tooltip
             qualityRankEl.setAttribute('tabindex', '0');
             qualityRankEl.setAttribute('aria-label', `This company ranks ${qualityRank} out of ${allScores.quality.length} companies in Enterprise Quality. Top ${percentile}%.`);
@@ -4092,6 +4159,7 @@ async function calculateScoreRankings() {
             
             const percentile = Math.round(((allScores.idq.length - idqRank + 1) / allScores.idq.length) * 100);
             idqRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+            idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length} • Top ${percentile}%`;
             idqRankEl.setAttribute('tabindex', '0');
             idqRankEl.setAttribute('aria-label', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in IDQ Ranking. Top ${percentile}%.`);
             // no native title to avoid double-tooltips
@@ -4114,6 +4182,7 @@ async function calculateScoreRankings() {
             
             const percentile = Math.round(((allScores.antiFragile.length - antiFragileRank + 1) / allScores.antiFragile.length) * 100);
             antiFragileRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+            antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length} • Top ${percentile}%`;
             antiFragileRankEl.setAttribute('tabindex', '0');
             antiFragileRankEl.setAttribute('aria-label', `This company ranks ${antiFragileRank} out of ${allScores.antiFragile.length} companies in Anti-Fragile Score. Top ${percentile}%.`);
             // no native title to avoid double-tooltips

@@ -1044,6 +1044,16 @@ canvas#earnings-chart { display: block; width: 100%; height: 360px; }
     border-color: var(--tier-color, var(--glass-border-hover));
 }
 
+/* Scores toolbar */
+/* (removed scores toolbar styles) */
+
+/* IDQ grade caption under chip */
+.idq-grade-caption {
+  color: var(--color-text-secondary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
 .score-card.expanded {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
@@ -1104,6 +1114,18 @@ canvas#earnings-chart { display: block; width: 100%; height: 360px; }
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Improve numeral readability in dark theme; remove heavy shadow in light */
+body:not(.light-theme) #quality-score-value,
+body:not(.light-theme) #idq-score-value,
+body:not(.light-theme) #antifragile-score-value {
+  text-shadow: 0 1px 1px rgba(0,0,0,0.45);
+}
+body.light-theme #quality-score-value,
+body.light-theme #idq-score-value,
+body.light-theme #antifragile-score-value {
+  text-shadow: none;
+}
+
 /* IDQ Chip */
 .idq-visual-container {
     width: 160px;
@@ -1150,21 +1172,33 @@ canvas#earnings-chart { display: block; width: 100%; height: 360px; }
 
 .idq-tier-label {
     position: absolute;
-    /* Place above the downward arrow indicator, not over the -3/12 labels */
-    top: -22px;
+    top: -26px;
     transform: translateX(-50%);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
     transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
-    text-shadow: 
-        0 0 8px currentColor,
-        0 0 16px currentColor,
-        0 1px 2px rgba(0, 0, 0, 0.4);
-    opacity: 0.9;
     z-index: 1;
     pointer-events: none;
+    /* Enhanced readability */
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--color-text-primary) !important;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.idq-tier-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--tier-color, currentColor);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--tier-color, currentColor) 30%, transparent);
 }
 
 .idq-animated-dots {
@@ -1236,6 +1270,21 @@ canvas#earnings-chart { display: block; width: 100%; height: 360px; }
 /* Sub-scores */
 .subscore-item {
     margin-bottom: var(--space-2);
+}
+
+/* Two-column layout for sub-scores on desktop */
+#quality-sub-scores-container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+@media (max-width: 768px) {
+  #quality-sub-scores-container { grid-template-columns: 1fr; }
+}
+#antifragile-sub-scores-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
 }
 
 .subscore-item span {
