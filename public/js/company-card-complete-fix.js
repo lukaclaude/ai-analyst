@@ -306,8 +306,12 @@ function drawPriceChart(dates, prices) {
     ctx.lineWidth = 2;
     ctx.stroke();
     
+    // Theme-aware axis/text colors for mini chart
+    const cs = getComputedStyle(document.body);
+    const axisColor = (cs.getPropertyValue('--chart-text-color') || '#9ca3af').trim();
+
     // Draw Y axis (prices) on the right - WITH REAL PRICES
-    ctx.fillStyle = '#9ca3af';
+    ctx.fillStyle = axisColor;
     ctx.font = '10px monospace';
     ctx.textAlign = 'right';
     
@@ -319,7 +323,7 @@ function drawPriceChart(dates, prices) {
     }
     
     // Draw X axis (dates) at bottom
-    ctx.fillStyle = '#9ca3af';
+    ctx.fillStyle = axisColor;
     ctx.font = '9px monospace'; // Smaller font for dates
     if (dates && dates.length > 0) {
         // Format dates to be shorter
@@ -629,7 +633,7 @@ async function populateCompanyCard() {
                 else if (curr === 'GBP') currencySymbol = '£';
                 
                 priceTargetEl.innerHTML = `
-                    <span class="font-medium">1Y Target Est:</span> 
+                    <span class="font-medium price-target-label secondary-text">1Y Target Est:</span> 
                     <span class="font-bold font-mono ${textColorClass}">${currencySymbol}${priceTargetNum.toFixed(2)}</span>
                     <span class="font-mono ${textColorClass}">(${upside > 0 ? '+' : ''}${upside.toFixed(1)}%)</span>
                 `;
@@ -697,7 +701,7 @@ async function populateCompanyCard() {
         const upside = ((targetPrice - currentPrice) / currentPrice * 100).toFixed(1);
         const upsideColor = upside > 0 ? 'text-green-400' : 'text-red-400';
         targetEl.innerHTML = `
-            <span class="font-medium">1Y Target Est:</span> 
+            <span class="font-medium price-target-label secondary-text">1Y Target Est:</span> 
             <span class="font-bold font-mono ${upsideColor}">$${targetPrice.toFixed(2)}</span>
             <span class="font-mono ${upsideColor}">(${upside > 0 ? '+' : ''}${upside}%)</span>
         `;
@@ -2008,8 +2012,8 @@ function createEarningsChart(metricType = 'revenue') {
     const portfolio = state.currentStockData.Portfolio;
     const ctx = canvas.getContext('2d');
 
-    // Get theme-aware colors from CSS variables
-    const computedStyle = getComputedStyle(document.documentElement);
+    // Get theme-aware colors from CSS variables (read from body to pick up light-theme overrides)
+    const computedStyle = getComputedStyle(document.body);
     const gridColor = computedStyle.getPropertyValue('--chart-grid-color').trim();
     const textColor = computedStyle.getPropertyValue('--chart-text-color').trim();
     const pointColor = computedStyle.getPropertyValue('--color-text-primary').trim();

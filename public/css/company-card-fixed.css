@@ -894,6 +894,41 @@ body.light-theme .glass-morphism {
     color: #7c3aed !important; /* Darker purple for better contrast */
 }
 
+/* Light theme: remap overly light gray utilities to readable theme tokens */
+.light-theme .text-gray-100,
+.light-theme .text-gray-200,
+.light-theme .text-gray-300 {
+    color: var(--color-text-primary) !important;
+}
+
+.light-theme .text-gray-400,
+.light-theme .text-gray-500,
+.light-theme .text-gray-600 {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Tables: improve hover and divider colors in light theme */
+.light-theme .financial-table-wrapper tbody tr:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.light-theme .financial-table-wrapper tbody tr {
+    border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-theme .financial-table-wrapper th {
+    color: var(--color-text-secondary) !important;
+}
+
+.light-theme .financial-table-wrapper td {
+    color: var(--color-text-primary);
+}
+
+/* Hero header: ensure price target label is readable in both themes */
+#analyst-price-target .price-target-label {
+    color: var(--color-text-secondary);
+}
+
 /* ============================================
    HERO HEADER - PRESERVED FROM ORIGINAL
    ============================================ */
@@ -3019,3 +3054,44 @@ body.light-theme .glass-morphism {
     background: rgba(0, 0, 0, 0.9);
 }
 .rounded-full { border-radius: var(--radius-full); }
+
+/* ============================================
+   UNIVERSAL TOOLTIP (Rank badges rollout)
+   ============================================ */
+/* Disable legacy ::after tooltips globally to prevent conflicts */
+[data-tooltip]::after { content: none !important; }
+
+/* Single tooltip node appended to body by js/tooltip.js */
+.ui-tooltip {
+    position: fixed; /* set by JS; keep here as a safeguard */
+    z-index: 2147483647; /* ensure above any stacking contexts */
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(
+        135deg,
+        var(--glass-gradient-start, rgba(255, 255, 255, 0.08)) 0%,
+        var(--glass-gradient-end, rgba(255, 255, 255, 0.02)) 100%
+    );
+    backdrop-filter: var(--glass-blur, blur(20px)) var(--glass-saturate, saturate(180%));
+    -webkit-backdrop-filter: var(--glass-blur, blur(20px)) var(--glass-saturate, saturate(180%));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        0 16px 40px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    color: var(--color-text-primary, #E6EDF3);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-line; /* support multi-line (e.g., tooltip + percentile) */
+    pointer-events: none;
+    transition: opacity var(--transition-fast, 150ms ease);
+    max-width: min(320px, calc(100vw - 16px));
+}
+
+/* Light theme tweaks are inherited through CSS variables */
+
+/* Extra hard disables for legacy pseudo-tooltips on common classes */
+.health-score-tooltip[data-tooltip]::after,
+.metric-item[data-tooltip]::after {
+    content: none !important;
+}
