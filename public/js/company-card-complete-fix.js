@@ -1273,17 +1273,9 @@ function populateAnalysis() {
         </div>
     </section>`;
     
-    // Insert Synthesis Card after scores section
-    const scoresSection = document.querySelector('.scores-section');
-    if (scoresSection && scoresSection.nextSibling) {
-        scoresSection.parentNode.insertBefore(investmentSynthesis, scoresSection.nextSibling);
-    }
-    
-    // Draw the score breakdown chart
-    setTimeout(() => drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier), 100);
-    
-    // Generate the rest of the analysis sections (without Investment Thesis)
+    // Build analysis section content with Investment Synthesis at the top
     analysisContainer.innerHTML = `
+        ${investmentSynthesis.outerHTML}
         <div class="analysis-grid">
             ${bigPicture ? `
             <div class="analysis-card glass-morphism border-l-4 border-green-500">
@@ -1361,6 +1353,9 @@ function populateAnalysis() {
             </div>
         </div>
     `;
+
+    // Draw the score breakdown chart once the canvas is in the DOM
+    setTimeout(() => drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier), 100);
 }
 
 // ============================================

@@ -49,6 +49,14 @@
   --focus-ring-color: rgba(59, 130, 246, 0.5);
   --focus-ring-width: 3px;
 
+  /* Shadows */
+  --shadow-color: 0, 0, 0;
+  --shadow-opacity-sm: 0.5;
+  --shadow-opacity-md: 0.5;
+  --shadow-opacity-lg: 0.5;
+  --shadow-opacity-xl: 0.5;
+  --shadow-glass: 0 14px 40px rgba(var(--shadow-color), 0.22);
+
   /* Layout */
   --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
   --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
@@ -134,6 +142,9 @@ body.light-theme {
   --chart-negative: #dc2626;
 
   --focus-ring-color: rgba(37, 99, 235, 0.5);
+
+  /* Light theme shadow tuning */
+  --shadow-glass: 0 12px 24px rgba(0, 0, 0, 0.08);
 }
 
 /* Universal text helpers */
@@ -183,3 +194,85 @@ h1, h2, h3, h4, h5, h6 { color: var(--color-text-primary); }
 /* Disable legacy pseudo-tooltips globally to prevent conflicts */
 [data-tooltip]::after { content: none !important; }
 
+/* --------------------------------------------
+   Section Surface (glass panel for sections)
+   -------------------------------------------- */
+.section-surface {
+  position: relative;
+  background: linear-gradient(140deg, var(--glass-gradient-start) 0%, var(--glass-gradient-end) 100%);
+  backdrop-filter: var(--glass-blur) var(--glass-saturate);
+  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
+  border: 1px solid color-mix(in oklab, var(--glass-border) 70%, transparent);
+  border-radius: var(--radius-xl);
+  padding: clamp(var(--space-4), 2.5vw, var(--space-6));
+  margin-bottom: var(--space-12);
+  box-shadow: var(--shadow-glass);
+  overflow: hidden;
+  transition: background-color var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base), color var(--transition-base);
+}
+
+.section-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 60% at 15% 0%,
+    color-mix(in oklab, var(--color-text-primary) 3%, transparent) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.section-surface::after {
+  content: '';
+  position: absolute;
+  inset: -28% -32% -28% -32%;
+  background:
+    radial-gradient(75% 75% at 18% 28%, color-mix(in oklab, var(--color-score-purple) 4%, transparent) 0%, transparent 90%),
+    radial-gradient(70% 70% at 82% 22%, color-mix(in oklab, var(--color-score-blue) 3.5%, transparent) 0%, transparent 90%),
+    radial-gradient(85% 60% at 50% 92%, color-mix(in oklab, var(--color-score-purple) 2.5%, transparent) 0%, transparent 92%);
+  filter: blur(32px);
+  transform: translate3d(0,0,0);
+  animation: surfaceMeshDrift 38s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes surfaceMeshDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(1%, -1%, 0) scale(1.005); }
+}
+
+@media (max-width: 767px) {
+  .section-surface {
+    /* lighter blur on mobile for perf */
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    padding: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-surface::after { animation: none; }
+}
+
+/* Dark theme refinement: slightly stronger ambience so panels read on deep backgrounds */
+body:not(.light-theme) .section-surface {
+  border-color: color-mix(in oklab, var(--glass-border) 85%, transparent);
+}
+
+body:not(.light-theme) .section-surface::before {
+  background: radial-gradient(
+    60% 60% at 15% 0%,
+    color-mix(in oklab, var(--color-text-primary) 6%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+body:not(.light-theme) .section-surface::after {
+  background:
+    radial-gradient(75% 75% at 18% 28%, color-mix(in oklab, var(--color-score-purple) 8%, transparent) 0%, transparent 90%),
+    radial-gradient(70% 70% at 82% 22%, color-mix(in oklab, var(--color-score-blue) 7%, transparent) 0%, transparent 90%),
+    radial-gradient(85% 60% at 50% 92%, color-mix(in oklab, var(--color-score-purple) 5%, transparent) 0%, transparent 92%);
+  filter: blur(28px);
+}

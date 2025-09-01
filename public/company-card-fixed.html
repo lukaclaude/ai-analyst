@@ -147,9 +147,10 @@
             <!-- Scores Section - The Crown Jewels -->
             <section class="scores-section" id="scores">
                 <div class="scores-container" id="scores-container">
-                    <h2 class="text-2xl font-bold mb-8">Score Trinity Analysis</h2>
-                    
-                    <div class="score-cards-grid">
+                    <div class="section-surface">
+                        <h2 class="text-2xl font-bold mb-8">Score Trinity Analysis</h2>
+                        
+                        <div class="score-cards-grid">
                         <!-- Quality Score Card -->
                         <div class="score-card glass-morphism" id="quality-card" data-score="quality">
                             <div class="flex justify-between items-start mb-4">
@@ -313,14 +314,15 @@
                                 <span class="reveal-text text-xs text-gray-400">View Details</span>
                             </button>
                         </div>
-                    </div>
-                    
-                    <!-- Revelation Panel - The crown jewels detail view -->
-                    <div class="score-revelation-panel" id="score-revelation-panel">
-                        <div class="revelation-content">
-                            <div class="detail-section quality-details" id="quality-details"></div>
-                            <div class="detail-section idq-details" id="idq-details"></div>
-                            <div class="detail-section antifragile-details" id="antifragile-details"></div>
+                        </div>
+                        
+                        <!-- Revelation Panel - The crown jewels detail view -->
+                        <div class="score-revelation-panel" id="score-revelation-panel">
+                            <div class="revelation-content">
+                                <div class="detail-section quality-details" id="quality-details"></div>
+                                <div class="detail-section idq-details" id="idq-details"></div>
+                                <div class="detail-section antifragile-details" id="antifragile-details"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -329,16 +331,19 @@
             <!-- Company Analysis Section -->
             <section class="py-12" id="analysis">
                 <div class="container-centered">
-                    <h2 class="text-2xl font-bold mb-8">Company Analysis</h2>
-                    <div id="company-analysis"></div>
+                    <div class="section-surface">
+                        <h2 class="text-2xl font-bold mb-8">Company Analysis</h2>
+                        <div id="company-analysis"></div>
+                    </div>
                 </div>
             </section>
             
             <!-- Health Scores Section -->
             <section class="py-12" id="health-scores">
                 <div class="container-centered">
-                    <h2 class="text-2xl font-bold mb-8">Financial Health Indicators</h2>
-                    <div id="health-scores-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="section-surface">
+                        <h2 class="text-2xl font-bold mb-8">Financial Health Indicators</h2>
+                        <div id="health-scores-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Piotroski F-Score -->
                         <div class="health-score-card glass-morphism p-6 rounded-xl">
                             <div class="flex justify-between items-start mb-4">
@@ -393,6 +398,7 @@
                                 <p id="working-capital-interpretation" class="text-sm text-gray-400"></p>
                             </div>
                         </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -400,14 +406,16 @@
             <!-- Performance Trends Section -->
             <section class="py-12" id="performance-trends">
                 <div class="container-centered">
-                    <h2 class="text-2xl font-bold mb-8">Performance Trends</h2>
-                    <div class="performance-tabs mb-6">
-                        <button class="tab-button active" data-metric="revenue">Revenue</button>
-                        <button class="tab-button" data-metric="netIncome">Net Income</button>
-                        <button class="tab-button" data-metric="eps">EPS</button>
-                    </div>
-                    <div class="chart-container glass-morphism p-6 rounded-xl">
-                        <canvas id="earnings-chart" width="800" height="400"></canvas>
+                    <div class="section-surface">
+                        <h2 class="text-2xl font-bold mb-8">Performance Trends</h2>
+                        <div class="performance-tabs mb-6">
+                            <button class="tab-button active" data-metric="revenue">Revenue</button>
+                            <button class="tab-button" data-metric="netIncome">Net Income</button>
+                            <button class="tab-button" data-metric="eps">EPS</button>
+                        </div>
+                        <div class="chart-container glass-morphism p-6 rounded-xl">
+                            <canvas id="earnings-chart" width="800" height="400"></canvas>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -415,22 +423,26 @@
             <!-- Financial Metrics Section -->
             <section class="py-12" id="financials">
                 <div class="container-centered">
-                    <h2 class="text-2xl font-bold mb-8">Key Financial Metrics</h2>
-                    <div id="key-financial-metrics"></div>
+                    <div class="section-surface">
+                        <h2 class="text-2xl font-bold mb-8">Key Financial Metrics</h2>
+                        <div id="key-financial-metrics"></div>
+                    </div>
                 </div>
             </section>
             
             <!-- Detailed Financial Data Section -->
             <section class="py-12" id="detailed-financials">
                 <div class="container-centered">
-                    <h2 class="text-2xl font-bold mb-8">Detailed Financial Data</h2>
-                    <div class="financial-data-tabs mb-6">
-                        <button class="data-tab-button active" data-statement="income">Income Statement</button>
-                        <button class="data-tab-button" data-statement="balance">Balance Sheet</button>
-                        <button class="data-tab-button" data-statement="cashflow">Cash Flow</button>
-                    </div>
-                    <div id="financial-data-content" class="glass-morphism p-6 rounded-xl overflow-x-auto">
-                        <!-- Populated by JavaScript -->
+                    <div class="section-surface">
+                        <h2 class="text-2xl font-bold mb-8">Detailed Financial Data</h2>
+                        <div class="financial-data-tabs mb-6">
+                            <button class="data-tab-button active" data-statement="income">Income Statement</button>
+                            <button class="data-tab-button" data-statement="balance">Balance Sheet</button>
+                            <button class="data-tab-button" data-statement="cashflow">Cash Flow</button>
+                        </div>
+                        <div id="financial-data-content" class="glass-morphism p-6 rounded-xl overflow-x-auto">
+                            <!-- Populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
             </section>
