@@ -1114,6 +1114,20 @@ function calculateCompanyTier(qualityScore, idqScore, antiFragileScore) {
     return tier;
 }
 
+// Escape text for safe placement inside HTML attribute values
+function escapeAttr(val) {
+    try {
+        return String(val)
+            .replace(/&/g, '&amp;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    } catch (_) {
+        return '';
+    }
+}
+
 function populateAnalysis() {
     const analysisContainer = document.getElementById('company-analysis');
     if (!analysisContainer || !state.currentStockData) return;
@@ -1199,8 +1213,9 @@ function populateAnalysis() {
     if (trendAnalysis.companyAnalysis) {
         const companyAnalysis = trendAnalysis.companyAnalysis;
         const parts = companyAnalysis.split('## The Core Debate');
-        bigPicture = parts[0].replace('## The Big Picture', '').trim();
-        coreDebate = parts[1]?.trim() || '';
+        // Remove markdown headers and clean up the text
+        bigPicture = parts[0].replace('## The Big Picture', '').replace(/^#+\s*/gm, '').trim();
+        coreDebate = parts[1]?.replace(/^#+\s*/gm, '').trim() || '';
     }
     
     // Get antiFragile data from state
@@ -1213,11 +1228,10 @@ function populateAnalysis() {
     const exceptionalMetrics = findExceptionalMetrics(llmResearch, antiFragileData);
     
     // Create Investment Synthesis Card
-    const investmentSynthesis = document.createElement('section');
-    investmentSynthesis.className = 'investment-synthesis-section';
+    const investmentSynthesis = document.createElement('div');
+    investmentSynthesis.className = 'analysis-card glass-morphism mb-4';
     investmentSynthesis.innerHTML = `
-        <div class="investment-synthesis-card">
-            <div class="synthesis-container" style="--tier-color: ${companyTier.color}; --tier-glow: ${companyTier.color}40;">
+        <div class="synthesis-container" style="--tier-color: ${companyTier.color}; --tier-glow: ${companyTier.color}40;">
                 <div class="synthesis-header">
                     <svg class="synthesis-icon" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
@@ -1235,13 +1249,13 @@ function populateAnalysis() {
                     
                     <div class="synthesis-visualization">
                         <canvas id="score-breakdown-chart" class="score-breakdown-chart" width="140" height="140"></canvas>
-                        <span class="score-breakdown-label">Score Composition</span>
+                        <span class="score-breakdown-label" data-tooltip="Composition: Quality 40%, IDQ 35%, Anti‑Fragile 25%.">Score Composition</span>
                     </div>
                 </div>
                 
                 <div class="synthesis-highlights">
                     <div class="tier-badge-compact">
-                        <span class="tier-name">${companyTier.name}</span>
+                        <span class="tier-name" data-tooltip="Tiers: Apex (85+), Powerhouse (78–84.9), Compounder (65–77.9), Mixed (55–64.9), Challenged (32–54.9), High Risk (<32). Formula: 40% Quality, 35% IDQ, 25% Anti‑Fragile.">${companyTier.name}</span>
                         <div class="tier-score">
                             <span class="tier-score-value">${companyTier.score.toFixed(1)}</span>
                             <span class="tier-score-total">/100</span>
@@ -1272,69 +1286,69 @@ function populateAnalysis() {
                     </div>
                 </div>
             </div>
-        </div>
-    </section>`;
+        </div>`;
     
     // Build analysis section content with Investment Synthesis at the top
     analysisContainer.innerHTML = `
         ${investmentSynthesis.outerHTML}
-        <div class="analysis-grid">
+        
+        <!-- Big Picture + Core Debate grouped together -->
+        ${(bigPicture || coreDebate) ? `
+        <div class="analysis-card glass-morphism mb-4">
             ${bigPicture ? `
-            <div class="analysis-card glass-morphism border-l-4 border-green-500">
-                <div class="analysis-header">
-                    <h3 class="analysis-title">The Big Picture</h3>
+            <div class="analysis-section">
+                <div class="analysis-header border-l-4 border-green-500 pl-4">
+                    <h3 class="analysis-title text-lg font-semibold">The Big Picture</h3>
                 </div>
-                <div class="analysis-content">
+                <div class="analysis-content mt-3">
                     <p class="secondary-text leading-relaxed">${bigPicture}</p>
                 </div>
             </div>
             ` : ''}
             
             ${coreDebate ? `
-            <div class="analysis-card glass-morphism border-l-4 border-purple-500">
-                <div class="analysis-header">
-                    <h3 class="analysis-title">The Core Debate</h3>
+            <div class="analysis-section ${bigPicture ? 'mt-6 pt-6 border-t border-gray-700/50' : ''}">
+                <div class="analysis-header border-l-4 border-purple-500 pl-4">
+                    <h3 class="analysis-title text-lg font-semibold">The Core Debate</h3>
                 </div>
-                <div class="analysis-content">
+                <div class="analysis-content mt-3">
                     <p class="secondary-text leading-relaxed">${coreDebate}</p>
                 </div>
             </div>
             ` : ''}
-            
+        </div>
+        ` : ''}
+        
+        <!-- Bullish vs Bearish Traits side-by-side -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="analysis-card glass-morphism">
                 <div class="analysis-header">
                     <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                     </svg>
-                    <h3 class="analysis-title">Bull Case</h3>
+                    <h3 class="analysis-title">Bullish Traits</h3>
                 </div>
                 <div class="analysis-content">
                     ${bullishTraits.length > 0 ? 
                         `<ul class="space-y-2">
-                            ${bullishTraits.slice(0, 3).map(trait => 
-                                `<li class="text-sm">• <strong>${trait.headline || ''}</strong>: ${trait.description || ''}</li>`
+                            ${bullishTraits.slice(0, 5).map(trait => 
+                                `<li class="text-sm flex items-start">
+                                    <span class="text-green-400 mr-2 mt-1">•</span>
+                                    <span class="flex-1">
+                                        ${trait.headline ? `<strong>${trait.headline}</strong>: ` : ''}
+                                        <span class="trait-detail-inline">${trait.description || trait.summary || ''}</span>
+                                        ${(trait.reasoning || trait.summary) ? `
+                                            <span class="inline-block ml-1 cursor-help" tabindex="0" aria-label="Reasoning details" data-tooltip="${escapeAttr(trait.reasoning || trait.summary)}">
+                                                <svg class="w-3 h-3 text-gray-400 inline" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </span>
+                                        ` : ''}
+                                    </span>
+                                </li>`
                             ).join('')}
                         </ul>` : 
-                        '<p>No bull case data available.</p>'
-                    }
-                </div>
-            </div>
-            
-            <div class="analysis-card glass-morphism">
-                <div class="analysis-header">
-                    <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    <h3 class="analysis-title">Bear Case</h3>
-                </div>
-                <div class="analysis-content">
-                    ${bearishTraits.length > 0 ? 
-                        `<ul class="space-y-2">
-                            ${bearishTraits.slice(0, 3).map(trait => 
-                                `<li class="text-sm">• <strong>${trait.headline || ''}</strong>: ${trait.description || ''}</li>`
-                            ).join('')}
-                        </ul>` : 
-                        '<p>No bear case data available.</p>'
+                        '<p class="secondary-text">No bullish traits available.</p>'
                     }
                 </div>
             </div>
@@ -1342,19 +1356,43 @@ function populateAnalysis() {
             <div class="analysis-card glass-morphism">
                 <div class="analysis-header">
                     <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                     </svg>
-                    <h3 class="analysis-title">Key Risks</h3>
+                    <h3 class="analysis-title">Bearish Traits</h3>
                 </div>
                 <div class="analysis-content">
-                    ${trendAnalysis.companyAnalysis ? 
-                        `<p>${trendAnalysis.companyAnalysis.substring(0, 300)}...</p>` :
-                        '<p>No risk analysis available.</p>'
+                    ${bearishTraits.length > 0 ? 
+                        `<ul class="space-y-2">
+                            ${bearishTraits.slice(0, 5).map(trait => 
+                                `<li class="text-sm flex items-start">
+                                    <span class="text-red-500 mr-2 mt-1">•</span>
+                                    <span class="flex-1">
+                                        ${trait.headline ? `<strong>${trait.headline}</strong>: ` : ''}
+                                        <span class="trait-detail-inline">${trait.description || trait.summary || ''}</span>
+                                        ${(trait.reasoning || trait.summary) ? `
+                                            <span class="inline-block ml-1 cursor-help" tabindex="0" aria-label="Reasoning details" data-tooltip="${escapeAttr(trait.reasoning || trait.summary)}">
+                                                <svg class="w-3 h-3 text-gray-400 inline" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </span>
+                                        ` : ''}
+                                    </span>
+                                </li>`
+                            ).join('')}
+                        </ul>` : 
+                        '<p class="secondary-text">No bearish traits available.</p>'
                     }
                 </div>
             </div>
         </div>
     `;
+    // Ensure analysis tooltip triggers are keyboard-focusable
+    try {
+        document.querySelectorAll('.analysis-content .cursor-help[data-tooltip]').forEach((el) => {
+            el.setAttribute('tabindex', '0');
+            if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', 'Reasoning details');
+        });
+    } catch (_) {}
 
     // Draw the score breakdown chart once the canvas is in the DOM
     setTimeout(() => drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier), 100);
@@ -2216,6 +2254,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Setup dynamic tooltip positioning
     setupTooltipEdgeDetection();
+    // Do not set native title attributes to avoid double-tooltips; rely on universal tooltip only
     
     // Load searchable stocks from Firestore
     await loadSearchableStocks();
@@ -3069,34 +3108,61 @@ function drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, compa
         currentAngle += angle;
     });
     
-    // Draw center text with proper color - MUCH darker for light theme
-    // Check multiple ways to detect theme
-    const htmlElement = document.documentElement;
-    const isLightTheme = htmlElement.getAttribute('data-theme') === 'light' || 
-                         htmlElement.classList.contains('light') ||
-                         localStorage.getItem('theme') === 'light';
-    
-    // Force black text for light theme, white for dark
-    ctx.fillStyle = isLightTheme ? '#000000' : '#e5e7eb';
+    // Draw center text using theme token color
+    const cs = getComputedStyle(document.body);
+    const textPrimary = (cs.getPropertyValue('--color-text-primary') || '#e6edf3').trim();
+    ctx.fillStyle = textPrimary || '#e6edf3';
     ctx.font = 'bold 22px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Debug: log what we're using
-    console.log('Theme detection - isLightTheme:', isLightTheme, 'fillStyle:', ctx.fillStyle);
-    
     ctx.fillText(companyTier.score.toFixed(1), centerX, centerY);
     
-    // Create or get tooltip element
-    let tooltip = document.getElementById('chart-tooltip');
-    if (!tooltip) {
-        tooltip = document.createElement('div');
-        tooltip.id = 'chart-tooltip';
-        tooltip.className = 'chart-tooltip';
-        document.body.appendChild(tooltip);
+    // Reuse universal tooltip for chart segments
+    function getGlobalTooltip() {
+        let el = document.getElementById('ui-tooltip');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'ui-tooltip';
+            el.className = 'ui-tooltip';
+            el.style.position = 'fixed';
+            el.style.left = '0px';
+            el.style.top = '0px';
+            el.style.opacity = '0';
+            el.style.pointerEvents = 'none';
+            el.style.transform = 'translate3d(0,0,0)';
+            el.style.visibility = 'hidden';
+            document.body.appendChild(el);
+        }
+        return el;
     }
-    
-    // Add mouse event listeners
+
+    function showChartTooltip(clientX, clientY, text) {
+        const tt = getGlobalTooltip();
+        tt.textContent = text;
+        // Position with slight offset, clamp into viewport
+        const MARGIN = 8;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        tt.style.visibility = 'hidden';
+        tt.style.opacity = '0';
+        const tw = tt.offsetWidth;
+        const th = tt.offsetHeight;
+        let x = clientX + 12;
+        let y = clientY + 12;
+        if (x + tw + MARGIN > vw) x = clientX - tw - 12;
+        if (y + th + MARGIN > vh) y = clientY - th - 12;
+        tt.style.left = `${Math.max(MARGIN, x)}px`;
+        tt.style.top = `${Math.max(MARGIN, y)}px`;
+        tt.style.visibility = 'visible';
+        tt.style.opacity = '1';
+    }
+    function hideChartTooltip() {
+        const tt = document.getElementById('ui-tooltip');
+        if (tt) { tt.style.opacity = '0'; tt.style.visibility = 'hidden'; }
+    }
+
+    // Add mouse event listeners (hover reveals composition details)
     canvas.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -3132,58 +3198,22 @@ function drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, compa
             });
             
             if (hoveredSegment) {
-                // Format score display
-                let scoreDisplay = hoveredSegment.rawScore;
-                if (hoveredSegment.minScore !== undefined && hoveredSegment.minScore < 0) {
-                    scoreDisplay = `${hoveredSegment.rawScore}/${hoveredSegment.maxScore}`;
-                } else {
-                    scoreDisplay = `${hoveredSegment.rawScore}/${hoveredSegment.maxScore}`;
-                }
-                
-                // Build tooltip content
-                tooltip.innerHTML = `
-                    <div style="color: ${hoveredSegment.color}; font-weight: bold; margin-bottom: 4px;">
-                        ${hoveredSegment.label} Score
-                    </div>
-                    <div style="color: var(--color-text-primary);">
-                        Score: ${scoreDisplay}
-                    </div>
-                    <div style="color: var(--color-text-secondary); font-size: 0.9em;">
-                        ${hoveredSegment.percentage.toFixed(1)}% of maximum
-                    </div>
-                    <div style="color: var(--color-text-secondary); font-size: 0.9em;">
-                        Contributes ${hoveredSegment.value.toFixed(1)}% to overall
-                    </div>
-                    <div style="color: var(--color-text-muted); font-size: 0.85em; margin-top: 4px;">
-                        Weight: ${hoveredSegment.weight}%
-                    </div>
-                `;
-                
-                // Position tooltip
-                tooltip.style.display = 'block';
-                tooltip.style.left = `${e.clientX + 10}px`;
-                tooltip.style.top = `${e.clientY - 10}px`;
-                
-                // Adjust if tooltip goes off screen
-                const tooltipRect = tooltip.getBoundingClientRect();
-                if (tooltipRect.right > window.innerWidth) {
-                    tooltip.style.left = `${e.clientX - tooltipRect.width - 10}px`;
-                }
-                if (tooltipRect.bottom > window.innerHeight) {
-                    tooltip.style.top = `${e.clientY - tooltipRect.height - 10}px`;
-                }
+                const scoreDisplay = `${hoveredSegment.rawScore}/${hoveredSegment.maxScore}`;
+                const text = `${hoveredSegment.label} Score\n` +
+                             `Score: ${scoreDisplay}\n` +
+                             `${hoveredSegment.percentage.toFixed(1)}% of maximum\n` +
+                             `Contributes ${hoveredSegment.value.toFixed(1)}% (weight ${hoveredSegment.weight}%)`;
+                showChartTooltip(e.clientX, e.clientY, text);
             } else {
-                tooltip.style.display = 'none';
+                hideChartTooltip();
             }
         } else {
-            tooltip.style.display = 'none';
+            hideChartTooltip();
         }
     });
     
     canvas.addEventListener('mouseleave', () => {
-        if (tooltip) {
-            tooltip.style.display = 'none';
-        }
+        hideChartTooltip();
     });
 }
 
@@ -3238,7 +3268,7 @@ function renderMetricBar(label, value, max, options = {}) {
     
     return `
         <div class="subscore-item metric-item ${customClass} ${showReasoning ? 'has-reasoning' : ''}" 
-             ${showReasoning ? `data-tooltip="${reasoning}"` : ''}>
+             ${showReasoning ? `data-tooltip="${escapeAttr(reasoning)}"` : ''}>
             <div class="flex justify-between items-center mb-1">
                 <span class="text-xs muted-heading">
                     ${label}
@@ -3472,7 +3502,7 @@ function populateIDQExpanded() {
     let html = `
         <div class="flex items-center gap-2 mb-6">
             <h3 class="text-xl font-bold">Innovation Disruption Quotient (IDQ)</h3>
-            <span class="has-reasoning" data-tooltip="${scoringTooltipText}">
+            <span class="has-reasoning" data-tooltip="${escapeAttr(scoringTooltipText)}">
                  <span class="reasoning-icon text-lg">💡</span>
             </span>
         </div>
@@ -3560,7 +3590,7 @@ function populateAntiFragileExpanded() {
     let html = `
         <div class="flex items-center gap-2 mb-8">
             <h3 class="text-xl font-bold">Anti-Fragile Score Breakdown</h3>
-            <span class="has-reasoning" data-tooltip="${tooltipText}">
+            <span class="has-reasoning" data-tooltip="${escapeAttr(tooltipText)}">
                  <span class="reasoning-icon text-lg">💡</span>
             </span>
         </div>
@@ -3773,7 +3803,7 @@ function showGroupDetails(groupName) {
             if (rangeKey === 'gauntlet') {
             const scoreColorClass = value === 0 ? '' : 'text-red-400';
                 const hasReasoning = reasoning && value !== 0;
-                const tooltipText = hasReasoning ? reasoning.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+                const tooltipText = hasReasoning ? escapeAttr(reasoning) : '';
                 const reasoningIcon = hasReasoning ? '<span class="reasoning-icon">💡</span>' : '';
                 
                 content += `
@@ -3792,7 +3822,7 @@ function showGroupDetails(groupName) {
                     content += renderMetric(displayName, value, max, reasoning, false);
                 } else {
                     // Fallback for metrics without defined ranges
-                    const tooltipText = reasoning ? reasoning.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+                    const tooltipText = reasoning ? escapeAttr(reasoning) : '';
                     content += `
                         <div class="metric-item ${reasoning ? 'has-reasoning' : ''}" ${reasoning ? `data-tooltip="${tooltipText}"` : ''}>
                             <div class="flex justify-between items-center">
@@ -3903,6 +3933,10 @@ async function calculateScoreRankings() {
             // Add percentile for context
             const percentile = Math.round(((allScores.quality.length - qualityRank + 1) / allScores.quality.length) * 100);
             qualityRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+            // Keyboard + a11y for tooltip
+            qualityRankEl.setAttribute('tabindex', '0');
+            qualityRankEl.setAttribute('aria-label', `This company ranks ${qualityRank} out of ${allScores.quality.length} companies in Enterprise Quality. Top ${percentile}%.`);
+            // no native title to avoid double-tooltips
         }
         
         if (idqRankEl && idqRank > 0) {
@@ -3922,6 +3956,9 @@ async function calculateScoreRankings() {
             
             const percentile = Math.round(((allScores.idq.length - idqRank + 1) / allScores.idq.length) * 100);
             idqRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+            idqRankEl.setAttribute('tabindex', '0');
+            idqRankEl.setAttribute('aria-label', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in IDQ Ranking. Top ${percentile}%.`);
+            // no native title to avoid double-tooltips
         }
         
         if (antiFragileRankEl && antiFragileRank > 0) {
@@ -3941,6 +3978,9 @@ async function calculateScoreRankings() {
             
             const percentile = Math.round(((allScores.antiFragile.length - antiFragileRank + 1) / allScores.antiFragile.length) * 100);
             antiFragileRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
+            antiFragileRankEl.setAttribute('tabindex', '0');
+            antiFragileRankEl.setAttribute('aria-label', `This company ranks ${antiFragileRank} out of ${allScores.antiFragile.length} companies in Anti-Fragile Score. Top ${percentile}%.`);
+            // no native title to avoid double-tooltips
         }
         
         console.log(`Rankings calculated - Quality: #${qualityRank}, IDQ: #${idqRank}, Anti-Fragile: #${antiFragileRank}`);
@@ -3978,6 +4018,11 @@ async function calculateScoreRankings() {
         if (qualityRankEl) {
             qualityRankEl.textContent = `~#${qualityRank} of ${totalCompanies}`;
             qualityRankEl.setAttribute('data-tooltip', `Estimated rank ${qualityRank} out of ${totalCompanies} companies in Enterprise Quality`);
+            const percentileEst = Math.round(((totalCompanies - qualityRank + 1) / totalCompanies) * 100);
+            qualityRankEl.setAttribute('data-percentile', `Top ${percentileEst}%`);
+            qualityRankEl.setAttribute('tabindex', '0');
+            qualityRankEl.setAttribute('aria-label', `Estimated rank ${qualityRank} out of ${totalCompanies} companies in Enterprise Quality. Top ${percentileEst}%.`);
+            // no native title to avoid double-tooltips
             if (qualityRank <= 10) qualityRankEl.classList.add('rank-gold');
             else if (qualityRank <= 20) qualityRankEl.classList.add('rank-silver');
             else if (qualityRank <= 30) qualityRankEl.classList.add('rank-bronze');
@@ -3986,6 +4031,11 @@ async function calculateScoreRankings() {
         if (idqRankEl) {
             idqRankEl.textContent = `~#${idqRank} of ${totalCompanies}`;
             idqRankEl.setAttribute('data-tooltip', `Estimated rank ${idqRank} out of ${totalCompanies} companies in IDQ Ranking`);
+            const percentileEst = Math.round(((totalCompanies - idqRank + 1) / totalCompanies) * 100);
+            idqRankEl.setAttribute('data-percentile', `Top ${percentileEst}%`);
+            idqRankEl.setAttribute('tabindex', '0');
+            idqRankEl.setAttribute('aria-label', `Estimated rank ${idqRank} out of ${totalCompanies} companies in IDQ Ranking. Top ${percentileEst}%.`);
+            // no native title to avoid double-tooltips
             if (idqRank <= 10) idqRankEl.classList.add('rank-gold');
             else if (idqRank <= 20) idqRankEl.classList.add('rank-silver');
             else if (idqRank <= 30) idqRankEl.classList.add('rank-bronze');
@@ -3994,6 +4044,11 @@ async function calculateScoreRankings() {
         if (antiFragileRankEl) {
             antiFragileRankEl.textContent = `~#${antiFragileRank} of ${totalCompanies}`;
             antiFragileRankEl.setAttribute('data-tooltip', `Estimated rank ${antiFragileRank} out of ${totalCompanies} companies in Anti-Fragile Score`);
+            const percentileEst = Math.round(((totalCompanies - antiFragileRank + 1) / totalCompanies) * 100);
+            antiFragileRankEl.setAttribute('data-percentile', `Top ${percentileEst}%`);
+            antiFragileRankEl.setAttribute('tabindex', '0');
+            antiFragileRankEl.setAttribute('aria-label', `Estimated rank ${antiFragileRank} out of ${totalCompanies} companies in Anti-Fragile Score. Top ${percentileEst}%.`);
+            // no native title to avoid double-tooltips
             if (antiFragileRank <= 10) antiFragileRankEl.classList.add('rank-gold');
             else if (antiFragileRank <= 20) antiFragileRankEl.classList.add('rank-silver');
             else if (antiFragileRank <= 30) antiFragileRankEl.classList.add('rank-bronze');

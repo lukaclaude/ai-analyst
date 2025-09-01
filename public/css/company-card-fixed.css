@@ -1968,9 +1968,8 @@ body.light-theme .glass-morphism {
 }
 
 .investment-synthesis-card {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
+    /* Remove max-width and auto margins to align with other cards */
+    padding: 0;
 }
 
 .synthesis-container {
@@ -2211,7 +2210,7 @@ body.light-theme .glass-morphism {
 }
 
 .tier-badge-compact:hover .tier-tooltip {
-    display: block;
+    display: none; /* use universal tooltip instead */
 }
 
 .tier-name {
@@ -2352,7 +2351,7 @@ body.light-theme .glass-morphism {
 
 /* Tier Tooltip */
 .tier-tooltip {
-    display: none;
+    display: none; /* fully disabled in favor of universal tooltip */
     position: absolute;
     bottom: calc(100% + var(--space-3));
     left: 50%;
@@ -2365,6 +2364,16 @@ body.light-theme .glass-morphism {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
     z-index: 10000;
     backdrop-filter: blur(10px);
+}
+
+/* Desktop vs Mobile trait text behavior */
+@media (max-width: 768px) {
+  .trait-detail-inline { display: none; }
+}
+@media (min-width: 769px) {
+  .trait-detail-inline { display: inline; }
+  /* Hide (i) icon on desktop; rely on inline text */
+  .analysis-content .cursor-help { display: none; }
 }
 
 /* Chart Tooltip */
@@ -2881,6 +2890,8 @@ body.light-theme .glass-morphism {
 
 /* Universal tooltip styles moved to theme.css; keep hard disables */
 .health-score-tooltip[data-tooltip]::after,
-.metric-item[data-tooltip]::after {
+.metric-item[data-tooltip]::after,
+.analysis-content [data-tooltip]::after,
+.rank-badge[data-tooltip]::after {
     content: none !important;
 }

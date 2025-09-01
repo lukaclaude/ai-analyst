@@ -72,6 +72,7 @@
   }
 
   function showTooltip(trigger) {
+    if (!trigger) return;
     createTooltip();
     if (!tooltipEl) return;
     currentTrigger = trigger;
@@ -79,7 +80,6 @@
     const percentile = trigger.getAttribute('data-percentile') || '';
     setTooltipContent(text, percentile);
     trigger.setAttribute('aria-describedby', ID);
-    // Position on next frame to ensure content is measured
     if (rafId) cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(() => positionTooltip(trigger));
   }
@@ -92,27 +92,38 @@
     currentTrigger = null;
   }
 
-  function onPointerEnter(e) {
-    const trigger = e.target.closest('[data-tooltip]');
+  // Use pointerover/pointerout with relatedTarget containment checks
+  function onPointerOver(e) {
+    const trigger = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
     if (!trigger) return;
     showTooltip(trigger);
   }
 
-  function onPointerLeave(e) {
-    const trigger = e.target.closest('[data-tooltip]');
+  function onPointerOut(e) {
+    const trigger = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
     if (!trigger) return;
-    // Ensure we only hide when leaving the same element
-    if (currentTrigger === trigger) hideTooltip(trigger);
+    const toEl = e.relatedTarget;
+    // Only hide if moving outside the same trigger (not within its children)
+    if (!toEl || !trigger.contains(toEl)) {
+      if (currentTrigger === trigger) hideTooltip(trigger);
+    }
+  }
+
+  function onPointerMove() {
+    if (currentTrigger && tooltipEl && tooltipEl.style.visibility === 'visible') {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => positionTooltip(currentTrigger));
+    }
   }
 
   function onFocusIn(e) {
-    const trigger = e.target.closest('[data-tooltip]');
+    const trigger = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
     if (!trigger) return;
     showTooltip(trigger);
   }
 
   function onFocusOut(e) {
-    const trigger = e.target.closest('[data-tooltip]');
+    const trigger = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
     if (!trigger) return;
     if (currentTrigger === trigger) hideTooltip(trigger);
   }
@@ -125,9 +136,10 @@
 
   function init() {
     createTooltip();
-    // Delegated listeners so dynamically-updated rank badges work
-    document.addEventListener('pointerenter', onPointerEnter, true);
-    document.addEventListener('pointerleave', onPointerLeave, true);
+    // Delegated listeners so dynamically-created elements work
+    document.addEventListener('pointerover', onPointerOver, true);
+    document.addEventListener('pointerout', onPointerOut, true);
+    document.addEventListener('pointermove', onPointerMove, true);
     document.addEventListener('focusin', onFocusIn, true);
     document.addEventListener('focusout', onFocusOut, true);
     window.addEventListener('scroll', onScrollOrResize, true);
