@@ -89,6 +89,8 @@ Firebase Firestore → Service Layer → State Manager → Components → UI
 - **State Management**: Simple publish-subscribe pattern
 - **Data Source**: Firebase Firestore (existing structure preserved)
 - **Charts**: Enhanced Chart.js with custom styling
+ - **Theme System (Centralized)**: Shared CSS variables in `css/theme.css`; `ThemeService` (`js/services/ThemeService.js`) controls theme (light/dark), persists to localStorage, and emits a global `themeChanged` event. Components read tokens from `document.body` and subscribe for canvas redraws.
+ - **Universal Tooltip**: Single tooltip in `js/tooltip.js` for all `[data-tooltip]`; legacy pseudo-tooltips disabled globally.
 
 ## 4. Visual Design System
 
@@ -187,10 +189,13 @@ This Hero Header must remain but sits BELOW the new universal header
 ### 7.1 Directory Structure
 ```
 /
+├── css/theme.css                        (shared tokens + universal utilities)
 ├── index.html (entry point)
 ├── company-card.html (company view)
 ├── css/ (all stylesheets)
 ├── js/ (all JavaScript)
+│   └── services/
+│       └── ThemeService.js              (centralized theme controller)
 ├── components/ (templates and Web Components)
 			├── templates/
 			│   ├── universal-header.template.html  (NEW)
@@ -315,6 +320,17 @@ const querySnapshot = await db.collection("stocks")
 ### A3. Overall Score Calculation
 ```javascript
 const overallScore = (qualityNorm * 0.4) + (idqNorm * 0.35) + (antiFragileNorm * 0.25);
+```
+
+### A4. Theme Integration
+```javascript
+// Toggle via ThemeService
+ThemeService.toggle();
+
+// Listen for theme changes to redraw canvas elements
+window.addEventListener('themeChanged', () => {
+  // e.g., recreate charts using CSS vars read from document.body
+});
 ```
 
 ---

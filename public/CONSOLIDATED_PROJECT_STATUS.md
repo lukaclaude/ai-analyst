@@ -472,11 +472,11 @@ drawMiniPriceChart()           // Chart rendering
 5. **Chart Order**: Historical data must be reversed (oldest → newest)
 
 ### Theme System Status
-⚠️ **BROKEN**: Theme switching exists but doesn't properly update all components
-- Must be fixed in Phase 0 before any visual work
-- Use CSS variables exclusively for all colors
-- Test both light and dark modes with every change
-- Some components have hardcoded colors that ignore theme
+✅ **CENTRALIZED & FIXED**
+- Shared tokens in `css/theme.css`; components use CSS variables only
+- `ThemeService` (`js/services/ThemeService.js`) applies/persists theme and emits `themeChanged`
+- Components and charts subscribe to `themeChanged` and read vars from `document.body`
+- Legacy CSS pseudo-tooltips removed; universal tooltip (`js/tooltip.js`) is theme-aware
 
 ### CSS Classes That Matter
 ```css

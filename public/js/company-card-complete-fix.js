@@ -2210,9 +2210,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const ticker = urlParams.get('ticker') || 'NVDA';
     
-    // Load theme
-    if (state.theme === 'light') {
-        document.body.classList.add('light-theme');
+    // Load theme via ThemeService (centralized)
+    if (window.ThemeService && typeof window.ThemeService.init === 'function') {
+        // ThemeService is idempotent; ensures stored theme is applied
+        window.ThemeService.init();
     }
     
     // Setup dynamic tooltip positioning
@@ -2273,22 +2274,23 @@ function setupEventListeners() {
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light-theme');
-            state.theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
-            localStorage.setItem('theme', state.theme);
-            // Redraw charts with new theme colors
-            if (state.currentStockData) {
-                createEarningsChart(currentChartMetric);
-                
-                // Also redraw the score breakdown chart with correct text color
-                const qualityScore = state.currentStockData?.Portfolio?.Quality_Score || 0;
-                const idqScore = state.currentStockData?.LLM_Reports?.IDQ_Report?.totalIDQScore || 0;
-                const antiFragileScore = state.currentStockData?.Anti_Fragile_Score?.totalScore || 0;
-                const companyTier = calculateCompanyTier(qualityScore, idqScore, antiFragileScore);
-                drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier);
+            if (window.ThemeService && typeof window.ThemeService.toggle === 'function') {
+                window.ThemeService.toggle();
             }
         });
     }
+
+    // React to theme changes (from header, sidebar, or anywhere)
+    window.addEventListener('themeChanged', () => {
+        if (state.currentStockData) {
+            createEarningsChart(currentChartMetric);
+            const qualityScore = state.currentStockData?.Portfolio?.Quality_Score || 0;
+            const idqScore = state.currentStockData?.LLM_Reports?.IDQ_Report?.totalIDQScore || 0;
+            const antiFragileScore = state.currentStockData?.Anti_Fragile_Score?.totalScore || 0;
+            const companyTier = calculateCompanyTier(qualityScore, idqScore, antiFragileScore);
+            drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier);
+        }
+    });
     
     // Setup chart tab switching
     document.querySelectorAll('.tab-button').forEach(button => {

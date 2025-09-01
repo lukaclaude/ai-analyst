@@ -14,7 +14,7 @@ This document tracks the completion of Phase 0 (Foundation) and provides context
 ## ✅ PHASE 0: FOUNDATION - COMPLETED ITEMS
 
 ### 1. Comprehensive CSS Variable System ✅
-**Location**: `/public/css/company-card-fixed.css`
+**Location**: `/public/css/theme.css` (shared) and `/public/css/company-card-fixed.css` (page-specific)
 
 #### What Was Done:
 - Created complete CSS variable system for ALL colors, including:
@@ -44,18 +44,19 @@ This document tracks the completion of Phase 0 (Foundation) and provides context
 }
 ```
 
-### 2. Fixed Theme System ✅
-**Files Modified**: 
-- `/public/css/company-card-fixed.css`
-- `/public/js/company-card-complete-fix.js`
-- `/public/components/universal-header.html`
+### 2. Fixed Theme System ✅ (Centralized)
+**Files**: 
+- `/public/css/theme.css` (tokens, universal helpers, tooltip)
+- `/public/js/services/ThemeService.js` (single source of truth)
+- `/public/js/company-card-complete-fix.js` (subscribes to `themeChanged` and redraws charts)
+- `/public/js/universal-header.js` (uses ThemeService for toggle)
 
 #### What Was Fixed:
 - All hardcoded colors converted to CSS variables
 - Light theme properly overrides all variables
-- Charts now read CSS variables dynamically
+- Charts read CSS variables dynamically from `document.body`
 - Glass morphism effects work in both themes
-- Universal header forced to use theme variables
+- Theme toggling unified via ThemeService; components listen to `themeChanged`
 
 ### 3. Mobile-First Responsive Foundation ✅
 **Breakpoints Established**:

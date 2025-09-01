@@ -84,12 +84,15 @@ class UniversalHeader {
     }
     
     toggleTheme() {
-        document.body.classList.toggle('light-theme');
-        const isLight = document.body.classList.contains('light-theme');
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        
-        // Dispatch event for other components to react
-        window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: isLight ? 'light' : 'dark' } }));
+        if (window.ThemeService && typeof window.ThemeService.toggle === 'function') {
+            window.ThemeService.toggle();
+        } else {
+            // Fallback if ThemeService not loaded
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: isLight ? 'light' : 'dark' } }));
+        }
     }
     
     handleSearch(query) {
