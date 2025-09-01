@@ -898,10 +898,12 @@ async function populateCompanyCard() {
         positionIndicator.style.color = idqColors.color;
     }
     
-    // Add IDQ tier label below the indicator
+    // Add IDQ tier label (positioned above the indicator arrow)
     const tierLabel = document.getElementById('idq-tier-label');
     if (tierLabel) {
         let tierName = '';
+        // IDQ tiers (inclusive ranges) — keep in sync with blueprint.md spec and README Design Quick Reference
+        // 11–12: Pioneer; 9–10: Leader; 6–8: Integrator; 3–5: Follower; ≤2: Lagging
         if (idqScore >= 11) {
             tierName = 'Pioneer';
         } else if (idqScore >= 9) {
@@ -909,9 +911,9 @@ async function populateCompanyCard() {
         } else if (idqScore >= 6) {
             tierName = 'Integrator';
         } else if (idqScore >= 3) {
-            tierName = 'Optimizer';
+            tierName = 'Follower';
         } else {
-            tierName = 'Laggard';
+            tierName = 'Lagging';
         }
         tierLabel.textContent = tierName;
         tierLabel.style.color = idqColors.color;

@@ -1120,18 +1120,21 @@ body.light-theme .glass-morphism {
 
 .idq-tier-label {
     position: absolute;
-    top: 18px;
+    /* Place above the downward arrow indicator, not over the -3/12 labels */
+    top: -22px;
     transform: translateX(-50%);
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
     text-shadow: 
         0 0 8px currentColor,
         0 0 16px currentColor,
         0 1px 2px rgba(0, 0, 0, 0.4);
     opacity: 0.9;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .idq-animated-dots {
