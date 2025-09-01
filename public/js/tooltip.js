@@ -8,6 +8,11 @@
   let tooltipEl = null;
   let currentTrigger = null;
   let rafId = null;
+  let pinned = false; // when true, tooltip stays until explicit dismiss
+
+  function isCoarsePointer() {
+    try { return window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch (_) { return false; }
+  }
 
   function createTooltip() {
     if (tooltipEl) return tooltipEl;
@@ -90,6 +95,7 @@
     tooltipEl.style.visibility = 'hidden';
     if (trigger) trigger.removeAttribute('aria-describedby');
     currentTrigger = null;
+    pinned = false;
   }
 
   // Use pointerover/pointerout with relatedTarget containment checks
@@ -102,6 +108,7 @@
   function onPointerOut(e) {
     const trigger = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
     if (!trigger) return;
+    if (pinned && currentTrigger === trigger) return; // keep visible when pinned
     const toEl = e.relatedTarget;
     // Only hide if moving outside the same trigger (not within its children)
     if (!toEl || !trigger.contains(toEl)) {
@@ -144,6 +151,36 @@
     document.addEventListener('focusout', onFocusOut, true);
     window.addEventListener('scroll', onScrollOrResize, true);
     window.addEventListener('resize', onScrollOrResize);
+
+    // Tap-to-pin for mobile/coarse pointers
+    document.addEventListener('click', (e) => {
+      if (!isCoarsePointer()) return;
+      const trigger = e.target && e.target.closest ? e.target.closest('[data-tooltip]') : null;
+      if (trigger) {
+        if (pinned && currentTrigger === trigger) {
+          hideTooltip(trigger);
+        } else {
+          showTooltip(trigger);
+          pinned = true;
+        }
+      } else {
+        // click outside hides if pinned
+        if (pinned) hideTooltip(currentTrigger);
+      }
+    }, true);
+
+    // Keyboard toggle for accessibility (Enter/Space pins/unpins)
+    document.addEventListener('keydown', (e) => {
+      const focused = document.activeElement;
+      if (!focused || !focused.matches || !focused.matches('[data-tooltip]')) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (pinned && currentTrigger === focused) hideTooltip(focused);
+        else { showTooltip(focused); pinned = true; }
+      } else if (e.key === 'Escape') {
+        if (pinned) hideTooltip(currentTrigger);
+      }
+    });
   }
 
   if (document.readyState === 'loading') {

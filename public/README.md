@@ -36,12 +36,21 @@ What works (100%)
 - Header search (desktop + mobile reveal): suggestions styled and tap/click navigable
 - Sidebar search: suggestions work; clicking updates the current page; consistent dropdown behavior (active/hidden)
 - Bottom mobile nav: Home navigates to index, Search triggers header search reveal, Favorites is a placeholder, Menu opens the sidebar
+- Company Analysis (desktop): Bullish/Bearish traits show inline “text pull”; (i) icons hidden on desktop and shown on mobile
+- Score Composition: uses universal tooltip for segment details and label; center text uses theme tokens
+- Tier badge: tier name shows universal tooltip with tier ranges and formula (old popup disabled)
+- Score Cards: main score numerals now use theme text color (light on dark, dark on light) instead of tier color; Anti‑Fragile shield background is neutral per theme (no gray block in light theme); IDQ/Quality visuals still use tier colors for strokes/gradients
+- Performance Trends: chart fills container, redraws on resize, visible on mobile
+- Health Indicators: Working Capital displays bn/tn/m units (with currency)
+- Detailed Financials: shares outstanding pulls from multiple possible keys (weightedAverageShares / Outstanding / Diluted)
 
 Known issues / gaps
 - Mobile responsiveness: layout still desktop‑first in places (score card stacking, tables, hero compact mode)
 - Sidebar drawer on mobile: needs a visible close control and refined drawer width/behavior
 - Favorites page is not built (placeholder toast)
 - Universal sidebar (context‑aware top content) not implemented yet
+- Mobile tooltips: tap-to-pin supported; visual affordance added (dotted underline/icon), but we may want a richer bottom-sheet for long content
+- Financial metrics mapping: EV/EBITDA and some ratios vary by source; we added fallbacks (enterpriseValueOverEBITDA, computed margins), but confirm field names across collections
 
 Critical warnings
 - Many numeric values are strings; always `parseFloat()` when needed
@@ -55,6 +64,7 @@ Critical warnings
 - `components/universal-header.html` — Header markup + header‑scoped styles
 - `js/universal-header.js` — Header logic (theme toggle via ThemeService, global search)
 - `js/services/ThemeService.js` — Centralized theme (apply/persist/emit `themeChanged`)
+- `js/services/DataService.js` — Firestore init + cached search index + recent companies
 - `js/tooltip.js` — Universal tooltip (single element appended to `body`, [data-tooltip] triggers)
 - `js/company-card-complete-fix.js` — Main page logic (data fetch, charts, analysis, sidebar search, score “revelation panel”)
 - `company-card-fixed.html` — Working page markup (scores, analysis, financials)
@@ -175,6 +185,7 @@ Accessibility
 If you only read one section, read this:
 - Theming is centralized (ThemeService + CSS tokens). Always read vars from `document.body`. Redraw canvas charts on `themeChanged`.
 - Tooltips are universal (js/tooltip.js). Do not add CSS `::after` tooltips; they are disabled.
+- Mobile tooltips: tap once to pin; tap outside to dismiss. Avoid adding `title` attributes which trigger native tooltips and conflict with the universal system.
 - Section surfaces are standardized. Use `.section-surface` for premium, theme‑aware section backgrounds.
 - Header search (desktop/mobile) and sidebar search are both working. Sidebar shows results that update the page inline; header navigates via links.
 - Bottom nav: Home and Search wired; Favorites is a placeholder; Menu opens the sidebar (mobile close control to be implemented in Phase 2).
@@ -187,7 +198,9 @@ Do not break:
 Start with:
 1) Universal Sidebar skeleton (context-aware) + `DataService`
 2) Extract `css/components.css` and route header/sidebar styles there
-3) Add mobile sidebar close control (temporary) and prepare for full responsiveness
+3) Add mobile sidebar close control; prepare for full responsiveness
+4) Desktop polish: Company Analysis card dividers, score card stacking rules, table variants
+5) Expand tooltips coverage across Key Financial Metrics and Detailed Financial Data
 
 ## Change Log (Reverse Chronological)
 
@@ -206,3 +219,5 @@ Start with:
 
 - Spec: `blueprint.md`
 - Data example: `public/FireStore-TSM JSON example.json`
+- 2025‑09‑01: Tooltip system hardened; removed native `title` fallbacks to prevent double-tooltips; mobile tap-to-pin added; dotted underline indicator on mobile. Score Composition now uses universal tooltip (segments and label), center text reads theme tokens. Tier name uses universal tooltip; legacy tier popup disabled. Traits show inline text on desktop and tooltip-only on mobile. Fixed duplicate universal sidebar container. Files: js/tooltip.js, js/company-card-complete-fix.js, css/theme.css, css/company-card-fixed.css, company-card-fixed.html
+- 2025‑09‑01: DataService refactor: single Firestore init + cached search index (5‑min TTL). universal‑header now uses DataService for search. Expanded financial tooltips in metrics grid and detailed tables. Unit formatting for Market Cap, Revenue, Working Capital; shares outstanding displayed as quantities. Theme change updates score numerals live. Files: js/services/DataService.js, js/universal-header.js, js/company-card-complete-fix.js, README.md

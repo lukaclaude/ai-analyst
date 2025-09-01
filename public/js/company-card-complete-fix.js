@@ -58,6 +58,18 @@ function formatCurrency(value, decimals = 1, currency = 'USD') {
         `${symbol}${formatted}` : `${formatted} ${symbol}`;
 }
 
+// Format large quantities (non-currency) with units (tn/bn/m/k)
+function formatQuantity(value, decimals = 2) {
+    if (value == null || isNaN(value)) return 'N/A';
+    const num = parseFloat(value);
+    const absNum = Math.abs(num);
+    if (absNum >= 1e12) return `${(num / 1e12).toFixed(decimals)} tn`;
+    if (absNum >= 1e9) return `${(num / 1e9).toFixed(decimals)} bn`;
+    if (absNum >= 1e6) return `${(num / 1e6).toFixed(decimals)} m`;
+    if (absNum >= 1e3) return `${(num / 1e3).toFixed(decimals)} k`;
+    return num.toFixed(decimals);
+}
+
 // Format market cap to human readable format  
 function formatMarketCap(value, currencyCode = 'USD') {
     if (!value || isNaN(value)) return 'N/A';
@@ -824,7 +836,9 @@ async function populateCompanyCard() {
     const qualityValueEl = document.getElementById('quality-score-value');
     if (qualityValueEl) {
         animateValue(qualityValueEl, 0, qualityScore, 1000);
-        qualityValueEl.style.color = qualityColors.color;
+        const cs = getComputedStyle(document.body);
+        const textPrimary = (cs.getPropertyValue('--color-text-primary') || '#E6EDF3').trim();
+        qualityValueEl.style.color = textPrimary;
     }
     
     // Animate circle
@@ -885,7 +899,9 @@ async function populateCompanyCard() {
     const idqValueEl = document.getElementById('idq-score-value');
     if (idqValueEl) {
         idqValueEl.textContent = idqScore;
-        idqValueEl.setAttribute('fill', idqColors.color);
+        const cs = getComputedStyle(document.body);
+        const textPrimary = (cs.getPropertyValue('--color-text-primary') || '#E6EDF3').trim();
+        idqValueEl.setAttribute('fill', textPrimary);
     }
     
     // Calculate position percentage (IDQ ranges from -3 to 12, total range of 15)
@@ -1004,6 +1020,13 @@ async function populateCompanyCard() {
     
     // Populate Anti-Fragile sub-scores
     const afSubScoresContainer = document.getElementById('antifragile-sub-scores-container');
+    // Ensure AF score value uses theme text color (not tier color)
+    if (afValueEl) {
+        const cs = getComputedStyle(document.body);
+        const textPrimary = (cs.getPropertyValue('--color-text-primary') || '#E6EDF3').trim();
+        afValueEl.setAttribute('fill', textPrimary);
+        afValueEl.style.color = textPrimary;
+    }
     if (afSubScoresContainer && antiFragile?.groupScores) {
         const subScores = [
             { label: 'Strategic Core', value: antiFragile.groupScores.barbellMethodScore || 0, max: 13, min: -1 },
@@ -1477,10 +1500,11 @@ function populateHealthScores() {
     const wcInterpretation = document.getElementById('working-capital-interpretation');
     
     if (wcElement && workingCapitalValue !== undefined) {
-        const workingCapital = parseFloat(workingCapitalValue);
+        const workingCapital = parseFloat(String(workingCapitalValue).replace(/,/g,''));
         
         if (!isNaN(workingCapital)) {
-            wcElement.textContent = formatCurrency(workingCapital, 1, currency);
+            // Use bn/tn/m/k units for readability, with currency
+            wcElement.textContent = formatMarketCap(workingCapital, currency);
             wcElement.className = 'text-4xl font-bold ' + (workingCapital > 0 ? 'text-green-400' : 'text-red-400');
             
             if (wcInterpretation) {
@@ -1506,32 +1530,99 @@ function populateFinancialMetrics() {
     const healthScores = apiFinancials?.Health_Scores || {};
     const ttm = apiFinancials?.TTM || {};
     const ratios = ttm.Ratios || {};
+    const getRatio = (...keys) => {
+        for (const k of keys) {
+            const v = ratios[k];
+            if (v != null && v !== 'N/A' && v !== '') return v;
+        }
+        return null;
+    };
+    const tryPercent = (val) => {
+        if (val == null) return null;
+        if (typeof val === 'string' && val.includes('%')) return parseFloat(val.replace('%',''));
+        const num = parseFloat(val); return isNaN(num) ? null : num;
+    };
+    // Fallback computations for growth and margins if missing
+    const y1 = apiFinancials?.Y1 || {};
+    const ttmIncome = ttm.Income_Statement || {};
+    const y1Income = y1.Income_Statement || {};
+    const revenueGrowthFallback = () => {
+        const a = parseFloat(String(ttmIncome.revenue||'').replace(/,/g,''));
+        const b = parseFloat(String(y1Income.revenue||'').replace(/,/g,''));
+        if (!isNaN(a) && !isNaN(b) && b !== 0) return ((a-b)/Math.abs(b))*100;
+        return null;
+    };
+    const epsGrowthFallback = () => {
+        const a = parseFloat(String(ttmIncome.ePS||'').replace(/,/g,''));
+        const b = parseFloat(String(y1Income.ePS||'').replace(/,/g,''));
+        if (!isNaN(a) && !isNaN(b) && b !== 0) return ((a-b)/Math.abs(b))*100;
+        return null;
+    };
+    const operatingMarginFallback = () => {
+        const op = parseFloat(String(ttmIncome.operatingIncome||'').replace(/,/g,''));
+        const rev = parseFloat(String(ttmIncome.revenue||'').replace(/,/g,''));
+        if (!isNaN(op) && !isNaN(rev) && rev !== 0) return (op/rev)*100;
+        return null;
+    };
     const income = ttm.Income_Statement || {};
     
+    const currencyCode = ttm?.reportedCurrency || state.currentStockData?.Portfolio?.stockpricecurrency || 'USD';
     const metrics = [
         {
             category: 'Valuation',
             items: [
-                { label: 'Market Cap', value: formatCurrency(parseFloat(healthScores.marketCap)) },
-                { label: 'P/E Ratio', value: ratios.peRatio ? parseFloat(ratios.peRatio).toFixed(2) : 'N/A' },
+                { label: 'Market Cap', value: (() => {
+                    const raw = healthScores.marketCap;
+                    const num = raw != null ? parseFloat(String(raw).replace(/,/g, '')) : NaN;
+                    return !isNaN(num) ? formatMarketCap(num, currencyCode) : 'N/A';
+                })() },
+                { label: 'P/E Ratio', value: (() => {
+                    const v = getRatio('priceEarningsRatio','peRatio','trailingPE');
+                    return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A';
+                })() },
                 { label: 'P/B Ratio', value: ratios.priceToBookRatio ? parseFloat(ratios.priceToBookRatio).toFixed(2) : 'N/A' },
-                { label: 'EV/EBITDA', value: ratios.evToEBITDA ? parseFloat(ratios.evToEBITDA).toFixed(2) : 'N/A' }
+                { label: 'EV/EBITDA', value: (() => {
+                    const v = getRatio('evToEBITDA','enterpriseValueOverEBITDA','EVtoEBITDA');
+                    return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A';
+                })() }
             ]
         },
         {
             category: 'Profitability',
             items: [
-                { label: 'Revenue', value: formatCurrency(parseFloat(income.revenue)) },
+                { label: 'Revenue', value: (() => {
+                    const raw = income.revenue;
+                    const num = raw != null ? parseFloat(String(raw).replace(/,/g, '')) : NaN;
+                    return !isNaN(num) ? formatCurrency(num, 1, currencyCode) : 'N/A';
+                })() },
                 { label: 'Gross Margin', value: ratios.grossProfitMargin ? `${parseFloat(ratios.grossProfitMargin).toFixed(1)}%` : 'N/A' },
-                { label: 'Operating Margin', value: ratios.operatingMargin ? `${parseFloat(ratios.operatingMargin).toFixed(1)}%` : 'N/A' },
+                { label: 'Operating Margin', value: (() => {
+                    const v = getRatio('operatingMargin','operatingProfitMargin');
+                    const num = tryPercent(v);
+                    const fb = operatingMarginFallback();
+                    const res = num != null ? num : fb;
+                    return res != null ? `${res.toFixed(1)}%` : 'N/A';
+                })() },
                 { label: 'Net Margin', value: ratios.netProfitMargin ? `${parseFloat(ratios.netProfitMargin).toFixed(1)}%` : 'N/A' }
             ]
         },
         {
             category: 'Growth',
             items: [
-                { label: 'Revenue Growth', value: ratios.revenueGrowth ? `${parseFloat(ratios.revenueGrowth).toFixed(1)}%` : 'N/A' },
-                { label: 'EPS Growth', value: ratios.epsGrowth ? `${parseFloat(ratios.epsGrowth).toFixed(1)}%` : 'N/A' },
+                { label: 'Revenue Growth', value: (() => {
+                    const v = getRatio('revenueGrowth');
+                    const num = tryPercent(v);
+                    const fb = revenueGrowthFallback();
+                    const res = num != null ? num : fb;
+                    return res != null ? `${res.toFixed(1)}%` : 'N/A';
+                })() },
+                { label: 'EPS Growth', value: (() => {
+                    const v = getRatio('epsGrowth');
+                    const num = tryPercent(v);
+                    const fb = epsGrowthFallback();
+                    const res = num != null ? num : fb;
+                    return res != null ? `${res.toFixed(1)}%` : 'N/A';
+                })() },
                 { label: 'Altman Z-Score', value: healthScores.altmanZScore || 'N/A' },
                 { label: 'Piotroski F-Score', value: healthScores.piotroskiFScore || 'N/A' }
             ]
@@ -1540,7 +1631,7 @@ function populateFinancialMetrics() {
             category: 'Financial Health',
             items: [
                 { label: 'Current Ratio', value: ratios.currentRatio ? parseFloat(ratios.currentRatio).toFixed(2) : 'N/A' },
-                { label: 'Debt/Equity', value: ratios.debtToEquityRatio ? parseFloat(ratios.debtToEquityRatio).toFixed(2) : 'N/A' },
+                { label: 'Debt/Equity', value: (() => { const v = getRatio('debtEquityRatio','debtToEquityRatio','debtToEquity'); return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A'; })() },
                 { label: 'ROE', value: ratios.returnOnEquity ? `${parseFloat(ratios.returnOnEquity).toFixed(1)}%` : 'N/A' },
                 { label: 'ROA', value: ratios.returnOnAssets ? `${parseFloat(ratios.returnOnAssets).toFixed(1)}%` : 'N/A' }
             ]
@@ -1556,6 +1647,17 @@ function populateFinancialMetrics() {
                         ${category.items.map(item => {
                             let valueClass = 'metric-value';
                             let displayValue = item.value || 'N/A';
+                            const metricTooltips = {
+                                'Revenue': 'What it is: Total sales revenue.\nWhy it matters: Shows top-line growth and demand.',
+                                'Net Income': "What it is: Profit after all expenses.\nWhy it matters: Bottom line; true profitability.",
+                                'EPS': "What it is: Earnings per share.\nWhy it matters: Key for shareholders; growing EPS supports higher prices.",
+                                'Net Margin': 'What it is: % of revenue left as profit.\nWhy it matters: Efficiency turning sales into profit.',
+                                'Free Cash Flow': 'What it is: Cash after operations + investments.\nWhy it matters: Funds growth, buybacks, dividends.',
+                                'P/E Ratio': 'What it is: Price divided by EPS.\nWhy it matters: Common valuation gauge.',
+                                'P/B Ratio': 'What it is: Price to book value.\nWhy it matters: Capital intensity and asset valuation.',
+                                'EV/EBITDA': 'What it is: Enterprise value over EBITDA.\nWhy it matters: Capital-structure-neutral valuation.'
+                            };
+                            const labelTooltip = metricTooltips[item.label];
                             
                             // Add color to growth metrics
                             if (item.label.includes('Growth') && item.value && item.value !== 'N/A') {
@@ -1586,7 +1688,7 @@ function populateFinancialMetrics() {
                             
                             return `
                             <div class="metric-item">
-                                <span class="metric-label">${item.label}</span>
+                                <span class="metric-label" ${labelTooltip ? `data-tooltip="${labelTooltip}"` : ''}>${item.label}</span>
                                 <span class="${valueClass}">${displayValue}</span>
                             </div>
                             `;
@@ -1850,11 +1952,27 @@ function populateDetailedFinancials(viewType = 'income') {
     
     const currentYear = new Date().getFullYear();
     
-    // Helper function to get nested values
-    const getValue = (root, path) => path.split('.').reduce((obj, key) => obj?.[key], root);
+    // Helper function to get nested values; supports fallback keys separated by |
+    const getValue = (root, path) => {
+        if (!path) return null;
+        const candidates = path.split('|').map(s => s.trim());
+        for (const p of candidates) {
+            const v = p.split('.').reduce((obj, key) => obj?.[key], root);
+            if (v != null) return v;
+        }
+        return null;
+    };
     
     // Helper to build table HTML
     const buildTable = (title, periods, metrics) => {
+        const tableTooltips = {
+            'Revenue': 'What it is: Total sales revenue.\nWhy it matters: Shows top-line growth and demand.',
+            'Net Income': "What it is: Total profit after all expenses.\nWhy it matters: The 'bottom line' indicating true profitability.",
+            'EPS': "What it is: Earnings per share.\nWhy it matters: Key for shareholders; growing EPS supports higher prices.",
+            'Net Profit Margin': 'What it is: % of revenue left as profit.\nWhy it matters: Efficiency turning sales into profit.',
+            'Net Margin': 'What it is: % of revenue left as profit.\nWhy it matters: Efficiency turning sales into profit.',
+            'Free Cash Flow': 'What it is: Cash after operations + investments.\nWhy it matters: Funds growth, buybacks, dividends.'
+        };
         let html = `
             <div class="financial-table-wrapper">
                 <h3 class="text-lg font-semibold mb-4">${title}</h3>
@@ -1872,7 +1990,8 @@ function populateDetailedFinancials(viewType = 'income') {
         
         metrics.forEach(metric => {
             html += `<tr class="hover:bg-gray-800/50 transition-colors">`;
-            html += `<td class="px-4 py-3 secondary-text">${metric.name}</td>`;
+            const ttip = tableTooltips[metric.name];
+            html += `<td class="px-4 py-3 secondary-text" ${ttip ? `data-tooltip="${ttip}"` : ''}>${metric.name}</td>`;
             
             let previousValue = null;
             periods.forEach(period => {
@@ -1894,6 +2013,8 @@ function populateDetailedFinancials(viewType = 'income') {
                             // Check if value is already a percentage
                             displayValue = typeof value === 'string' && value.includes('%') ? 
                                 value : `${numValue.toFixed(1)}%`;
+                        } else if (metric.format === 'quantity') {
+                            displayValue = formatQuantity(numValue, 2);
                         } else {
                             displayValue = numValue.toFixed(2);
                         }
@@ -1946,7 +2067,7 @@ function populateDetailedFinancials(viewType = 'income') {
                 { name: 'EBITDA', key: 'Income_Statement.eBITDA', format: 'currency' },
                 { name: 'Net Income', key: 'Income_Statement.netIncome', format: 'currency' },
                 { name: 'EPS', key: 'Income_Statement.ePS', format: 'number' },
-                { name: 'Shares Outstanding', key: 'Income_Statement.weightedAverageSharesOutstanding', format: 'number' }
+                { name: 'Shares Outstanding', key: 'Income_Statement.weightedAverageShares|Income_Statement.weightedAverageSharesOutstanding|Income_Statement.weightedAverageSharesDiluted', format: 'quantity' }
             ];
             
             const marginMetrics = [
@@ -2107,9 +2228,9 @@ function createEarningsChart(metricType = 'revenue') {
         });
     }
 
-    // Set canvas size
-    const width = canvas.width = canvas.offsetWidth || 800;
-    const height = canvas.height = 400;
+    // Set canvas size responsive to container
+    const width = canvas.width = (canvas.clientWidth || canvas.offsetWidth || 800);
+    const height = canvas.height = (canvas.clientHeight || 360);
     const padding = 60;
     
     ctx.clearRect(0, 0, width, height);
@@ -2372,7 +2493,22 @@ function setupEventListeners() {
             const antiFragileScore = state.currentStockData?.Anti_Fragile_Score?.totalScore || 0;
             const companyTier = calculateCompanyTier(qualityScore, idqScore, antiFragileScore);
             drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier);
+
+            // Ensure main score numerals adopt current theme text color
+            const cs = getComputedStyle(document.body);
+            const textPrimary = (cs.getPropertyValue('--color-text-primary') || '#E6EDF3').trim();
+            const qEl = document.getElementById('quality-score-value');
+            if (qEl) qEl.style.color = textPrimary;
+            const idqEl = document.getElementById('idq-score-value');
+            if (idqEl) idqEl.setAttribute('fill', textPrimary);
+            const afEl = document.getElementById('antifragile-score-value');
+            if (afEl) { afEl.setAttribute('fill', textPrimary); afEl.style.color = textPrimary; }
         }
+    });
+
+    // Redraw performance chart on resize for responsiveness
+    window.addEventListener('resize', () => {
+        if (state.currentStockData) createEarningsChart(currentChartMetric);
     });
     
     // Mobile bottom navigation functionality

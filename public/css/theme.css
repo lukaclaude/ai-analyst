@@ -194,6 +194,17 @@ h1, h2, h3, h4, h5, h6 { color: var(--color-text-primary); }
 /* Disable legacy pseudo-tooltips globally to prevent conflicts */
 [data-tooltip]::after { content: none !important; }
 
+/* Mobile: make tooltip targets discoverable */
+@media (max-width: 768px) {
+  .analysis-content [data-tooltip],
+  .score-breakdown-label[data-tooltip],
+  .tier-name[data-tooltip],
+  .rank-badge[data-tooltip] {
+    text-decoration: underline dotted var(--color-text-secondary);
+    text-underline-offset: 2px;
+  }
+}
+
 /* --------------------------------------------
    Section Surface (glass panel for sections)
    -------------------------------------------- */

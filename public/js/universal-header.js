@@ -111,8 +111,6 @@ class UniversalHeader {
     async performSearch(query) {
         const resultsContainer = document.getElementById('global-search-results');
         if (!resultsContainer) return;
-        
-        // Show loading state
         resultsContainer.innerHTML = `
             <div class="search-loading">
                 <div class="spinner"></div>
@@ -120,67 +118,12 @@ class UniversalHeader {
             </div>
         `;
         resultsContainer.classList.add('active');
-        
         try {
-            // Initialize Firebase if not already done
-            if (typeof firebase === 'undefined') {
-                console.error('Firebase not loaded');
-                throw new Error('Firebase not initialized');
+            if (!window.DataService || typeof window.DataService.searchStocks !== 'function') {
+                throw new Error('DataService unavailable');
             }
-            
-            if (!firebase.apps.length) {
-                firebase.initializeApp({
-                    apiKey: "AIzaSyAjllbzGx8QK3L7mePVk0uZ0R-ccenxElA",
-                    authDomain: "sheets-to-firestore-sync-v2.firebaseapp.com",
-                    projectId: "sheets-to-firestore-sync-v2",
-                    storageBucket: "sheets-to-firestore-sync-v2.firebasestorage.app",
-                    messagingSenderId: "1035123111291",
-                    appId: "1:1035123111291:web:30c0f5ee30f001c1a739de",
-                    measurementId: "G-QQW25R6FB8"
-                });
-            }
-            
-            const db = firebase.firestore();
-            const querySnapshot = await db.collection("stocks").get();
-            
-            const searchResults = [];
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                if (data.Portfolio?.ticker && data.Portfolio?.companyName) {
-                    const ticker = data.Portfolio.ticker;
-                    const name = data.Portfolio.companyName;
-                    
-                    if (ticker.toLowerCase().includes(query.toLowerCase()) || 
-                        name.toLowerCase().includes(query.toLowerCase())) {
-                        
-                        // Calculate score if available
-                        let score = 0;
-                        if (data.Scores) {
-                            const q = parseFloat(data.Scores.qualityScore) || 0;
-                            const idq = parseFloat(data.Scores.growthIdqScore) || 0;
-                            const af = parseFloat(data.Scores.antiFragileScore) || 0;
-                            score = ((q / 109) * 50 + (idq / 12) * 25 + (af / 17) * 25).toFixed(1);
-                        }
-                        
-                        searchResults.push({
-                            ticker: ticker,
-                            name: name,
-                            score: score
-                        });
-                    }
-                }
-            });
-            
-            // Sort by relevance and limit to 10
-            searchResults.sort((a, b) => {
-                // Exact ticker match first
-                if (a.ticker.toLowerCase() === query.toLowerCase()) return -1;
-                if (b.ticker.toLowerCase() === query.toLowerCase()) return 1;
-                // Then by score
-                return b.score - a.score;
-            });
-            
-            this.displaySearchResults(searchResults.slice(0, 10));
+            const results = await window.DataService.searchStocks(query);
+            this.displaySearchResults(results.slice(0, 10));
         } catch (error) {
             console.error('Search failed:', error);
             resultsContainer.innerHTML = `
