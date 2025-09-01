@@ -2222,6 +2222,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Setup search bar
     setupSearchBar();
+
+    // Wire panel tabs (desktop)
+    setupPanelTabs();
     
     // Initialize universal sidebar (default)
     try {
@@ -2608,6 +2611,9 @@ function revealScoreDetails(scoreType) {
     // Reveal the panel
     panel.classList.add('revealed');
     currentRevealed = scoreType;
+
+    // Update panel tabs active state
+    try { updatePanelTabsActive(); } catch (_) {}
     
     // Smooth scroll to panel on mobile
     if (window.innerWidth <= 768) {
@@ -2615,6 +2621,40 @@ function revealScoreDetails(scoreType) {
             panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 100);
     }
+}
+
+function setupPanelTabs() {
+    const tabs = document.getElementById('panel-tabs');
+    if (!tabs) return;
+    // Click handlers
+    tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.panel-tab');
+        const closeBtn = e.target.closest('#panel-tab-close');
+        if (closeBtn) {
+            // Collapse by toggling the current revealed section
+            const active = document.querySelector('.detail-section.active');
+            if (active) {
+                const type = active.id.replace('-details', '');
+                revealScoreDetails(type);
+            }
+            return;
+        }
+        if (btn) {
+            const target = btn.getAttribute('data-target');
+            if (target) revealScoreDetails(target);
+        }
+    });
+}
+
+function updatePanelTabsActive() {
+    const tabs = document.getElementById('panel-tabs');
+    if (!tabs) return;
+    const active = document.querySelector('.detail-section.active');
+    const activeId = active ? active.id.replace('-details', '') : null;
+    tabs.querySelectorAll('.panel-tab').forEach((el) => {
+        const t = el.getAttribute('data-target');
+        el.classList.toggle('active', t === activeId);
+    });
 }
 
 // Mobile swipe detection for carousel
@@ -3205,7 +3245,7 @@ function renderMetricBar(label, value, max, options = {}) {
                     ${showReasoning ? '<span class="reasoning-icon">ⓘ</span>' : ''}
                 </span>
                 <span class="text-xs font-semibold">
-                    <span style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && value !== 0) || value < 0 ? '#ef4444' : 'white'}; font-weight: bold;">${value}</span>
+                    <span style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && value !== 0) || value < 0 ? '#ef4444' : 'var(--color-text-primary)'}; font-weight: bold;">${value}</span>
                     ${min < 0 ? 
                         `<span class="text-xs subtle-text"> (${min} to ${max})</span>` : 
                         `<span class="subtle-text">/${max}</span>`
@@ -3251,7 +3291,7 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                         <span class="text-sm font-mono">
-                            <span class="font-bold" style="color: ${score < 0 ? '#ef4444' : 'white'};">${formatNumber(score, 0)}</span>
+                            <span class="font-bold" style="color: ${score < 0 ? '#ef4444' : 'var(--color-text-primary)'};">${formatNumber(score, 0)}</span>
                             <span class="subtle-text"> / 0</span>
                         </span>
                     </div>
@@ -3265,7 +3305,7 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
                     <div class="flex justify-between items-center">
                         <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                         <span class="text-sm font-mono">
-                            <span class="font-bold" style="color: ${score < 0 ? '#ef4444' : 'white'};">${formatNumber(score, 0)}</span>
+                            <span class="font-bold" style="color: ${score < 0 ? '#ef4444' : 'var(--color-text-primary)'};">${formatNumber(score, 0)}</span>
                             <span class="subtle-text"> / 0</span>
                         </span>
                     </div>
@@ -3282,7 +3322,7 @@ function renderMetric(name, score, max, reasoning, isPenalty = false, colorOverr
                 <div class="flex justify-between items-center mb-1">
                     <span class="text-sm muted-heading">${name}${reasoningIcon}</span>
                     <span class="text-sm font-mono">
-                        <span class="font-bold" style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && score !== 0) ? '#ef4444' : 'white'};">${formatNumber(score)}</span>
+                        <span class="font-bold" style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && score !== 0) ? '#ef4444' : 'var(--color-text-primary)'};">${formatNumber(score)}</span>
                         <span class="subtle-text">/${max}</span>
                     </span>
                 </div>
@@ -3480,7 +3520,7 @@ function populateIDQExpanded() {
                     <div class="idq-facet-item">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-sm font-medium secondary-text">${title}</span>
-                            <span class="text-sm font-mono"><span class="font-bold text-white">${score}</span>/${maxScore}</span>
+                            <span class="text-sm font-mono"><span class="font-bold">${score}</span>/${maxScore}</span>
                         </div>
                         <div class="metric-bar mb-3">
                             <div class="metric-fill ${shimmerClass}" style="width: ${percentage}%; background: ${barColor};"></div>
@@ -3494,14 +3534,14 @@ function populateIDQExpanded() {
         html += '</div></div>';
     }
     
-    // Catalyst Watch Section
+    // Catalyst Watch Section (visually separated from facet breakdown)
     if (idqReport.catalystWatch) {
         html += `
-            <div class="idq-section">
+            <div class="idq-section mt-10 pt-6" style="border-top: 1px solid var(--glass-border);">
                 <h4 class="idq-section-title">Catalyst Watch</h4>
                 <div class="text-xs subtle-text mb-3">Last Updated: ${idqReport.lastUpdated || 'N/A'}</div>
                 <div class="border-l-2 border-gray-600 pl-4 space-y-2">
-                    ${idqReport.catalystWatch.split('•').filter(line => line.trim()).map(line => `<p class="muted-heading leading-relaxed">${line.trim()}</p>`).join('')}
+                    ${idqReport.catalystWatch.split('•').filter(line => line.trim()).map(line => `<p class=\"muted-heading leading-relaxed\">${line.trim()}</p>`).join('')}
                 </div>
             </div>
         `;
@@ -3731,7 +3771,7 @@ function showGroupDetails(groupName) {
             
             // Special handling for Gauntlet metrics (no progress bars, color-coded)
             if (rangeKey === 'gauntlet') {
-                const scoreColorClass = value === 0 ? 'text-white' : 'text-red-400';
+            const scoreColorClass = value === 0 ? '' : 'text-red-400';
                 const hasReasoning = reasoning && value !== 0;
                 const tooltipText = hasReasoning ? reasoning.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
                 const reasoningIcon = hasReasoning ? '<span class="reasoning-icon">💡</span>' : '';
@@ -3757,7 +3797,7 @@ function showGroupDetails(groupName) {
                         <div class="metric-item ${reasoning ? 'has-reasoning' : ''}" ${reasoning ? `data-tooltip="${tooltipText}"` : ''}>
                             <div class="flex justify-between items-center">
                                 <span class="text-sm muted-heading">${displayName}${reasoning ? '<span class="reasoning-icon">💡</span>' : ''}</span>
-                                <span class="text-sm font-mono font-bold text-white">${formatNumber(value)}</span>
+                                <span class="text-sm font-mono font-bold">${formatNumber(value)}</span>
                             </div>
                         </div>
                     `;
@@ -3848,7 +3888,7 @@ async function calculateScoreRankings() {
         if (qualityRankEl && qualityRank > 0) {
             // For non-medal ranks, make the rank number bold white
             if (qualityRank > 30) {
-                qualityRankEl.innerHTML = `<span style="font-weight: bold; color: white;">#${qualityRank}</span> of ${allScores.quality.length}`;
+                qualityRankEl.innerHTML = `<span style="font-weight: bold;">#${qualityRank}</span> of ${allScores.quality.length}`;
             } else {
                 qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length}`;
             }
@@ -3868,7 +3908,7 @@ async function calculateScoreRankings() {
         if (idqRankEl && idqRank > 0) {
             // For non-medal ranks, make the rank number bold white
             if (idqRank > 30) {
-                idqRankEl.innerHTML = `<span style="font-weight: bold; color: white;">#${idqRank}</span> of ${allScores.idq.length}`;
+                idqRankEl.innerHTML = `<span style="font-weight: bold;">#${idqRank}</span> of ${allScores.idq.length}`;
             } else {
                 idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length}`;
             }
@@ -3887,7 +3927,7 @@ async function calculateScoreRankings() {
         if (antiFragileRankEl && antiFragileRank > 0) {
             // For non-medal ranks, make the rank number bold white
             if (antiFragileRank > 30) {
-                antiFragileRankEl.innerHTML = `<span style="font-weight: bold; color: white;">#${antiFragileRank}</span> of ${allScores.antiFragile.length}`;
+                antiFragileRankEl.innerHTML = `<span style="font-weight: bold;">#${antiFragileRank}</span> of ${allScores.antiFragile.length}`;
             } else {
                 antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length}`;
             }

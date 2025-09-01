@@ -289,6 +289,16 @@
                         <!-- Revelation Panel - The crown jewels detail view -->
                         <div class="score-revelation-panel" id="score-revelation-panel">
                             <div class="revelation-content">
+                                <!-- Sticky panel header with section pills -->
+                                <div class="panel-tabs" id="panel-tabs" aria-label="Score details navigation">
+                                    <div class="panel-tabs-inner">
+                                        <button class="panel-tab" data-target="quality" aria-controls="quality-details">Quality</button>
+                                        <button class="panel-tab" data-target="idq" aria-controls="idq-details">IDQ</button>
+                                        <button class="panel-tab" data-target="antifragile" aria-controls="antifragile-details">Anti‑Fragile</button>
+                                        <div class="spacer"></div>
+                                        <button class="panel-tab-close" id="panel-tab-close" aria-label="Collapse details">Collapse</button>
+                                    </div>
+                                </div>
                                 <div class="detail-section quality-details" id="quality-details"></div>
                                 <div class="detail-section idq-details" id="idq-details"></div>
                                 <div class="detail-section antifragile-details" id="antifragile-details"></div>
