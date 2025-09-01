@@ -2204,7 +2204,7 @@ function setupTooltipEdgeDetection() {
 document.addEventListener('DOMContentLoaded', async function() {
     const urlParams = new URLSearchParams(window.location.search);
     const ticker = urlParams.get('ticker') || 'NVDA';
-    const useNewSidebar = urlParams.get('useNewSidebar') === '1';
+    const useNewSidebar = true; // universal sidebar is now default
     
     // Load theme via ThemeService (centralized)
     if (window.ThemeService && typeof window.ThemeService.init === 'function') {
@@ -2221,11 +2221,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Setup search bar
     setupSearchBar();
     
-    // Feature-flag: initialize universal sidebar into its container
+    // Initialize universal sidebar (default)
     try {
         const legacySidebar = document.getElementById('navigation-sidebar');
         const newSidebar = document.getElementById('universal-sidebar-container');
-        if (useNewSidebar && newSidebar && window.UniversalSidebar) {
+        if (newSidebar && window.UniversalSidebar) {
             if (legacySidebar) legacySidebar.style.display = 'none';
             newSidebar.style.display = 'block';
             // Load the sidebar skeleton markup
@@ -2262,7 +2262,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await fetchAndDisplayCompanyData(ticker);
     // Update universal sidebar top item (ticker/logo) after data is loaded
     try {
-        if (useNewSidebar && window.UniversalSidebar && typeof window.UniversalSidebar.updateTopFromState === 'function') {
+        if (window.UniversalSidebar && typeof window.UniversalSidebar.updateTopFromState === 'function') {
             window.UniversalSidebar.updateTopFromState();
         }
     } catch (_) {}

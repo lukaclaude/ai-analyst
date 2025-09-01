@@ -191,6 +191,7 @@ Start with:
 
 ## Change Log (Reverse Chronological)
 
+- 2025‑09‑01: Universal sidebar is now default; legacy sidebar removed. Desktop collapse (icon‑only) added with mid‑edge handle; collapsed state centers the clock and recent logos, and shows only sun/moon icon for theme. Top item shows [tiny logo] TICKER aligned with other icons. Files: company-card-fixed.html, js/company-card-complete-fix.js, components/universal-sidebar.html, js/universal-sidebar.js, css/components.css
 - 2025‑09‑01: Universal sidebar (flag `useNewSidebar=1`) — added scrollspy with animated indicator, renamed links (Top/Ticker, Score Trinity, Analysis, Key Metrics → `#health-scores`, Raw Financials), anchored Recent Companies + Theme at bottom, added mobile close handle; files: components/universal-sidebar.html, js/universal-sidebar.js, css/components.css
 - 2025‑09‑01: Sidebar search aligned with header (dropdown `active`/`hidden`); removed duplicate handler; header results restyled; mobile header search delay on blur so taps work; sidebar search positioned below header via padding; files: js/company-card-complete-fix.js, components/universal-header.html, css/company-card-fixed.css, js/universal-header.js
 - 2025‑09‑01: Section surfaces refined (ambient mesh; dark theme strengthened); applied to Scores, Analysis, Health Indicators, Performance Trends, Key Metrics, Detailed Financials; files: css/theme.css, company-card-fixed.html
