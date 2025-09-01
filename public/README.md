@@ -43,6 +43,11 @@ What works (100%)
 - Performance Trends: chart fills container, redraws on resize, visible on mobile
 - Health Indicators: Working Capital displays bn/tn/m units (with currency)
 - Detailed Financials: shares outstanding pulls from multiple possible keys (weightedAverageShares / Outstanding / Diluted)
+- IDQ tiers (raw‑score mapping): 11–12 Pioneer (purple), 9–10 Leader (blue), 6–8 Integrator (green), 3–5 Follower (yellow), ≤2 Lagging (orange). The IDQ chip, IDQ label pill, and indicator dot all use the same mapping; indicator position uses normalized percent for layout only.
+- Key Financial Metrics: tooltips added for Revenue, Net Income, EPS, Gross/Operating/Net margins, P/E, P/B, EV/EBITDA, Current Ratio, Debt/Equity, ROE, ROA, Revenue/EPS growth. Grid values formatted with tn/bn/m/k.
+- Detailed Financial Data tables: tooltips added to common rows across Income/Profit/Balance/Cash Flow (Revenue, Net Income, EPS, Net/EBITDA margin, Operating/Investing/Financing CF, CapEx, FCF, Dividends, Repurchases, Debt Repayment, etc.).
+- Header search uses `DataService.searchStocks()` (single Firestore init + 5‑min cached index) rather than initializing Firebase in components.
+- index.html placeholder now loads (fixed resource paths to `/main.js` and `/main.css`).
 
 Known issues / gaps
 - Mobile responsiveness: layout still desktop‑first in places (score card stacking, tables, hero compact mode)
@@ -92,7 +97,7 @@ Universal components (plan)
 - Mobile bottom nav (present but basic): hook up favorites when page exists; refine active state
 
 Services (plan)
-- `DataService` — single Firestore init; search; recent companies; caching
+- `DataService` — single Firestore init; search; recent companies; caching (implemented)
 - `NavigationService` — page navigation with query params and history
 - `StateService` — lightweight pub/sub for cross‑component state
 
@@ -189,6 +194,11 @@ If you only read one section, read this:
 - Section surfaces are standardized. Use `.section-surface` for premium, theme‑aware section backgrounds.
 - Header search (desktop/mobile) and sidebar search are both working. Sidebar shows results that update the page inline; header navigates via links.
 - Bottom nav: Home and Search wired; Favorites is a placeholder; Menu opens the sidebar (mobile close control to be implemented in Phase 2).
+- IDQ color logic: use raw IDQ score for tiers — see `getIdqTierColors(idqScore)` in `js/company-card-complete-fix.js`. Do not use percent tiers for IDQ color.
+- Score numerals: on `themeChanged`, reapply `--color-text-primary` to `#quality-score-value`, `#idq-score-value`, `#antifragile-score-value`.
+- Anti‑Fragile sub‑scores: single column (3 metrics). Quality sub‑scores: 2‑column on desktop. This avoids awkward gaps.
+- Key financials: tn/bn/m/k formatting; shares outstanding as quantities; Debt/Equity aliasing across `debtEquityRatio|debtToEquityRatio|debtToEquity`.
+- Header search: `DataService` provides a 5‑min cached index and single Firestore init.
 
 Do not break:
 - `fetchAndDisplayCompanyData()`, `revealScoreDetails()`, calculation and chart flows
@@ -200,6 +210,9 @@ Start with:
 2) Extract `css/components.css` and route header/sidebar styles there
 3) Add mobile sidebar close control; prepare for full responsiveness
 4) Desktop polish: Company Analysis card dividers, score card stacking rules, table variants
+5) Quality gauge: add subtle tick marks and refine arc thickness; keep perf in mind
+6) Expand table tooltips across any remaining rows; keep copy concise (“What it is / Why it matters”)
+7) Field alias map: centralize and extend for ratios (P/E, EV/EBITDA, margins) and per‑ticker differences
 5) Expand tooltips coverage across Key Financial Metrics and Detailed Financial Data
 
 ## Change Log (Reverse Chronological)
@@ -221,3 +234,4 @@ Start with:
 - Data example: `public/FireStore-TSM JSON example.json`
 - 2025‑09‑01: Tooltip system hardened; removed native `title` fallbacks to prevent double-tooltips; mobile tap-to-pin added; dotted underline indicator on mobile. Score Composition now uses universal tooltip (segments and label), center text reads theme tokens. Tier name uses universal tooltip; legacy tier popup disabled. Traits show inline text on desktop and tooltip-only on mobile. Fixed duplicate universal sidebar container. Files: js/tooltip.js, js/company-card-complete-fix.js, css/theme.css, css/company-card-fixed.css, company-card-fixed.html
 - 2025‑09‑01: DataService refactor: single Firestore init + cached search index (5‑min TTL). universal‑header now uses DataService for search. Expanded financial tooltips in metrics grid and detailed tables. Unit formatting for Market Cap, Revenue, Working Capital; shares outstanding displayed as quantities. Theme change updates score numerals live. Files: js/services/DataService.js, js/universal-header.js, js/company-card-complete-fix.js, README.md
+- 2025‑09‑01: IDQ chip/label corrected to raw‑score tier mapping; IDQ label restyled as readable pill (tier dot); added grade caption under chip. Removed score toolbar (kept keyboard toggles). Quality sub‑scores: 2‑column desktop; Anti‑Fragile sub‑scores: single column. Expanded tooltips across Key Financial Metrics and Detailed Financial Data. Debt/Equity aliasing fixed. index.html now loads. Files: company-card-fixed.html, css/company-card-fixed.css, js/company-card-complete-fix.js, js/services/DataService.js, js/universal-header.js
