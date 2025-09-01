@@ -1,3 +1,8 @@
+> DEPRECATION NOTICE
+> This file has been consolidated into README.md (Project Guide).
+> For the latest status, next steps, and handoff, see README.md.
+> The long‑term product spec remains in public/blueprint.md.
+
 # CONSOLIDATED PROJECT STATUS - Premium Financial Analysis Platform
 ### Last Updated: August 30, 2025
 ### For: Next Agent With Zero Context

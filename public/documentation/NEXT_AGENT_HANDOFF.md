@@ -1,3 +1,8 @@
+> DEPRECATION NOTICE
+> This file has been consolidated into README.md (Project Guide).
+> For the latest status, next steps, and handoff, see README.md.
+> The long‑term product spec remains in public/blueprint.md.
+
 # 🚨 NEXT AGENT HANDOFF - CRITICAL FIXES NEEDED
 ### Updated: August 30, 2025 (Session 5)
 ### Priority: FIX TOOLTIPS FIRST, Then Complete Analysis Sections

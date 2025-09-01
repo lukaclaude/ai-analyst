@@ -1,3 +1,8 @@
+> DEPRECATION NOTICE
+> This file has been consolidated into README.md (Project Guide).
+> For the latest status, next steps, and handoff, see README.md.
+> The long‑term product spec remains in public/blueprint.md.
+
 # PHASE 0 COMPLETION STATUS - Foundation Fixes
 ### Last Updated: August 30, 2025 (Session 5)
 ### Status: Phase 0 IN PROGRESS - Score Cards Done, Analysis Sections Pending
