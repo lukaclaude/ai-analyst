@@ -182,6 +182,8 @@ This Hero Header must remain but sits BELOW the new universal header
     - tiers.js
   - views/
     - score-cards.js
+    - analysis.js (wrapper)
+    - tables.js (wrapper)
 - archive/
 
 ### Testing & QA (quick checks)

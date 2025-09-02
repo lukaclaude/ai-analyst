@@ -1008,7 +1008,8 @@ async function populateCompanyCard() {
     // ========================================================================
     // POPULATE ANALYSIS SECTION
     // ========================================================================
-    populateAnalysis();
+    if (window.AnalysisView && window.AnalysisView.render) window.AnalysisView.render();
+    else populateAnalysis();
     
     // ========================================================================
     // POPULATE HEALTH SCORES
@@ -1028,7 +1029,8 @@ async function populateCompanyCard() {
     // ========================================================================
     // POPULATE DETAILED FINANCIALS
     // ========================================================================
-    populateDetailedFinancials('income');
+    if (window.TablesView && window.TablesView.render) window.TablesView.render('income');
+    else populateDetailedFinancials('income');
 }
 
 // ============================================
@@ -2697,7 +2699,8 @@ function setupEventListeners() {
                 e.target.classList.add('active');
                 
                 // Load new financial statement
-                populateDetailedFinancials(statement);
+                if (window.TablesView && window.TablesView.render) window.TablesView.render(statement);
+                else populateDetailedFinancials(statement);
             }
         });
     });
@@ -3325,7 +3328,7 @@ function renderMetricBar(label, value, max, options = {}) {
                     ${showReasoning ? '<span class="reasoning-icon">ⓘ</span>' : ''}
                 </span>
                 <span class="text-xs font-semibold">
-                    <span style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && value !== 0) || value < 0 ? '#ef4444' : 'var(--color-text-primary)'}; font-weight: bold;">${value}</span>
+                    <span style="color: ${percentage >= 90 ? '#a855f7' : (percentage <= 20 && value !== 0) || value < 0 ? '#ef4444' : 'var(--color-text-primary)'}; font-weight: bold;">${formatNumber(value, 1)}</span>
                     ${min < 0 ? 
                         `<span class="text-xs subtle-text"> (${min} to ${max})</span>` : 
                         `<span class="subtle-text">/${max}</span>`

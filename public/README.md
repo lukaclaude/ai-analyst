@@ -80,6 +80,8 @@ Critical warnings
 - `js/lib/formatters.js` — Currency/quantity/market cap formatting
 - `js/lib/tiers.js` — IDQ tier mapping by raw score
 - `js/views/score-cards.js` — Score card orchestration + details panel
+- `js/views/analysis.js` — Analysis view wrapper (delegates to existing implementation)
+- `js/views/tables.js` — Detailed Financials view wrapper (delegates to existing implementation)
 - `company-card-fixed.html` — Working page markup (scores, analysis, financials)
 - `archive/` — Non-runtime references (original single-file versions, variants, manual tests, historical docs). Nothing here is imported by the app.
 
