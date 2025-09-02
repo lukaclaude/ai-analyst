@@ -657,7 +657,26 @@ async function populateCompanyCard() {
     updatePriceDisplay(currentPrice, currency);
     
     // Fetch live price from API
-    fetchLiveStockPrice(portfolio.ticker, currency, updatePriceDisplay);
+    fetchLiveStockPrice(portfolio.ticker, currency, (p, cur) => {
+        const updated = updatePriceDisplay(p, cur);
+        try {
+            const logoEl = document.getElementById('company-logo');
+            const qs = parseFloat(state.currentStockData?.Portfolio?.qualityScore) || 0;
+            const is = parseFloat(state.currentStockData?.LLM_Reports?.IDQ_Report?.idqScore) || 0;
+            const af = parseFloat(state.currentStockData?.Anti_Fragile_Score?.totalScore) || 0;
+            const tier = typeof calculateCompanyTier === 'function' ? calculateCompanyTier(qs, is, af) : { score: 0, color: '' };
+            window.dispatchEvent(new CustomEvent('companyContextChanged', { detail: {
+                ticker: state.currentTicker,
+                companyName: state.currentStockData?.Portfolio?.companyName,
+                price: updated,
+                currency: cur,
+                overallScore: tier.score,
+                tierColor: tier.color,
+                logo: logoEl && logoEl.src || ''
+            }}));
+        } catch (_) {}
+        return updated;
+    });
     
     // Parse fair price range for target (from analyst estimates if available)
     let targetPrice = 0;
@@ -694,6 +713,20 @@ async function populateCompanyCard() {
     const antiFragileScore = parseFloat(portfolio.antiFragileScore) || antiFragile?.totalScore || 0;
     
     const companyTier = calculateCompanyTier(qualityScore, idqScore, antiFragileScore);
+
+    // Dispatch initial company context for header chip
+    try {
+        const logoEl = document.getElementById('company-logo');
+        window.dispatchEvent(new CustomEvent('companyContextChanged', { detail: {
+            ticker: state.currentTicker,
+            companyName: state.currentStockData?.Portfolio?.companyName,
+            price: currentPrice,
+            currency: currency,
+            overallScore: companyTier.score,
+            tierColor: companyTier.color,
+            logo: logoEl && logoEl.src || ''
+        }}));
+    } catch (_) {}
     
     const badgeEl = document.getElementById('overall-assessment-badge');
     if (badgeEl) {
@@ -3984,10 +4017,10 @@ async function calculateScoreRankings() {
             else if (qualityRank <= 30) qualityRankEl.classList.add('rank-bronze');
             
             // Add percentile for context
-            const percentile = Math.round(((allScores.quality.length - qualityRank + 1) / allScores.quality.length) * 100);
-            qualityRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
-            // Show percentile inline for quick scanning
-            qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length} • Top ${percentile}%`;
+            const topPctQ = Math.max(1, Math.round((qualityRank / allScores.quality.length) * 100));
+            qualityRankEl.setAttribute('data-percentile', `Top ${topPctQ}%`);
+            // Keep original order
+            qualityRankEl.textContent = `#${qualityRank} of ${allScores.quality.length} • Top ${topPctQ}%`;
             // Keyboard + a11y for tooltip
             qualityRankEl.setAttribute('tabindex', '0');
             qualityRankEl.setAttribute('aria-label', `This company ranks ${qualityRank} out of ${allScores.quality.length} companies in Enterprise Quality. Top ${percentile}%.`);
@@ -4009,9 +4042,9 @@ async function calculateScoreRankings() {
             else if (idqRank <= 20) idqRankEl.classList.add('rank-silver');
             else if (idqRank <= 30) idqRankEl.classList.add('rank-bronze');
             
-            const percentile = Math.round(((allScores.idq.length - idqRank + 1) / allScores.idq.length) * 100);
-            idqRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
-            idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length} • Top ${percentile}%`;
+            const topPctI = Math.max(1, Math.round((idqRank / allScores.idq.length) * 100));
+            idqRankEl.setAttribute('data-percentile', `Top ${topPctI}%`);
+            idqRankEl.textContent = `#${idqRank} of ${allScores.idq.length} • Top ${topPctI}%`;
             idqRankEl.setAttribute('tabindex', '0');
             idqRankEl.setAttribute('aria-label', `This company ranks ${idqRank} out of ${allScores.idq.length} companies in IDQ Ranking. Top ${percentile}%.`);
             // no native title to avoid double-tooltips
@@ -4032,9 +4065,9 @@ async function calculateScoreRankings() {
             else if (antiFragileRank <= 20) antiFragileRankEl.classList.add('rank-silver');
             else if (antiFragileRank <= 30) antiFragileRankEl.classList.add('rank-bronze');
             
-            const percentile = Math.round(((allScores.antiFragile.length - antiFragileRank + 1) / allScores.antiFragile.length) * 100);
-            antiFragileRankEl.setAttribute('data-percentile', `Top ${percentile}%`);
-            antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length} • Top ${percentile}%`;
+            const topPctA = Math.max(1, Math.round((antiFragileRank / allScores.antiFragile.length) * 100));
+            antiFragileRankEl.setAttribute('data-percentile', `Top ${topPctA}%`);
+            antiFragileRankEl.textContent = `#${antiFragileRank} of ${allScores.antiFragile.length} • Top ${topPctA}%`;
             antiFragileRankEl.setAttribute('tabindex', '0');
             antiFragileRankEl.setAttribute('aria-label', `This company ranks ${antiFragileRank} out of ${allScores.antiFragile.length} companies in Anti-Fragile Score. Top ${percentile}%.`);
             // no native title to avoid double-tooltips
@@ -4073,9 +4106,10 @@ async function calculateScoreRankings() {
         const antiFragileRankEl = document.getElementById('antifragile-rank-placeholder');
         
         if (qualityRankEl) {
-            qualityRankEl.textContent = `~#${qualityRank} of ${totalCompanies}`;
+            const topPct = Math.max(1, Math.round((qualityRank / totalCompanies) * 100));
+            qualityRankEl.textContent = `#${qualityRank} of ${totalCompanies} • Top ${topPct}%`;
             qualityRankEl.setAttribute('data-tooltip', `Estimated rank ${qualityRank} out of ${totalCompanies} companies in Enterprise Quality`);
-            const percentileEst = Math.round(((totalCompanies - qualityRank + 1) / totalCompanies) * 100);
+            const percentileEst = topPct;
             qualityRankEl.setAttribute('data-percentile', `Top ${percentileEst}%`);
             qualityRankEl.setAttribute('tabindex', '0');
             qualityRankEl.setAttribute('aria-label', `Estimated rank ${qualityRank} out of ${totalCompanies} companies in Enterprise Quality. Top ${percentileEst}%.`);
@@ -4086,9 +4120,10 @@ async function calculateScoreRankings() {
         }
         
         if (idqRankEl) {
-            idqRankEl.textContent = `~#${idqRank} of ${totalCompanies}`;
+            const topPct = Math.max(1, Math.round((idqRank / totalCompanies) * 100));
+            idqRankEl.textContent = `#${idqRank} of ${totalCompanies} • Top ${topPct}%`;
             idqRankEl.setAttribute('data-tooltip', `Estimated rank ${idqRank} out of ${totalCompanies} companies in IDQ Ranking`);
-            const percentileEst = Math.round(((totalCompanies - idqRank + 1) / totalCompanies) * 100);
+            const percentileEst = topPct;
             idqRankEl.setAttribute('data-percentile', `Top ${percentileEst}%`);
             idqRankEl.setAttribute('tabindex', '0');
             idqRankEl.setAttribute('aria-label', `Estimated rank ${idqRank} out of ${totalCompanies} companies in IDQ Ranking. Top ${percentileEst}%.`);
@@ -4099,9 +4134,10 @@ async function calculateScoreRankings() {
         }
         
         if (antiFragileRankEl) {
-            antiFragileRankEl.textContent = `~#${antiFragileRank} of ${totalCompanies}`;
+            const topPct = Math.max(1, Math.round((antiFragileRank / totalCompanies) * 100));
+            antiFragileRankEl.textContent = `#${antiFragileRank} of ${totalCompanies} • Top ${topPct}%`;
             antiFragileRankEl.setAttribute('data-tooltip', `Estimated rank ${antiFragileRank} out of ${totalCompanies} companies in Anti-Fragile Score`);
-            const percentileEst = Math.round(((totalCompanies - antiFragileRank + 1) / totalCompanies) * 100);
+            const percentileEst = topPct;
             antiFragileRankEl.setAttribute('data-percentile', `Top ${percentileEst}%`);
             antiFragileRankEl.setAttribute('tabindex', '0');
             antiFragileRankEl.setAttribute('aria-label', `Estimated rank ${antiFragileRank} out of ${totalCompanies} companies in Anti-Fragile Score. Top ${percentileEst}%.`);

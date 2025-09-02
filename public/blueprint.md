@@ -162,10 +162,17 @@ This Hero Header must remain but sits BELOW the new universal header
   - Details panel: lazy render; Enter/Esc keyboard; no layout shift.
   - Expand financial tooltips; consolidate field aliasing to reduce “N/A”.
 
-- Phase B — Componentization & Reuse — IN PROGRESS NEXT
+- Phase B — Componentization & Reuse — IN PROGRESS
   - Split monolith into views (`js/views/*`) and libs (`js/lib/*`).
   - Consume `js/visualizations/*` via a small interface (state → render(container)).
   - Keep `DataService` as the only Firestore initializer; avoid Firebase init in components.
+
+- Phase C — Mobile (Next)
+  - Cards: stack on mobile; reduced padding/typography; restrained motion.
+  - Detailed tables: condensed TTM + last FY view with expander to full history.
+  - Sidebar drawer: explicit close, overlay, body scroll lock.
+  - Tooltips: mobile affordances (dotted underline/ⓘ), tap‑to‑pin, viewport clamping.
+  - Universal header: compact “company chip” (logo + ticker + price + overall score) appears when hero scrolls out on company pages.
 
 ### Directory Structure (current)
 
@@ -182,8 +189,8 @@ This Hero Header must remain but sits BELOW the new universal header
     - tiers.js
   - views/
     - score-cards.js
-    - analysis.js (wrapper)
-    - tables.js (wrapper)
+    - analysis.js
+    - tables.js
 - archive/
 
 ### Testing & QA (quick checks)
@@ -196,6 +203,11 @@ This Hero Header must remain but sits BELOW the new universal header
 - Analysis: “Copy Insight” copies thesis; brief “Copied!” feedback
 - Reduced motion: animated dots/shimmers disabled; hover transforms minimized
 - Aliases: P/E, EV/EBITDA, Operating Margin, Debt/Equity use `Aliases` fallbacks; metrics grid and tables consistent
+
+- Icons & PWA: favicons load in tabs/bookmarks; Safari pinned tab color applies; Windows tile displays; site.webmanifest maskable icons visible on Android.
+- Sub‑score rounding: quality sub‑scores display with 1 decimal (no float artifacts).
+- Rank badges: “Top X%” equals round(rank/total×100), lower is better; format “#Y of N • Top X%”; no tilde for fallback.
+- Header chip: on company pages, when hero header scrolls away, chip shows (logo, ticker, overall score, price) and uses tier color; updates on live price.
 
 - Phase C — Mobile Responsiveness
   - Cards stack; condensed tables; drawer close affordance; tooltip tap‑to‑pin with clear affordance.

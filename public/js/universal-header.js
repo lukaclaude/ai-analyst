@@ -81,6 +81,10 @@ class UniversalHeader {
         
         // Scroll effect
         window.addEventListener('scroll', () => this.handleScroll());
+
+        // Company chip: context + visibility
+        window.addEventListener('companyContextChanged', (e) => this.updateCompanyChip(e.detail));
+        this.setupCompanyChipObserver();
     }
     
     toggleTheme() {
@@ -203,6 +207,39 @@ class UniversalHeader {
             header.style.background = 'rgba(13, 17, 23, 0.85)';
             header.style.boxShadow = 'none';
         }
+    }
+
+    setupCompanyChipObserver() {
+        const chip = document.getElementById('uh-company-chip');
+        if (!chip) return;
+        const hero = document.querySelector('.hero-header');
+        // Only show the chip on company pages with hero present
+        if (!hero) { chip.hidden = true; return; }
+        const io = new IntersectionObserver((entries) => {
+            const entry = entries[0];
+            // When hero is mostly out of view, show the chip
+            chip.hidden = entry.isIntersecting;
+        }, { root: null, threshold: 0.2 });
+        io.observe(hero);
+    }
+
+    updateCompanyChip(detail) {
+        const chip = document.getElementById('uh-company-chip');
+        if (!chip || !detail) return;
+        const logo = document.getElementById('uh-chip-logo');
+        const tkr = document.getElementById('uh-chip-ticker');
+        const scr = document.getElementById('uh-chip-score');
+        const prc = document.getElementById('uh-chip-price');
+        const cur = document.getElementById('uh-chip-currency');
+        if (logo && detail.logo) { logo.src = detail.logo; logo.style.display = 'block'; }
+        if (tkr && detail.ticker) tkr.textContent = detail.ticker;
+        if (scr && typeof detail.overallScore === 'number') {
+            const clamped = Math.max(0, Math.min(100, detail.overallScore));
+            scr.textContent = `• ${clamped.toFixed(1)}`;
+            if (detail.tierColor) scr.style.color = detail.tierColor;
+        }
+        if (prc && typeof detail.price === 'number') prc.textContent = (detail.currency === 'USD' ? '$' : '') + detail.price.toFixed(2);
+        if (cur && detail.currency) cur.textContent = detail.currency !== 'USD' ? detail.currency : '';
     }
 }
 

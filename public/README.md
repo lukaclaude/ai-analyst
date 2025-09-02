@@ -47,8 +47,12 @@ What works (100%)
 - Key Financial Metrics: tooltips added for Revenue, Net Income, EPS, Gross/Operating/Net margins, P/E, P/B, EV/EBITDA, Current Ratio, Debt/Equity, ROE, ROA, Revenue/EPS growth. Grid values formatted with tn/bn/m/k.
 - Central metric aliasing: unified fallbacks for P/E, EV/EBITDA, Operating Margin, and Debt/Equity via `js/lib/aliases.js` so values don’t show N/A when alternates exist.
 - Quality gauge ticks and refined hover states (respect `prefers-reduced-motion`).
-- IDQ label pill with caption (tier dot reflects mapping); Anti‑Fragile shield neutral background fill for clarity across themes.
+- IDQ label pill (tier dot reflects mapping); Anti‑Fragile shield neutral background fill for clarity across themes. Removed redundant static IDQ caption under chip (kept moving label above the position bar).
 - “Copy Insight” action in Company Analysis copies the synthesized thesis with clipboard fallback.
+- Finalysis branding and favicon/PWA setup: header brand switched to “Finalysis”; transparent favicon pack wired (ico/svg/png/apple-touch), Safari pinned-tab, MS tile, and site.webmanifest (maskable icons, theme/background colors) for proper tabs/bookmarks/PWA icons.
+- Universal header “company chip”: on company pages, when the hero scrolls away, the header shows a compact chip (logo, ticker, overall score, price). Chip uses tier color and live price updates.
+- Rank badges: copy reads “#Y of N • Top X%” where Top X% = round(rank/total×100) (lower is better). Fallback ranks no longer include a tilde (~).
+- Sub‑score rounding: quality sub‑scores display rounded to 1 decimal to prevent float artifacts (e.g., 12.3999999 → 12.4).
 - Detailed Financial Data tables: tooltips added to common rows across Income/Profit/Balance/Cash Flow (Revenue, Net Income, EPS, Net/EBITDA margin, Operating/Investing/Financing CF, CapEx, FCF, Dividends, Repurchases, Debt Repayment, etc.).
 - Header search uses `DataService.searchStocks()` (single Firestore init + 5‑min cached index) rather than initializing Firebase in components.
 - index.html placeholder now loads (fixed resource paths to `/main.js` and `/main.css`).
@@ -59,6 +63,7 @@ Known issues / gaps
 - Favorites page is not built (placeholder toast)
 - Universal sidebar (context‑aware top content) not implemented yet
 - Mobile tooltips: tap-to-pin supported; visual affordance added (dotted underline/icon), but we may want a richer bottom-sheet for long content
+- Universal header: consider additional quick actions on mobile (e.g., favorite toggle or quick nav) in later iterations.
 - Financial metrics mapping: EV/EBITDA and some ratios vary by source; we added fallbacks (enterpriseValueOverEBITDA, computed margins), but confirm field names across collections
 
 Critical warnings
@@ -80,8 +85,8 @@ Critical warnings
 - `js/lib/formatters.js` — Currency/quantity/market cap formatting
 - `js/lib/tiers.js` — IDQ tier mapping by raw score
 - `js/views/score-cards.js` — Score card orchestration + details panel
-- `js/views/analysis.js` — Analysis view wrapper (delegates to existing implementation)
-- `js/views/tables.js` — Detailed Financials view wrapper (delegates to existing implementation)
+- `js/views/analysis.js` — Analysis view (render)
+- `js/views/tables.js` — Detailed Financials view (render)
 - `company-card-fixed.html` — Working page markup (scores, analysis, financials)
 - `archive/` — Non-runtime references (original single-file versions, variants, manual tests, historical docs). Nothing here is imported by the app.
 
@@ -248,6 +253,10 @@ Start with (next steps):
 
 ## Change Log (Reverse Chronological)
 
+- 2025‑09‑02: Header chip + ranks + IDQ caption — add universal header company chip (logo/ticker/overall score/price on scroll); fix overall score event flow and tier color; remove redundant IDQ caption; correct rank Top% math (Top = rank/total), keep copy order “#Y of N • Top X%”, and remove tilde for fallback ranks. Files: components/universal-header.html, js/universal-header.js, company-card-fixed.html, js/company-card-complete-fix.js
+- 2025‑09‑02: Branding & icons — header brand updated to “Finalysis”; transparent favicon pack wired (ico/svg/png/apple‑touch), Safari pinned‑tab, MS tile; site.webmanifest updated (maskable icons, theme/background). Ensures correct icons for tabs, bookmarks, and PWA installs. Files: components/universal-header.html, index.html, company-card-fixed.html, assets/favicons/*
+- 2025‑09‑02: Views extraction (Phase B) — moved Company Analysis and Detailed Financials rendering into `js/views/analysis.js` and `js/views/tables.js`; bootstrapping prefers new views but keeps legacy fallbacks. No behavior changes.
+- 2025‑09‑02: Sub‑score display fix — round Quality sub‑scores in score cards to 1 decimal to avoid float overflow/artifacts. File: js/company-card-complete-fix.js
 - 2025‑09‑02: Archived original single‑file breakdowns and manual test pages. Files moved to `archive/original/` (company-card_OLD-*.html) and `archive/manual-tests/` (test-company.html, test-nvda.html, debug.html). Historical docs moved to `archive/docs/` (IMPLEMENTATION_FIX_SUMMARY.md, PROJECT_STATUS_README.md). Root README remains the living guide; archive/README.md explains archive usage.
 - 2025‑09‑01: IDQ chip/label corrected to raw‑score tier mapping; IDQ label restyled as pill (tier dot) with caption; removed score toolbar; kept keyboard toggles. Quality sub‑scores: 2‑col desktop; Anti‑Fragile: single‑col. Expanded tooltips across Key Financial Metrics and Detailed Financial Data. Debt/Equity aliasing fixed. Header search uses DataService (cached index); index.html now loads. Files: company-card-fixed.html, css/company-card-fixed.css, js/company-card-complete-fix.js, js/services/DataService.js, js/universal-header.js
 - 2025‑09‑01: Universal sidebar is now default; legacy sidebar removed. Desktop collapse (icon‑only) added with mid‑edge handle; collapsed state centers the clock and recent logos, and shows only sun/moon icon for theme. Top item shows [tiny logo] TICKER aligned with other icons. Files: company-card-fixed.html, js/company-card-complete-fix.js, components/universal-sidebar.html, js/universal-sidebar.js, css/components.css
