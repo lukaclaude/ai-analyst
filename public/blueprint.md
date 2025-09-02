@@ -154,6 +154,25 @@ This Hero Header must remain but sits BELOW the new universal header
 
 ## 6. Implementation Phases
 
+### Revised Plan (Desktop‑First, Modular, Then Mobile)
+
+- Phase A — Desktop Lock (Company Page)
+  - Finalize Score Cards (Quality tick marks/stroke; IDQ chip + label pill readability; Anti‑Fragile single‑column rhythm).
+  - Company Analysis structure: anchors/dividers; optional takeaways chips; copy‑insight action.
+  - Details panel: lazy render; Enter/Esc keyboard; no layout shift.
+  - Expand financial tooltips; consolidate field aliasing to reduce “N/A”.
+
+- Phase B — Componentization & Reuse
+  - Split monolith into views (`js/views/*`) and libs (`js/lib/*`).
+  - Consume `js/visualizations/*` via a small interface (state → render(container)).
+  - Keep `DataService` as the only Firestore initializer; avoid Firebase init in components.
+
+- Phase C — Mobile Responsiveness
+  - Cards stack; condensed tables; drawer close affordance; tooltip tap‑to‑pin with clear affordance.
+
+- Phase D — Index Shell
+  - Reuse header/sidebar/DataService and shared visualizations for previews; thin routing and query param handling.
+
 ### Phase 1: Foundation (Day 1)
 - Set up file structure
 - Create design token system
@@ -190,22 +209,33 @@ This Hero Header must remain but sits BELOW the new universal header
 ### 7.1 Directory Structure
 ```
 /
-├── css/theme.css                        (shared tokens + universal utilities)
-├── index.html (entry point)
-├── company-card.html (company view)
-├── css/ (all stylesheets)
-├── js/ (all JavaScript)
-│   └── services/
-│       └── ThemeService.js              (centralized theme controller)
-├── components/ (templates and Web Components)
-			├── templates/
-			│   ├── universal-header.template.html  (NEW)
-			│   ├── hero-header.template.html       (FROM ORIGINAL)
-			│   ├── sidebar-company.template.html   (FOR COMPANY PAGES)
-			│   ├── sidebar-list.template.html      (FOR LIST PAGE)
-			│   └── sidebar-shared.template.html    (RECENT COMPANIES SECTION)
-├── assets/ (fonts, icons, images)
-└── lib/ (vendor libraries)
+├── css/
+│   ├── theme.css                        (tokens + universal utilities)
+│   ├── components.css                   (shared component styles: header/sidebar)
+│   └── company-card-fixed.css           (page‑specific layout)
+├── components/
+│   └── universal-header.html            (header markup + scoped styles)
+├── js/
+│   ├── services/
+│   │   ├── ThemeService.js              (centralized theme controller)
+│   │   └── DataService.js               (single Firestore init + cached search + recents)
+│   ├── views/
+│   │   ├── score-cards.js               (orchestration + details panel)
+│   │   ├── analysis.js                  (Investment Synthesis + sections)
+│   │   └── tables.js                    (Key metrics + detailed tables)
+│   ├── lib/
+│   │   ├── formatters.js                (currency/quantity/units)
+│   │   ├── aliases.js                   (field alias resolution)
+│   │   └── tiers.js                     (IDQ tier mapping etc.)
+│   └── visualizations/                  (SVG/canvas renderers)
+│       ├── quality-orbital.js
+│       ├── idq-processor.js
+│       ├── antifragile-shield.js
+│       └── score-visualization-engine.js
+├── company-card-fixed.html              (company view)
+├── index.html                           (placeholder; will reuse shared modules)
+├── assets/                              (fonts, icons, images)
+└── lib/                                 (vendor libraries)
 ```
 
 ### 7.2 Naming Conventions

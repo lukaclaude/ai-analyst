@@ -73,6 +73,17 @@ Critical warnings
 - `js/tooltip.js` — Universal tooltip (single element appended to `body`, [data-tooltip] triggers)
 - `js/company-card-complete-fix.js` — Main page logic (data fetch, charts, analysis, sidebar search, score “revelation panel”)
 - `company-card-fixed.html` — Working page markup (scores, analysis, financials)
+- `archive/` — Non-runtime references (original single-file versions, variants, manual tests, historical docs). Nothing here is imported by the app.
+
+## Housekeeping Plan (Safe Archival)
+- Purpose: reduce top-level clutter without risking regressions.
+- Create folders under `archive/`:
+  - `archive/original/` — `company-card_OLD-*` and (later) old `index.html` for reference only
+  - `archive/variants/` — previous `company-card-*.(html|css|js)` that are not loaded
+  - `archive/manual-tests/` — `test-company.html`, `test-nvda.html`, `debug.html`
+  - `archive/docs/` — `IMPLEMENTATION_FIX_SUMMARY.md`, `PROJECT_STATUS_README.md` now superseded by this README
+- Nothing in `archive/` should be imported by production code.
+- Timing: after current desktop polish; before componentization. We’ll move files in a single patch and verify no references remain (ripgrep checks).
 
 ## Architecture Fundamentals
 
@@ -208,15 +219,27 @@ Do not break:
 Start with:
 1) Universal Sidebar skeleton (context-aware) + `DataService`
 2) Extract `css/components.css` and route header/sidebar styles there
-3) Add mobile sidebar close control; prepare for full responsiveness
-4) Desktop polish: Company Analysis card dividers, score card stacking rules, table variants
-5) Quality gauge: add subtle tick marks and refine arc thickness; keep perf in mind
-6) Expand table tooltips across any remaining rows; keep copy concise (“What it is / Why it matters”)
-7) Field alias map: centralize and extend for ratios (P/E, EV/EBITDA, margins) and per‑ticker differences
-5) Expand tooltips coverage across Key Financial Metrics and Detailed Financial Data
+3) Desktop polish: Company Analysis dividers/anchors; score card visual refinements (Quality tick marks/stroke)
+4) Refactor `js/company-card-complete-fix.js` into `js/views/*` + `js/lib/*`; consume `js/visualizations/*`
+5) Field alias map: centralize and extend for ratios (P/E, EV/EBITDA, margins) and per‑ticker differences
+6) Expand table tooltips across remaining rows (concise “What it is / Why it matters”)
+7) Mobile responsiveness (cards/tables/sidebar/tooltip affordances), then plan index.html shell reuse
+
+## Roadmap (Desktop → Mobile → Index)
+- Desktop lock (now):
+  - Score cards: finalize visuals (Quality ticks/stroke), confirm IDQ label pill/caption, Anti‑Fragile single‑column rhythm.
+  - Company Analysis: anchors/dividers; optional chips/copy‑action; keep content.
+  - Details panel: lazy load, no layout shift; keyboard Enter/Esc.
+- Componentization (after desktop):
+  - Split monolith into views (`js/views/score-cards.js`, `analysis.js`, `tables.js`) and libs (`js/lib/formatters.js`, `aliases.js`, `tiers.js`).
+  - Consume `js/visualizations/*` with a small, consistent interface.
+- Mobile pass: stack cards, condensed tables, sidebar drawer close, tooltip affordance/tap‑to‑pin.
+- Index shell: reuse header/sidebar/DataService and, where useful, score previews that call the same visualizations.
 
 ## Change Log (Reverse Chronological)
 
+- 2025‑09‑02: Archived original single‑file breakdowns and manual test pages. Files moved to `archive/original/` (company-card_OLD-*.html) and `archive/manual-tests/` (test-company.html, test-nvda.html, debug.html). Historical docs moved to `archive/docs/` (IMPLEMENTATION_FIX_SUMMARY.md, PROJECT_STATUS_README.md). Root README remains the living guide; archive/README.md explains archive usage.
+- 2025‑09‑01: IDQ chip/label corrected to raw‑score tier mapping; IDQ label restyled as pill (tier dot) with caption; removed score toolbar; kept keyboard toggles. Quality sub‑scores: 2‑col desktop; Anti‑Fragile: single‑col. Expanded tooltips across Key Financial Metrics and Detailed Financial Data. Debt/Equity aliasing fixed. Header search uses DataService (cached index); index.html now loads. Files: company-card-fixed.html, css/company-card-fixed.css, js/company-card-complete-fix.js, js/services/DataService.js, js/universal-header.js
 - 2025‑09‑01: Universal sidebar is now default; legacy sidebar removed. Desktop collapse (icon‑only) added with mid‑edge handle; collapsed state centers the clock and recent logos, and shows only sun/moon icon for theme. Top item shows [tiny logo] TICKER aligned with other icons. Files: company-card-fixed.html, js/company-card-complete-fix.js, components/universal-sidebar.html, js/universal-sidebar.js, css/components.css
 - 2025‑09‑01: Universal sidebar (flag `useNewSidebar=1`) — added scrollspy with animated indicator, renamed links (Top/Ticker, Score Trinity, Analysis, Key Metrics → `#health-scores`, Raw Financials), anchored Recent Companies + Theme at bottom, added mobile close handle; files: components/universal-sidebar.html, js/universal-sidebar.js, css/components.css
 - 2025‑09‑01: Sidebar search aligned with header (dropdown `active`/`hidden`); removed duplicate handler; header results restyled; mobile header search delay on blur so taps work; sidebar search positioned below header via padding; files: js/company-card-complete-fix.js, components/universal-header.html, css/company-card-fixed.css, js/universal-header.js
