@@ -20,11 +20,25 @@
         const btn = card.querySelector('.reveal-text');
         if (btn) btn.textContent = 'View Details';
       });
+      // Mobile: reveal cards grid again
+      if (window.innerWidth <= 768) {
+        const sec = document.querySelector('.scores-section');
+        if (sec) sec.classList.remove('details-open');
+        const closeBtn = document.getElementById('panel-tab-close');
+        if (closeBtn) closeBtn.textContent = 'Collapse';
+      }
       currentRevealed = null; return;
     }
     if (!activeSection.innerHTML || activeSection.innerHTML.trim() === '') {
       if (typeof window.generateExpandedContent === 'function') {
         activeSection.innerHTML = window.generateExpandedContent(scoreType);
+      }
+      // Default-open Financials for Quality so users land on useful content immediately
+      if (scoreType === 'quality' && typeof window.showGroupDetails === 'function') {
+        try { setTimeout(() => window.showGroupDetails('financials'), 0); } catch (_) {}
+      }
+      if (scoreType === 'antifragile' && typeof window.showAfGroupDetails === 'function') {
+        try { setTimeout(() => window.showAfGroupDetails('sc'), 0); } catch (_) {}
       }
     }
     allCards.forEach(card => {
@@ -37,9 +51,41 @@
     const colorMap = { quality: '168, 85, 247', idq: '59, 130, 246', antifragile: '34, 197, 94' };
     panel.style.setProperty('--active-color-rgb', colorMap[scoreType]);
     panel.classList.add('revealed');
+    // Toggle desktop layout classes for Quality and Anti-Fragile
+    try {
+      const content = panel.querySelector('.revelation-content');
+      if (content) {
+        content.classList.toggle('quality-layout', scoreType === 'quality');
+        content.classList.toggle('af-layout', scoreType === 'antifragile');
+      }
+    } catch (_) {}
+    // Measure sticky offsets for mobile to prevent overlap
+    try {
+      const header = document.querySelector('#universal-header') || document.querySelector('.universal-header');
+      const tabs = panel.querySelector('.panel-tabs');
+      const active = document.querySelector('.detail-section.active');
+      const chips = active ? (active.querySelector('.quality-group-tabs') || active.querySelector('.af-group-tabs')) : null;
+      const uh = header ? header.offsetHeight : 52;
+      const th = tabs ? tabs.offsetHeight : 48;
+      const ch = chips ? chips.offsetHeight : 0; // no chips for IDQ or when hidden
+      panel.style.setProperty('--uh', uh + 'px');
+      panel.style.setProperty('--tabs-h', th + 'px');
+      panel.style.setProperty('--chips-h', ch + 'px');
+    } catch (_) {}
+    // Mobile: replace cards view with details view
+    if (window.innerWidth <= 768) {
+      const sec = document.querySelector('.scores-section');
+      if (sec) sec.classList.add('details-open');
+      const closeBtn = document.getElementById('panel-tab-close');
+      if (closeBtn) closeBtn.textContent = 'Back';
+      // Scroll section into view for immediate context
+      const sectionEl = document.querySelector('.scores-section');
+      if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     currentRevealed = scoreType;
     try { updatePanelTabsActive(); } catch (_) {}
-    if (window.innerWidth <= 768) { setTimeout(() => { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100); }
+    // On desktop, ensure panel is visible; on mobile the sheet overlays
+    if (window.innerWidth > 768) { setTimeout(() => { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100); }
   }
 
   function setupPanelTabs() {
@@ -93,4 +139,3 @@
   window.revealScoreDetails = revealScoreDetails;
   window.addEventListener('resize', () => { try { setupMobileCarousel(); } catch (_) {} });
 })();
-

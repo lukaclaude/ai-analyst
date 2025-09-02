@@ -2689,7 +2689,7 @@ function setupEventListeners() {
         favBtn.addEventListener('click', (e) => {
             e.preventDefault();
             // Placeholder: favorites page not implemented yet
-            showToast('Favorites coming soon');
+            showToast('Watchlists are coming soon');
         });
     }
 
@@ -2765,6 +2765,9 @@ function showToast(message) {
         setTimeout(() => el.remove(), 320);
     }, 1400);
 }
+
+// Expose toast globally for header and other components
+try { window.showToast = showToast; } catch (_) {}
 
 async function handleSearch(e) {
     const query = e.target.value.trim().toUpperCase();
@@ -3520,7 +3523,8 @@ function populateQualityExpanded() {
 
     let html = '<h3 class="text-xl font-bold mb-6">Enterprise Quality Breakdown</h3>';
 
-    html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">';
+    // Summary grid: mobile 2-col; md:2; lg:4
+    html += '<div id="quality-summary-grid" class="quality-summary-grid grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">';
 
     // Fixed max scores per requirements
     const groupDataMap = {
@@ -3554,7 +3558,7 @@ function populateQualityExpanded() {
 
     const gauntletScore = groupScores.Gauntlet_Group_Score;
     html += `
-        <div class="summary-metric-card glass-morphism rounded-lg p-3 border flex items-center justify-between transition-all duration-300 mb-8">
+        <div id="quality-gauntlet-tile" class="summary-metric-card glass-morphism rounded-lg p-3 border flex items-center justify-between transition-all duration-300 mb-4">
             <h4 class="font-medium text-red-400">Gauntlet Score</h4>
             <div class="flex items-center gap-4">
                 <div class="text-2xl font-bold text-red-400">${gauntletScore}</div>
@@ -3569,7 +3573,33 @@ function populateQualityExpanded() {
         </div>
     `;
 
-    html += '<div id="shared-summary-panel" class="summary-content my-6" style="grid-column: 1 / -1;"></div>';
+    // Sticky chip tabs for quick switching (mobile-friendly). Icons + labels. No Summary chip.
+    html += `
+      <div class="quality-group-tabs" role="tablist" aria-label="Quality groups">
+        <button class="chip" data-group-tab="financials" onclick="showGroupDetails('financials')" aria-label="Financials">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 10h18v10H3z" opacity=".3"/><path d="M21 8H3l9-5 9 5zm-4 10h2v2h-2zm-4 0h2v2h-2zm-4 0h2v2H9z"/></svg>
+          <span>Financials</span>
+        </button>
+        <button class="chip" data-group-tab="moat" onclick="showGroupDetails('moat')" aria-label="Moat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3v8c0 3.866 3.582 7 8 7s8-3.134 8-7V3l-4 2-4-2-4 2-4-2z"/></svg>
+          <span>Moat</span>
+        </button>
+        <button class="chip" data-group-tab="potential" onclick="showGroupDetails('potential')" aria-label="Potential">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16 5.5 20l2-7L2 9h7z"/></svg>
+          <span>Potential</span>
+        </button>
+        <button class="chip" data-group-tab="culture" onclick="showGroupDetails('culture')" aria-label="Culture">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zm-9 9a9 9 0 1118 0H3z"/></svg>
+          <span>Culture</span>
+        </button>
+        <button class="chip" data-group-tab="gauntlet" onclick="showGroupDetails('gauntlet')" aria-label="Gauntlet">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          <span>Gauntlet</span>
+        </button>
+      </div>
+    `;
+
+    html += '<div id="shared-summary-panel" class="summary-content my-4" style="grid-column: 1 / -1;"></div>';
 
     return html;
 }
@@ -3616,32 +3646,15 @@ function populateIDQExpanded() {
         for (let i = 0; i < facetItems.length; i += 2) {
             const titleAndScore = facetItems[i];
             const description = facetItems[i+1] || 'No description available.';
-            
             const scoreMatch = titleAndScore.match(/\(Facet Score: (\d+\.?\d*)\/(\d+)\)/);
             const title = titleAndScore.replace(/\(Facet Score:.*\):?/, '').trim();
-            
             if (scoreMatch) {
                 const score = parseFloat(scoreMatch[1]);
                 const maxScore = parseInt(scoreMatch[2], 10);
-                const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-                
-                // Color logic based on score
-                const barColor = score === 5 ? 'var(--color-purple)' : 
-                               score >= 4 ? 'var(--color-blue)' : 
-                               score >= 3 ? 'var(--color-green)' : 
-                               score >= 2 ? 'var(--color-yellow)' : 'var(--color-red)';
-                const shimmerClass = score === 5 ? 'shimmer-effect' : '';
-
+                // Use unified renderer to preserve color rules
                 html += `
                     <div class="idq-facet-item">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-medium secondary-text">${title}</span>
-                            <span class="text-sm font-mono"><span class="font-bold">${score}</span>/${maxScore}</span>
-                        </div>
-                        <div class="metric-bar mb-3">
-                            <div class="metric-fill ${shimmerClass}" style="width: ${percentage}%; background: ${barColor};"></div>
-                        </div>
-                        <p class="text-xs muted-heading leading-relaxed">${description}</p>
+                        ${renderMetric(title, score, maxScore, description, false)}
                     </div>
                 `;
             }
@@ -3674,7 +3687,7 @@ function populateAntiFragileExpanded() {
     const tooltipText = "Anti-Fragile scores are derived from Quality Score metrics using specific formulas. Click on metrics below to see their reasoning.";
 
     let html = `
-        <div class="flex items-center gap-2 mb-8">
+        <div class="flex items-center gap-2 mb-4">
             <h3 class="text-xl font-bold">Anti-Fragile Score Breakdown</h3>
             <span class="has-reasoning" data-tooltip="${escapeAttr(tooltipText)}">
                  <span class="reasoning-icon text-lg">💡</span>
@@ -3682,15 +3695,13 @@ function populateAntiFragileExpanded() {
         </div>
     `;
 
-    // --- Card Grid Layout ---
-    html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">';
-
+    // --- Summary tiles (wrapped for desktop hide + mobile hide via CSS) ---
+    html += '<div id="af-summary-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">';
     const groupData = [
-        { name: 'Strategic Core', score: antiFragile.groupScores.barbellMethodScore, max: 13 },
-        { name: 'Financial Fortitude', score: antiFragile.groupScores.financialFortitudeScore, max: 1 },
-        { name: 'Skin in the Game', score: antiFragile.groupScores.skinInTheGameScore, max: 3 }
+        { key: 'sc', name: 'Strategic Core', score: antiFragile.groupScores.barbellMethodScore, max: 13 },
+        { key: 'ff', name: 'Financial Fortitude', score: antiFragile.groupScores.financialFortitudeScore, max: 1 },
+        { key: 'sitg', name: 'Skin in the Game', score: antiFragile.groupScores.skinInTheGameScore, max: 3 }
     ];
-
     groupData.forEach(group => {
         html += `
             <div class="summary-metric-card glass-morphism rounded-lg p-4 border flex flex-col text-center">
@@ -3701,45 +3712,77 @@ function populateAntiFragileExpanded() {
     });
     html += '</div>';
 
-    // --- Detailed Breakdown ---
-    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">';
+    // --- AF chip nav (mobile + desktop right/top) ---
+    html += `
+      <div class="af-group-tabs" role="tablist" aria-label="Anti-Fragile groups">
+        <button class="chip" data-af-tab="sc" onclick="showAfGroupDetails('sc')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16 5.5 20l2-7L2 9h7z"/></svg>
+          <span>Strategic Core</span>
+        </button>
+        <button class="chip" data-af-tab="ff" onclick="showAfGroupDetails('ff')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h18v4H3zm0 6h10v12H3zM15 9h6v6h-6z"/></svg>
+          <span>Financial Fortitude</span>
+        </button>
+        <button class="chip" data-af-tab="sitg" onclick="showAfGroupDetails('sitg')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM3 21a9 9 0 1118 0H3z"/></svg>
+          <span>Skin in the Game</span>
+        </button>
+      </div>
+    `;
 
-    // Strategic Core Metrics
-    const sc = antiFragile.metricScores.barbellMethod;
-    html += '<div><h4 class="font-semibold secondary-text mb-3">Strategic Core</h4><div class="space-y-4">';
+    // --- Shared panel where selected group renders ---
+    html += '<div id="af-shared-panel" class="summary-content my-4"></div>';
 
-    // Special logic for Mission Statement color
-    let missionColorPercentage = null;
-    if (sc.missionStatement === 1) {
-        missionColorPercentage = 55; // Force Yellow tier color
-    } else if (sc.missionStatement === 2) {
-        missionColorPercentage = 80; // Force Purple tier color
-    }
-    html += renderMetric('Mission Statement', sc.missionStatement, 2, llmResearch.Culture_and_Pastperformance_Group?.missionStatementReasoning, false, missionColorPercentage);
-
-    const moatSummary = llmResearch.Summaries_Group?.moatSummary || 'Derived from multiple Moat Group metrics. See Moat section for detailed reasoning.';
-    html += renderMetric('Moat', sc.moat, 8, moatSummary);
-    html += renderMetric('Optionality', sc.optionality, 3, llmResearch.Potential_Group?.optionalityReasoning);
-    html += '</div></div>';
-
-    // Financial Fortitude Metrics
-    const ff = antiFragile.metricScores.financialFortitude;
-    html += '<div><h4 class="font-semibold secondary-text mb-3">Financial Fortitude</h4><div class="space-y-4">';
-    html += renderMetric('Cash, Debt, FCF', ff.cashDebtFreeCashFlow, 1, llmResearch.Financials_Group?.financialResilienceReasoning);
-    html += renderMetric('Concentration Penalty', ff.concentration, 0, llmResearch.Gauntlet_Group?.customerConcentrationReasoning, true);
-    html += '</div></div>';
-
-    // Skin in the Game Metrics
-    const sitg = antiFragile.metricScores.skinInTheGame;
-    html += '<div class="md:col-span-2"><h4 class="font-semibold secondary-text mb-3 mt-4">Skin in the Game</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">';
-    html += renderMetric('Glassdoor', sitg.glassdoor, 1, llmResearch.Culture_and_Pastperformance_Group?.glassdoorRatingsReasoning, sitg.glassdoor < 0);
-    html += renderMetric('Founder-Led', sitg.founder, 1, llmResearch.Culture_and_Pastperformance_Group?.soulInTheGameReasoning);
-    html += renderMetric('Ownership', sitg.ownership, 1, llmResearch.Culture_and_Pastperformance_Group?.insideOwnershipReasoning, sitg.ownership < 0);
-    html += '</div></div>';
-
-    html += '</div>'; // Close grid
-
+    // Default selection handled in views (mobile + desktop), but return base HTML
     return html;
+}
+
+// Render AF subgroup details into af-shared-panel
+function showAfGroupDetails(key) {
+    const antiFragile = state.currentStockData.Anti_Fragile_Score;
+    const llmResearch = state.currentStockData.LLM_Research_and_Comments;
+    const panel = document.getElementById('af-shared-panel');
+    if (!panel) return;
+
+    // Toggle chip active states
+    try { document.querySelectorAll('.af-group-tabs .chip').forEach(c => c.classList.remove('active')); } catch(_) {}
+    const activeChip = document.querySelector(`.af-group-tabs .chip[data-af-tab="${key}"]`);
+    if (activeChip) activeChip.classList.add('active');
+
+    let html = '';
+    if (key === 'sc') {
+        const sc = antiFragile.metricScores.barbellMethod;
+        const moatSummary = llmResearch.Summaries_Group?.moatSummary || 'Derived from multiple Moat Group metrics. See Moat section for detailed reasoning.';
+        // Special mission statement color override (same as before)
+        let missionColorPercentage = null;
+        if (sc.missionStatement === 1) missionColorPercentage = 55;
+        else if (sc.missionStatement === 2) missionColorPercentage = 80;
+        const total = antiFragile.groupScores.barbellMethodScore;
+        html += `<h4 class="text-lg font-semibold mb-3">Strategic Core (${formatNumber(total)}/13)</h4>`;
+        html += '<div class="space-y-4">';
+        html += renderMetric('Mission Statement', sc.missionStatement, 2, llmResearch.Culture_and_Pastperformance_Group?.missionStatementReasoning, false, missionColorPercentage);
+        html += renderMetric('Moat', sc.moat, 8, moatSummary);
+        html += renderMetric('Optionality', sc.optionality, 3, llmResearch.Potential_Group?.optionalityReasoning);
+        html += '</div>';
+    } else if (key === 'ff') {
+        const ff = antiFragile.metricScores.financialFortitude;
+        const total = antiFragile.groupScores.financialFortitudeScore;
+        html += `<h4 class="text-lg font-semibold mb-3">Financial Fortitude (${formatNumber(total)}/1)</h4>`;
+        html += '<div class="space-y-4">';
+        html += renderMetric('Cash, Debt, FCF', ff.cashDebtFreeCashFlow, 1, llmResearch.Financials_Group?.financialResilienceReasoning);
+        html += renderMetric('Concentration Penalty', ff.concentration, 0, llmResearch.Gauntlet_Group?.customerConcentrationReasoning, true);
+        html += '</div>';
+    } else if (key === 'sitg') {
+        const sitg = antiFragile.metricScores.skinInTheGame;
+        const total = antiFragile.groupScores.skinInTheGameScore;
+        html += `<h4 class="text-lg font-semibold mb-3">Skin in the Game (${formatNumber(total)}/3)</h4>`;
+        html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">';
+        html += renderMetric('Glassdoor', sitg.glassdoor, 1, llmResearch.Culture_and_Pastperformance_Group?.glassdoorRatingsReasoning, sitg.glassdoor < 0);
+        html += renderMetric('Founder-Led', sitg.founder, 1, llmResearch.Culture_and_Pastperformance_Group?.soulInTheGameReasoning);
+        html += renderMetric('Ownership', sitg.ownership, 1, llmResearch.Culture_and_Pastperformance_Group?.insideOwnershipReasoning, sitg.ownership < 0);
+        html += '</div>';
+    }
+    panel.innerHTML = html;
 }
 
 function formatMetricName(name) {
@@ -3809,6 +3852,8 @@ function showGroupDetails(groupName) {
         expandedGroups.delete(groupName.toLowerCase());
         panel.innerHTML = '';
         panel.style.display = 'none';
+        // Clear chip active state (mobile tabs)
+        try { document.querySelectorAll('.quality-group-tabs .chip').forEach(c => c.classList.remove('active')); } catch (_) {}
         
         // Update button text
         if (button) {
@@ -3832,6 +3877,12 @@ function showGroupDetails(groupName) {
         const textSpan = button.querySelector('span');
         if (textSpan) textSpan.textContent = 'Hide Details';
     }
+    // Update chips active state (mobile tabs)
+    try {
+        document.querySelectorAll('.quality-group-tabs .chip').forEach(c => c.classList.remove('active'));
+        const chip = document.querySelector(`.quality-group-tabs .chip[data-group-tab="${groupName.toLowerCase()}"]`);
+        if (chip) chip.classList.add('active');
+    } catch (_) {}
     
     const llmResearch = state.currentStockData.LLM_Research_and_Comments;
     let content = '';
@@ -3869,10 +3920,25 @@ function showGroupDetails(groupName) {
             break;
     }
     
+    // Compute group total and header label with max where applicable
+    const totals = llmResearch.Total_scores_group?.Group_Scores || {};
+    const headerMaxMap = { financials: 17, moat: 20, potential: 45, culture: 25 };
+    const groupTotal = (
+        groupName.toLowerCase() === 'financials' ? totals.Financials_Group_Score :
+        groupName.toLowerCase() === 'moat' ? totals.Moat_Group_Score :
+        groupName.toLowerCase() === 'potential' ? totals.Potential_Group_Score :
+        groupName.toLowerCase() === 'culture' ? totals.Culture_and_Pastperformance_Group_Score :
+        groupName.toLowerCase() === 'gauntlet' ? totals.Gauntlet_Group_Score : null
+    );
+    const headerSuffix = groupName.toLowerCase() === 'gauntlet'
+        ? (typeof groupTotal === 'number' ? ` (${groupTotal >= 0 ? '+' : ''}${groupTotal})` : '')
+        : (typeof groupTotal === 'number' ? ` (${groupTotal}/${headerMaxMap[groupName.toLowerCase()] || ''})` : '');
+    const prettyName = groupName.charAt(0).toUpperCase() + groupName.slice(1);
+
     // Build the content
     content = `
         <div class="p-6 glass-morphism rounded-lg border">
-            <h4 class="text-lg font-semibold mb-3 capitalize">${groupName} Details</h4>
+            <h4 class="text-lg font-semibold mb-3">${prettyName} Details${headerSuffix}</h4>
             <p class="text-sm muted-heading mb-6 leading-relaxed">${summary}</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
     `;
@@ -3932,8 +3998,15 @@ function showGroupDetails(groupName) {
     panel.style.display = 'block';
     setTimeout(() => {
         panel.classList.add('show');
+        // Bring tabs into view on mobile for quick switching
+        if (window.innerWidth <= 768) {
+            const tabs = document.querySelector('.quality-group-tabs');
+            if (tabs) tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }, 10);
 }
+
+// Note: no Summary chip on mobile; chips navigate directly between groups.
 
 // ============================================
 // SCORE RANKINGS CALCULATION

@@ -78,9 +78,20 @@ class UniversalHeader {
         if (userButton) {
             userButton.addEventListener('click', () => this.toggleUserMenu());
         }
+
+        // Delegated safety: ensure clicks still work if header re-renders
+        document.addEventListener('click', (e) => {
+            const wl = e.target && e.target.closest && e.target.closest('#watchlist-button');
+            if (wl) { e.preventDefault(); this.openWatchlist(); return; }
+            const av = e.target && e.target.closest && e.target.closest('#user-menu-button');
+            if (av) { e.preventDefault(); this.toggleUserMenu(); }
+        }, true);
         
-        // Scroll effect
+        // Scroll effect + theme changes
         window.addEventListener('scroll', () => this.handleScroll());
+        window.addEventListener('themeChanged', () => this.handleScroll());
+        // Apply immediately on load
+        this.handleScroll();
 
         // Company chip: context + visibility
         window.addEventListener('companyContextChanged', (e) => this.updateCompanyChip(e.detail));
@@ -187,26 +198,38 @@ class UniversalHeader {
     }
     
     openWatchlist() {
-        // TODO: Implement watchlist
-        console.log('Watchlist clicked');
+        const msg = 'Watchlists are coming soon';
+        if (window.showToast && typeof window.showToast === 'function') return window.showToast(msg);
+        // Inline toast fallback
+        const el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);padding:10px 14px;border-radius:8px;background:rgba(0,0,0,0.8);color:#fff;font-size:14px;z-index:2147483647;box-shadow:0 6px 20px rgba(0,0,0,0.3)';
+        document.body.appendChild(el);
+        setTimeout(()=>{ el.style.transition='opacity 300ms ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }, 1400);
     }
     
     toggleUserMenu() {
-        // TODO: Implement user menu
-        console.log('User menu clicked');
+        const msg = 'User profiles will be available sooner than later';
+        if (window.showToast && typeof window.showToast === 'function') return window.showToast(msg);
+        const el = document.createElement('div');
+        el.textContent = msg;
+        el.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);padding:10px 14px;border-radius:8px;background:rgba(0,0,0,0.8);color:#fff;font-size:14px;z-index:2147483647;box-shadow:0 6px 20px rgba(0,0,0,0.3)';
+        document.body.appendChild(el);
+        setTimeout(()=>{ el.style.transition='opacity 300ms ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }, 1400);
     }
     
     handleScroll() {
         const header = document.querySelector('.universal-header');
         if (!header) return;
-        
-        if (window.scrollY > 50) {
-            header.style.background = 'rgba(13, 17, 23, 0.95)';
-            header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
-        } else {
-            header.style.background = 'rgba(13, 17, 23, 0.85)';
-            header.style.boxShadow = 'none';
-        }
+        const cs = getComputedStyle(document.body);
+        const bg = cs.getPropertyValue('--color-bg-secondary')?.trim() || 'rgba(13,17,23,1)';
+        const border = cs.getPropertyValue('--color-border-primary')?.trim() || '#30363D';
+        header.style.background = bg;
+        header.style.borderBottom = `1px solid ${border}`;
+        header.style.backdropFilter = 'none';
+        header.style.webkitBackdropFilter = 'none';
+        if (window.scrollY > 50) header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+        else header.style.boxShadow = 'none';
     }
 
     setupCompanyChipObserver() {

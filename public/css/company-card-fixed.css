@@ -106,7 +106,8 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 86vw;
+    max-width: 360px;
     height: 100vh;
     padding-top: 56px; /* clear universal header so inputs are not covered */
     /* Use solid background colors that change with theme */
@@ -160,6 +161,7 @@ body {
 @media (min-width: 768px) {
     .navigation-sidebar {
         width: 280px;
+        max-width: none;
     }
 }
 
@@ -426,15 +428,9 @@ body {
     left: 0;
     right: 0;
     height: var(--touch-target-large);
-    background: linear-gradient(
-        135deg,
-        var(--glass-gradient-start) 0%,
-        var(--glass-gradient-end) 100%
-    );
-    backdrop-filter: var(--glass-blur) var(--glass-saturate);
-    -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
-    border-top: 1px solid var(--glass-border);
-    box-shadow: 0 -2px 10px rgba(var(--shadow-color), 0.1);
+    background: var(--color-bg-secondary);
+    border-top: 1px solid var(--color-border-primary);
+    box-shadow: 0 -2px 10px rgba(var(--shadow-color), 0.15);
     z-index: var(--z-sticky);
     padding: 0 var(--space-2);
 }
@@ -592,13 +588,8 @@ a.button:focus-visible {
    ============================================ */
 /* Ensure universal header uses theme variables */
 .universal-header {
-    background: linear-gradient(
-        135deg,
-        var(--glass-gradient-start) 0%,
-        var(--glass-gradient-end) 100%
-    ) !important;
-    backdrop-filter: var(--glass-blur) var(--glass-saturate) !important;
-    border-bottom: 1px solid var(--glass-border) !important;
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border-primary);
 }
 
 .universal-header * {
@@ -1614,30 +1605,22 @@ body.light-theme #antifragile-score-value {
         gap: 16px;
         padding: 0 20px;
     }
-    
-    .score-cards-grid::-webkit-scrollbar {
-        display: none;
-    }
-    
-    .score-card {
-        flex: 0 0 80%;
-        scroll-snap-align: center;
-    }
-    
-    .score-card.active {
-        transform: scale(1.08);
-    }
-    
-    .score-revelation-panel {
-        margin-top: var(--space-4);
-        position: sticky;
-        top: 60px;
-    }
-    
-    .score-revelation-panel.revealed {
-        max-height: calc(100vh - 100px);
-        overflow-y: auto;
-    }
+
+    .score-cards-grid::-webkit-scrollbar { display: none; }
+
+    .score-card { flex: 0 0 80%; scroll-snap-align: center; min-height: 380px; padding: var(--space-5); }
+    .score-card.active { transform: scale(1.08); }
+
+    /* Mobile sheet: convert revelation panel to a full-screen overlay */
+    /* Mobile inline details: hide card grid when details are open */
+    .scores-section.details-open .score-cards-grid { display: none; }
+    /* Keep panel inline, not overlay */
+    .score-revelation-panel { position: static; background: transparent; display: block; margin-top: var(--space-4); }
+    .score-revelation-panel.revealed { max-height: none; opacity: 1; overflow: visible; }
+    /* Ensure content is auto-sized and scrolls with page */
+    .score-revelation-panel .revelation-content { height: auto; max-height: none; margin: 0; }
+    /* Keep tabs visible while scrolling */
+    .score-revelation-panel .panel-tabs { position: sticky; top: 0; z-index: 5; }
 }
 
 .score-expanded-container .metric-group {
@@ -1680,6 +1663,103 @@ body.light-theme #antifragile-score-value {
     margin-bottom: 24px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--glass-border);
+}
+
+/* Quality mobile/group navigation enhancements */
+.quality-group-tabs {
+    display: none; /* hidden by default; shown on mobile */
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 8px 4px;
+    margin: 4px 0 8px 0;
+}
+.quality-group-tabs .chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 9999px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--color-text-primary);
+}
+.quality-group-tabs .chip svg { display: block; }
+.quality-group-tabs .chip.active {
+    border-color: var(--tier-color, var(--color-score-purple));
+    box-shadow: 0 0 0 2px rgba(var(--score-color-rgb, 168,85,247), 0.15) inset;
+}
+
+/* Hide chips when their section is not the active one */
+.detail-section:not(.active) .quality-group-tabs { display: none !important; }
+.detail-section:not(.active) .af-group-tabs { display: none !important; }
+
+@media (max-width: 768px) {
+    /* Keep top-level score tabs visible under universal header */
+    .score-revelation-panel .panel-tabs {
+        position: sticky;
+        top: var(--uh, 52px); /* below fixed header */
+        z-index: 20;
+        background: var(--color-bg-secondary);
+        border-bottom: 1px solid var(--color-border-primary);
+        margin: 0 -16px var(--space-2) -16px;
+        padding: 12px 16px;
+    }
+
+    /* Allow sticky children inside the content to work correctly */
+    .revelation-content { overflow: visible; }
+
+    .quality-group-tabs {
+        position: sticky;
+        display: flex; /* visible on mobile */
+        top: calc(var(--uh, 52px) + var(--tabs-h, 48px)); /* sits below the top-level tabs */
+        z-index: 19;
+        background: var(--color-bg-secondary);
+        border-bottom: 1px solid var(--color-border-primary);
+        padding: 8px 12px;
+        margin: 0 -12px 8px -12px; /* edge-to-edge alignment */
+    }
+    .quality-summary-grid .summary-metric-card { padding: 10px !important; }
+    .quality-summary-grid .dynamic-value { font-size: 22px !important; }
+    .quality-summary-grid h4 { font-size: 13px; }
+    .summary-button { font-size: 12px; padding: 6px 10px; }
+
+    /* Ensure content starts below sticky top-level tabs and chips */
+    .revelation-content .detail-section { padding-top: var(--tabs-h, 48px); }
+    .revelation-content .quality-details { padding-top: calc(var(--tabs-h, 48px) + var(--chips-h, 40px) + 8px); }
+}
+
+/* Desktop Quality split-pane layout */
+@media (min-width: 1024px) {
+  .revelation-content.quality-layout {
+    display: grid;
+    grid-template-columns: 1fr; /* full width for details */
+    grid-auto-rows: min-content;
+    align-items: start;
+  }
+  .revelation-content.quality-layout .panel-tabs { grid-column: 1 / -1; }
+  /* Hide legacy summary tiles within desktop Quality panel to avoid duplication */
+  .revelation-content.quality-layout #quality-summary-grid,
+  .revelation-content.quality-layout #quality-gauntlet-tile { display: none; }
+  /* Desktop chip bar for navigation within the panel (right column) */
+  .revelation-content.quality-layout .quality-group-tabs {
+    grid-column: 1 / -1;
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border-primary);
+    padding: 8px 0;
+    margin-bottom: 8px;
+  }
+  .revelation-content.quality-layout .quality-group-tabs .chip { font-size: 12px; padding: 6px 10px; }
+  /* Hide legacy header */
+  .revelation-content.quality-layout .quality-details > h3 { display: none; }
+  .revelation-content.quality-layout #shared-summary-panel { grid-column: 1 / -1; }
 }
 
 .score-expanded-container h4 {
@@ -2995,3 +3075,45 @@ body.light-theme #antifragile-score-value {
 /* Shield background neutral fill per theme */
 .antifragile-shield-bg { fill: rgba(255, 255, 255, 0.08); }
 .light-theme .antifragile-shield-bg { fill: rgba(0, 0, 0, 0.06); }
+
+/* Mobile-only: show chips-only Quality view (hide summary tiles) */
+@media (max-width: 768px) {
+  .quality-summary-grid { display: none !important; }
+  #quality-gauntlet-tile { display: none !important; }
+  /* Hide Anti‑Fragile summary tiles on mobile */
+  #af-summary-grid { display: none !important; }
+}
+
+/* AF chips style mirrors Quality chips */
+.af-group-tabs {
+  display: none; /* show only in mobile or desktop panel */
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 8px 4px;
+  margin: 4px 0 8px 0;
+}
+.af-group-tabs .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; font-size:12px; line-height:1; border-radius:9999px; border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--color-text-primary); }
+.af-group-tabs .chip.active { border-color: var(--tier-color, var(--color-score-purple)); box-shadow: 0 0 0 2px rgba(var(--score-color-rgb, 168,85,247), 0.15) inset; }
+.detail-section:not(.active) .af-group-tabs { display:none !important; }
+
+@media (max-width: 768px) {
+  /* Sticky positions for AF chips too */
+  .af-group-tabs {
+    position: sticky;
+    display: flex;
+    top: calc(var(--uh, 52px) + var(--tabs-h, 48px));
+    z-index: 19;
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border-primary);
+    padding: 8px 12px;
+    margin: 0 -12px 8px -12px;
+  }
+}
+
+/* Desktop AF layout parallels Quality */
+@media (min-width: 1024px) {
+  .revelation-content.af-layout #af-summary-grid { display:none; }
+  .revelation-content.af-layout .antifragile-details > h3 { display:none; }
+  .revelation-content.af-layout .af-group-tabs { display:flex; position:sticky; top:0; z-index:5; background:var(--color-bg-secondary); border-bottom:1px solid var(--color-border-primary); padding:8px 0; margin-bottom:8px; }
+}
