@@ -3521,7 +3521,7 @@ function populateQualityExpanded() {
     const qualityPercentage = (qualityScore / 109) * 100;
     const qualityColors = getScoreColor(qualityPercentage);
 
-    let html = '<h3 class="text-xl font-bold mb-6">Enterprise Quality Breakdown</h3>';
+    let html = '';
 
     // Summary grid: mobile 2-col; md:2; lg:4
     html += '<div id="quality-summary-grid" class="quality-summary-grid grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">';
@@ -3615,7 +3615,9 @@ function populateIDQExpanded() {
 
     const scoringTooltipText = "The final IDQ score is a holistic judgment based on five key facets. Significant weight is given to Disruptive Innovation & Core Technology Moat and Market Opportunity for Disruption, as these are primary engines of transformative potential.";
 
-    let html = `
+    // Wrap IDQ content to match Quality/AF panel spacing and visuals
+    let html = `<div class="p-6 glass-morphism rounded-lg border">`;
+    html += `
         <div class="flex items-center gap-2 mb-6">
             <h3 class="text-xl font-bold">Innovation Disruption Quotient (IDQ)</h3>
             <span class="has-reasoning" data-tooltip="${escapeAttr(scoringTooltipText)}">
@@ -3637,7 +3639,7 @@ function populateIDQExpanded() {
         html += `
             <div class="idq-section mt-6">
                 <h4 class="idq-section-title mb-4">Facet Breakdown</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
         `;
         
         const analysisBlock = detailedAnalysisText.split('--- DETAILED FACET ANALYSIS ---')[1] || '';
@@ -3676,6 +3678,7 @@ function populateIDQExpanded() {
         `;
     }
     
+    html += `</div>`; // close glass-morphism wrapper
     return html;
 }
 
@@ -3687,7 +3690,7 @@ function populateAntiFragileExpanded() {
     const tooltipText = "Anti-Fragile scores are derived from Quality Score metrics using specific formulas. Click on metrics below to see their reasoning.";
 
     let html = `
-        <div class="flex items-center gap-2 mb-4">
+        <div class="flex items-center gap-2 mb-4 mt-8 md:mt-4">
             <h3 class="text-xl font-bold">Anti-Fragile Score Breakdown</h3>
             <span class="has-reasoning" data-tooltip="${escapeAttr(tooltipText)}">
                  <span class="reasoning-icon text-lg">💡</span>
@@ -3782,7 +3785,12 @@ function showAfGroupDetails(key) {
         html += renderMetric('Ownership', sitg.ownership, 1, llmResearch.Culture_and_Pastperformance_Group?.insideOwnershipReasoning, sitg.ownership < 0);
         html += '</div>';
     }
-    panel.innerHTML = html;
+    // Wrap to match Quality panel spacing/visuals
+    panel.innerHTML = `<div class="p-6 glass-morphism rounded-lg border">${html}</div>`;
+    // Update sticky positioning variables
+    if (window.ScoreCardsView?.updateStickyVars) {
+        window.ScoreCardsView.updateStickyVars();
+    }
 }
 
 function formatMetricName(name) {
@@ -3828,8 +3836,30 @@ const metricDisplayNames = {
     consistentlyBeatsExpectations: 'Beats Expectations',
     shareholderFriendlyActions: 'Shareholder Friendly',
     
-    // Gauntlet
+    // Gauntlet (multiple key variants mapped to readable labels)
+    bigMarketLoser: 'Big Market Loser',
+    big_market_loser: 'Big Market Loser',
+    outsideForces: 'Outside Forces',
+    outside_forces: 'Outside Forces',
+    growthByAcquisition: 'Growth By Acquisition',
+    growth_by_acquisition: 'Growth By Acquisition',
+    industryDisruption: 'Industry Disruption',
+    industry_disruption: 'Industry Disruption',
+    accountingIrregularities: 'Accounting Irregularities',
+    accounting_irregularities: 'Accounting Irregularities',
     customerConcentration: 'Customer Concentration',
+    customer_concentration: 'Customer Concentration',
+    complicatedFinancials: 'Complicated Financials',
+    complicated_financials: 'Complicated Financials',
+    antitrustConcerns: 'Antitrust Concerns',
+    antitrust_concerns: 'Antitrust Concerns',
+    extremeDilution: 'Extreme Dilution',
+    extreme_dilution: 'Extreme Dilution',
+    headquarters: 'Headquarters',
+    currencyRisk: 'Currency Risk',
+    currency_risk: 'Currency Risk',
+    binaryEvent: 'Binary Event',
+    binary_event: 'Binary Event',
     regulatoryRisk: 'Regulatory Risk',
     obsoletionRisk: 'Obsoletion Risk'
 };
@@ -3842,56 +3872,47 @@ function showGroupDetails(groupName) {
     console.log('Toggle group details for:', groupName);
     const panel = document.getElementById('shared-summary-panel');
     if (!panel) return;
-    
-    // Get the button that was clicked
+
     const button = document.querySelector(`button[data-group="${groupName.toLowerCase()}"]`);
-    
-    // Check if this group is already expanded
+
     if (expandedGroups.has(groupName.toLowerCase())) {
-        // Collapse it
         expandedGroups.delete(groupName.toLowerCase());
         panel.innerHTML = '';
         panel.style.display = 'none';
-        // Clear chip active state (mobile tabs)
+        if (window.ScoreCardsView?.updateStickyVars) {
+            window.ScoreCardsView.updateStickyVars();
+        }
         try { document.querySelectorAll('.quality-group-tabs .chip').forEach(c => c.classList.remove('active')); } catch (_) {}
-        
-        // Update button text
         if (button) {
             const textSpan = button.querySelector('span');
             if (textSpan) textSpan.textContent = 'View Details';
         }
         return;
     }
-    
-    // Clear other expanded groups
+
     expandedGroups.clear();
     expandedGroups.add(groupName.toLowerCase());
-    
-    // Update all buttons to show "View Details"
+
     document.querySelectorAll('.summary-button span').forEach(span => {
         span.textContent = 'View Details';
     });
-    
-    // Update clicked button to show "Hide Details"
+
     if (button) {
         const textSpan = button.querySelector('span');
         if (textSpan) textSpan.textContent = 'Hide Details';
     }
-    // Update chips active state (mobile tabs)
     try {
         document.querySelectorAll('.quality-group-tabs .chip').forEach(c => c.classList.remove('active'));
         const chip = document.querySelector(`.quality-group-tabs .chip[data-group-tab="${groupName.toLowerCase()}"]`);
         if (chip) chip.classList.add('active');
     } catch (_) {}
-    
+
     const llmResearch = state.currentStockData.LLM_Research_and_Comments;
     let content = '';
-    
-    // Get the appropriate group data and summary
     let groupData = {};
     let summary = '';
     let rangeKey = '';
-    
+
     switch(groupName.toLowerCase()) {
         case 'financials':
             groupData = llmResearch.Financials_Group || {};
@@ -3919,8 +3940,7 @@ function showGroupDetails(groupName) {
             rangeKey = 'gauntlet';
             break;
     }
-    
-    // Compute group total and header label with max where applicable
+
     const totals = llmResearch.Total_scores_group?.Group_Scores || {};
     const headerMaxMap = { financials: 17, moat: 20, potential: 45, culture: 25 };
     const groupTotal = (
@@ -3935,45 +3955,41 @@ function showGroupDetails(groupName) {
         : (typeof groupTotal === 'number' ? ` (${groupTotal}/${headerMaxMap[groupName.toLowerCase()] || ''})` : '');
     const prettyName = groupName.charAt(0).toUpperCase() + groupName.slice(1);
 
-    // Build the content
     content = `
         <div class="p-6 glass-morphism rounded-lg border">
             <h4 class="text-lg font-semibold mb-3">${prettyName} Details${headerSuffix}</h4>
             <p class="text-sm muted-heading mb-6 leading-relaxed">${summary}</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
     `;
-    
-    // Add metrics with special handling for Gauntlet
+
     const ranges = scoreRanges[rangeKey] || {};
-    
+
     Object.entries(groupData).forEach(([metric, value]) => {
         if (!metric.endsWith('Reasoning') && typeof value !== 'object') {
             const reasoning = groupData[`${metric}Reasoning`];
             const displayName = metricDisplayNames[metric] || formatMetricName(metric);
-            
-            // Special handling for Gauntlet metrics (no progress bars, color-coded)
+
             if (rangeKey === 'gauntlet') {
-            const scoreColorClass = value === 0 ? '' : 'text-red-400';
-                const hasReasoning = reasoning && value !== 0;
+                const n = parseFloat(value);
+                const isNegative = !Number.isNaN(n) && n < 0;
+                const hasReasoning = reasoning && n !== 0;
                 const tooltipText = hasReasoning ? escapeAttr(reasoning) : '';
                 const reasoningIcon = hasReasoning ? '<span class="reasoning-icon">💡</span>' : '';
-                
+
                 content += `
                     <div class="metric-item ${hasReasoning ? 'has-reasoning' : ''}" ${hasReasoning ? `data-tooltip="${tooltipText}"` : ''}>
                         <div class="flex justify-between items-center">
                             <span class="text-sm muted-heading">${displayName}${reasoningIcon}</span>
-                            <span class="text-sm font-bold ${scoreColorClass}">${value}</span>
+                            <span class="text-sm font-bold" style="color: ${isNegative ? 'var(--color-score-red)' : 'var(--color-text-primary)'}">${Number.isNaN(n) ? value : n}</span>
                         </div>
                     </div>
                 `;
             } else {
-                // Regular metrics with progress bars
                 const range = ranges[metric];
                 if (range) {
                     const max = range[1];
                     content += renderMetric(displayName, value, max, reasoning, false);
                 } else {
-                    // Fallback for metrics without defined ranges
                     const tooltipText = reasoning ? escapeAttr(reasoning) : '';
                     content += `
                         <div class="metric-item ${reasoning ? 'has-reasoning' : ''}" ${reasoning ? `data-tooltip="${tooltipText}"` : ''}>
@@ -3987,21 +4003,27 @@ function showGroupDetails(groupName) {
             }
         }
     });
-    
+
     content += `
             </div>
         </div>
     `;
-    
-    // Show the panel with animation
+
     panel.innerHTML = content;
+    if (window.ScoreCardsView?.updateStickyVars) {
+        window.ScoreCardsView.updateStickyVars();
+    }
     panel.style.display = 'block';
     setTimeout(() => {
         panel.classList.add('show');
-        // Bring tabs into view on mobile for quick switching
         if (window.innerWidth <= 768) {
             const tabs = document.querySelector('.quality-group-tabs');
-            if (tabs) tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (tabs) {
+                const r = tabs.getBoundingClientRect();
+                const vh = window.innerHeight || document.documentElement.clientHeight;
+                const isVisible = r.top >= 0 && r.bottom <= vh;
+                if (!isVisible) tabs.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     }, 10);
 }

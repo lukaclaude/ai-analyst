@@ -761,10 +761,11 @@ body.light-theme .glass-morphism {
 
 /* Mobile Layout (<768px) */
 @media (max-width: 767px) {
+    .hero-header { padding: 8px 0; }
     .hero-grid {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
     }
     
     .company-info-section {
@@ -783,6 +784,10 @@ body.light-theme .glass-morphism {
         gap: 0.5rem;
     }
     
+    /* Compact hero text and badges */
+    #company-name { font-size: clamp(1.1rem, 3.8vw, 1.25rem); line-height: 1.2; }
+    .ticker-badge { font-size: 0.75rem; padding: 4px 8px; }
+    #stock-price { font-size: clamp(1.375rem, 6vw, 1.75rem); }
     /* Chart already hidden by tablet rule above */
 }
 
@@ -1297,6 +1302,8 @@ body.light-theme #antifragile-score-value {
   gap: var(--space-3);
 }
 @media (max-width: 768px) {
+    /* Ensure negative margins never bleed through on mobile */
+    .panel-tabs { margin: 0 !important; }
   #quality-sub-scores-container { grid-template-columns: 1fr; }
 }
 #antifragile-sub-scores-container {
@@ -1381,7 +1388,12 @@ body.light-theme #antifragile-score-value {
 }
 .panel-tab.active {
     border-color: var(--tier-color, var(--color-score-purple));
-    box-shadow: 0 0 0 2px rgba(var(--score-color-rgb, 168,85,247), 0.15) inset;
+    box-shadow:
+      0 0 0 2px rgba(var(--active-color-rgb, 168,85,247), 0.35) inset,
+      0 0 0 1px rgba(var(--active-color-rgb, 168,85,247), 0.9),
+      0 0 10px rgba(var(--active-color-rgb, 168,85,247), 0.25);
+    background: var(--glass-bg);
+    font-weight: 700;
 }
 .panel-tab-close {
     padding: 6px 12px;
@@ -1608,19 +1620,84 @@ body.light-theme #antifragile-score-value {
 
     .score-cards-grid::-webkit-scrollbar { display: none; }
 
-    .score-card { flex: 0 0 80%; scroll-snap-align: center; min-height: 380px; padding: var(--space-5); }
-    .score-card.active { transform: scale(1.08); }
+    .score-card { flex: 0 0 76%; scroll-snap-align: center; min-height: 320px; padding: clamp(12px, 3vw, 18px); }
+    .score-card.active { transform: scale(1.04); }
 
-    /* Mobile sheet: convert revelation panel to a full-screen overlay */
     /* Mobile inline details: hide card grid when details are open */
     .scores-section.details-open .score-cards-grid { display: none; }
+    
     /* Keep panel inline, not overlay */
     .score-revelation-panel { position: static; background: transparent; display: block; margin-top: var(--space-4); }
     .score-revelation-panel.revealed { max-height: none; opacity: 1; overflow: visible; }
+    
     /* Ensure content is auto-sized and scrolls with page */
-    .score-revelation-panel .revelation-content { height: auto; max-height: none; margin: 0; }
-    /* Keep tabs visible while scrolling */
-    .score-revelation-panel .panel-tabs { position: sticky; top: 0; z-index: 5; }
+    .score-revelation-panel .revelation-content { 
+        height: auto; 
+        max-height: none; 
+        margin: 0;
+        overflow: visible; /* Allow sticky children to work correctly */
+        padding: 12px; /* Add some base padding */
+    }
+
+    /* Keep top-level score tabs visible under universal header */
+    .score-revelation-panel .panel-tabs {
+        position: sticky;
+        top: var(--uh, 52px); /* Fallback for safety */
+        z-index: 20;
+        background: var(--color-bg-secondary);
+        border-bottom: 1px solid var(--color-border-primary);
+        margin: 0; /* CRITICAL: remove negative margins on mobile */
+        /* Tighter vertical rhythm so chips visually attach */
+        padding: 6px 16px 2px;
+    }
+
+    /* General rule for all chip containers */
+    .quality-group-tabs, .af-group-tabs {
+        position: sticky;
+        /* display is set by a more specific rule below */
+        top: calc(var(--uh, 52px) + var(--tabs-h, 48px)); /* Sits below the top-level tabs */
+        z-index: 19;
+        background: var(--color-bg-secondary);
+        border-bottom: 1px solid var(--color-border-primary);
+        /* Reduced top padding to minimize optical gap to tabs */
+        padding: 0 12px 4px;
+        margin: 0 -12px 0 -12px; /* Edge-to-edge alignment, no extra gap below */
+    }
+
+    /* --- FIX: Specifically display the chips only when their parent section is active --- */
+    .quality-details.active .quality-group-tabs,
+    .antifragile-details.active .af-group-tabs {
+        display: flex;
+    }
+
+    /* Ensure content starts below sticky UI. Use !important to override any inline styles or specificity issues. */
+    /* Default for sections without chips (like IDQ) */
+    .revelation-content .detail-section { 
+        /* Keep a small, consistent top breathing space (tabs are in-flow) */
+        padding-top: 8px !important; 
+    }
+    /* But for sections with their own chip bars (Quality, AF), do NOT add section-level padding. */
+    .revelation-content .quality-details,
+    .revelation-content .antifragile-details {
+        padding-top: 0 !important;
+    }
+    /* Reserve space for chips only where content begins (not on the whole section) */
+    .revelation-content .quality-details #shared-summary-panel {
+        padding-top: 4px !important;
+    }
+    .revelation-content .antifragile-details #af-shared-panel {
+        padding-top: 4px !important;
+    }
+
+    /* Legacy Quality H3 is not used; rule removed to reduce CSS noise */
+
+    /* Mobile-specific layout tweaks */
+    .quality-summary-grid .summary-metric-card { padding: 10px !important; }
+    .quality-summary-grid .dynamic-value { font-size: 22px !important; }
+    .quality-summary-grid h4 { font-size: 13px; }
+    .summary-button { font-size: 12px; padding: 6px 10px; }
+    #shared-summary-panel { margin-top: 0 !important; }
+    #af-shared-panel { margin-top: 0 !important; }
 }
 
 .score-expanded-container .metric-group {
@@ -1666,15 +1743,15 @@ body.light-theme #antifragile-score-value {
 }
 
 /* Quality mobile/group navigation enhancements */
-.quality-group-tabs {
-    display: none; /* hidden by default; shown on mobile */
+.quality-group-tabs, .af-group-tabs {
+    display: none; /* Hidden by default, shown by other rules */
     gap: 8px;
     flex-wrap: nowrap;
     overflow-x: auto;
     padding: 8px 4px;
     margin: 4px 0 8px 0;
 }
-.quality-group-tabs .chip {
+.quality-group-tabs .chip, .af-group-tabs .chip {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
@@ -1687,50 +1764,19 @@ body.light-theme #antifragile-score-value {
     background: var(--glass-bg);
     color: var(--color-text-primary);
 }
-.quality-group-tabs .chip svg { display: block; }
-.quality-group-tabs .chip.active {
-    border-color: var(--tier-color, var(--color-score-purple));
-    box-shadow: 0 0 0 2px rgba(var(--score-color-rgb, 168,85,247), 0.15) inset;
+.quality-group-tabs .chip svg, .af-group-tabs .chip svg { display: block; }
+.quality-group-tabs .chip.active, .af-group-tabs .chip.active {
+    border-color: color-mix(in oklab, rgb(var(--active-color-rgb, 168,85,247)) 60%, transparent);
+    box-shadow:
+      0 0 0 2px rgba(var(--active-color-rgb, 168,85,247), 0.35) inset,
+      0 0 8px rgba(var(--active-color-rgb, 168,85,247), 0.25);
+    background: var(--glass-bg);
+    font-weight: 700;
 }
 
 /* Hide chips when their section is not the active one */
 .detail-section:not(.active) .quality-group-tabs { display: none !important; }
 .detail-section:not(.active) .af-group-tabs { display: none !important; }
-
-@media (max-width: 768px) {
-    /* Keep top-level score tabs visible under universal header */
-    .score-revelation-panel .panel-tabs {
-        position: sticky;
-        top: var(--uh, 52px); /* below fixed header */
-        z-index: 20;
-        background: var(--color-bg-secondary);
-        border-bottom: 1px solid var(--color-border-primary);
-        margin: 0 -16px var(--space-2) -16px;
-        padding: 12px 16px;
-    }
-
-    /* Allow sticky children inside the content to work correctly */
-    .revelation-content { overflow: visible; }
-
-    .quality-group-tabs {
-        position: sticky;
-        display: flex; /* visible on mobile */
-        top: calc(var(--uh, 52px) + var(--tabs-h, 48px)); /* sits below the top-level tabs */
-        z-index: 19;
-        background: var(--color-bg-secondary);
-        border-bottom: 1px solid var(--color-border-primary);
-        padding: 8px 12px;
-        margin: 0 -12px 8px -12px; /* edge-to-edge alignment */
-    }
-    .quality-summary-grid .summary-metric-card { padding: 10px !important; }
-    .quality-summary-grid .dynamic-value { font-size: 22px !important; }
-    .quality-summary-grid h4 { font-size: 13px; }
-    .summary-button { font-size: 12px; padding: 6px 10px; }
-
-    /* Ensure content starts below sticky top-level tabs and chips */
-    .revelation-content .detail-section { padding-top: var(--tabs-h, 48px); }
-    .revelation-content .quality-details { padding-top: calc(var(--tabs-h, 48px) + var(--chips-h, 40px) + 8px); }
-}
 
 /* Desktop Quality split-pane layout */
 @media (min-width: 1024px) {
@@ -3086,7 +3132,7 @@ body.light-theme #antifragile-score-value {
 
 /* AF chips style mirrors Quality chips */
 .af-group-tabs {
-  display: none; /* show only in mobile or desktop panel */
+  /* base styles; visibility handled by active-section rules */
   gap: 8px;
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -3097,23 +3143,21 @@ body.light-theme #antifragile-score-value {
 .af-group-tabs .chip.active { border-color: var(--tier-color, var(--color-score-purple)); box-shadow: 0 0 0 2px rgba(var(--score-color-rgb, 168,85,247), 0.15) inset; }
 .detail-section:not(.active) .af-group-tabs { display:none !important; }
 
-@media (max-width: 768px) {
-  /* Sticky positions for AF chips too */
-  .af-group-tabs {
-    position: sticky;
-    display: flex;
-    top: calc(var(--uh, 52px) + var(--tabs-h, 48px));
-    z-index: 19;
-    background: var(--color-bg-secondary);
-    border-bottom: 1px solid var(--color-border-primary);
-    padding: 8px 12px;
-    margin: 0 -12px 8px -12px;
-  }
-}
+/* Mobile sticky styles for AF chips are defined earlier with the shared rule
+   under the main mobile block to avoid duplication. */
 
 /* Desktop AF layout parallels Quality */
 @media (min-width: 1024px) {
   .revelation-content.af-layout #af-summary-grid { display:none; }
   .revelation-content.af-layout .antifragile-details > h3 { display:none; }
   .revelation-content.af-layout .af-group-tabs { display:flex; position:sticky; top:0; z-index:5; background:var(--color-bg-secondary); border-bottom:1px solid var(--color-border-primary); padding:8px 0; margin-bottom:8px; }
+}
+    /* Tighten overall section vertical spacing */
+    .scores-section { padding: 24px 0; }
+/* Strong mobile overrides to ensure compact card height after global rules */
+@media (max-width: 768px) {
+  .score-card.active { transform: scale(1.02) translateY(-2px) !important; }
+  .score-card { min-height: 320px !important; }
+  .score-cards-grid { gap: 12px !important; }
+  .scores-section { padding: 20px 0 !important; }
 }

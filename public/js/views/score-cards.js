@@ -4,6 +4,39 @@
 (function() {
   let currentRevealed = null;
 
+  // Measure sticky heights after layout and set CSS vars
+  function updateStickyVars() {
+    const panel = document.getElementById('score-revelation-panel');
+    if (!panel) return;
+    // Defer to next frame to ensure DOM is painted and offsets are correct
+    requestAnimationFrame(() => {
+      try {
+        const header = document.querySelector('#universal-header') || document.querySelector('.universal-header');
+        const tabs = panel.querySelector('.panel-tabs');
+        const active = document.querySelector('.detail-section.active');
+        const chips = active ? (active.querySelector('.quality-group-tabs') || active.querySelector('.af-group-tabs')) : null;
+        const uh = header ? header.offsetHeight : 52;
+        const th = tabs ? tabs.offsetHeight : 48;
+        const ch = chips ? chips.offsetHeight : 0;
+        // Detect if tabs are currently stuck beneath the header
+        let tabsOffset = 0;
+        if (tabs) {
+          const rect = tabs.getBoundingClientRect();
+          if (rect.top <= uh + 1) tabsOffset = uh; // add header height when stuck
+        }
+        panel.style.setProperty('--uh', uh + 'px');
+        panel.style.setProperty('--tabs-h', th + 'px');
+        panel.style.setProperty('--chips-h', ch + 'px');
+        panel.style.setProperty('--tabs-offset', tabsOffset + 'px');
+        // Fallback on root to help any global consumers
+        document.documentElement.style.setProperty('--uh', uh + 'px');
+        document.documentElement.style.setProperty('--tabs-h', th + 'px');
+        document.documentElement.style.setProperty('--chips-h', ch + 'px');
+        document.documentElement.style.setProperty('--tabs-offset', tabsOffset + 'px');
+      } catch (_) {}
+    });
+  }
+
   function revealScoreDetails(scoreType) {
     const state = (window.CompanyCard && window.CompanyCard.state) || {};
     if (!state.currentStockData) { console.error('No stock data available'); return; }
@@ -60,27 +93,16 @@
       }
     } catch (_) {}
     // Measure sticky offsets for mobile to prevent overlap
-    try {
-      const header = document.querySelector('#universal-header') || document.querySelector('.universal-header');
-      const tabs = panel.querySelector('.panel-tabs');
-      const active = document.querySelector('.detail-section.active');
-      const chips = active ? (active.querySelector('.quality-group-tabs') || active.querySelector('.af-group-tabs')) : null;
-      const uh = header ? header.offsetHeight : 52;
-      const th = tabs ? tabs.offsetHeight : 48;
-      const ch = chips ? chips.offsetHeight : 0; // no chips for IDQ or when hidden
-      panel.style.setProperty('--uh', uh + 'px');
-      panel.style.setProperty('--tabs-h', th + 'px');
-      panel.style.setProperty('--chips-h', ch + 'px');
-    } catch (_) {}
+    updateStickyVars();
     // Mobile: replace cards view with details view
     if (window.innerWidth <= 768) {
       const sec = document.querySelector('.scores-section');
       if (sec) sec.classList.add('details-open');
       const closeBtn = document.getElementById('panel-tab-close');
-      if (closeBtn) closeBtn.textContent = 'Back';
+      if (closeBtn) { closeBtn.textContent = '✕'; closeBtn.setAttribute('aria-label','Close details'); }
       // Scroll section into view for immediate context
       const sectionEl = document.querySelector('.scores-section');
-      if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     currentRevealed = scoreType;
     try { updatePanelTabsActive(); } catch (_) {}
@@ -99,7 +121,14 @@
         if (active) { const type = active.id.replace('-details', ''); revealScoreDetails(type); }
         return;
       }
-      if (btn) { const target = btn.getAttribute('data-target'); if (target) revealScoreDetails(target); }
+      if (btn) {
+        const target = btn.getAttribute('data-target');
+        if (target) {
+          // On mobile, clicking the already-active tab should NOT close the panel; only the ✕ does
+          if (window.innerWidth <= 768 && target === currentRevealed) { e.preventDefault(); return; }
+          revealScoreDetails(target); updateStickyVars();
+        }
+      }
     });
   }
 
@@ -134,8 +163,17 @@
     });
   }
 
-  window.ScoreCardsView = { revealScoreDetails, setupPanelTabs, updatePanelTabsActive, setupMobileCarousel };
+  window.ScoreCardsView = { revealScoreDetails, setupPanelTabs, updatePanelTabsActive, setupMobileCarousel, updateStickyVars };
   // Maintain global for inline handlers
   window.revealScoreDetails = revealScoreDetails;
-  window.addEventListener('resize', () => { try { setupMobileCarousel(); } catch (_) {} });
+  window.addEventListener('resize', () => { try { setupMobileCarousel(); updateStickyVars(); } catch (_) {} });
+  window.addEventListener('orientationchange', () => { try { updateStickyVars(); } catch (_) {} });
+  window.addEventListener('themeChanged', () => { try { updateStickyVars(); } catch (_) {} });
+  // Light rAF-throttled scroll handler to keep --uh correct when header chip appears/disappears
+  let __scvTicking = false;
+  window.addEventListener('scroll', () => {
+    if (__scvTicking) return;
+    __scvTicking = true;
+    requestAnimationFrame(() => { try { updateStickyVars(); } finally { __scvTicking = false; } });
+  }, { passive: true });
 })();
