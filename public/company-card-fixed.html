@@ -144,6 +144,8 @@
                                         </filter>
                                     </defs>
                                     <circle cx="100" cy="100" r="88" class="progress-ring-bg"/>
+                                    <!-- Subtle tick marks around the gauge for readability -->
+                                    <circle cx="100" cy="100" r="88" class="quality-ticks" />
                                     <circle cx="100" cy="100" r="88" 
                                             stroke="url(#qualityGradient)"
                                             class="progress-ring-fg"
@@ -475,7 +477,11 @@
     <script src="./js/universal-sidebar.js"></script>
     
     <!-- Application Scripts -->
+    <script src="./js/lib/aliases.js"></script>
+    <script src="./js/lib/formatters.js"></script>
+    <script src="./js/lib/tiers.js"></script>
     <script src="./js/universal-header.js"></script>
+    <script src="./js/views/score-cards.js"></script>
     <script src="./js/company-card-complete-fix.js"></script>
     
     <script>

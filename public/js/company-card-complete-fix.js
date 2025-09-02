@@ -35,69 +35,18 @@ const state = {
 // UTILITY FUNCTIONS
 // ============================================
 
+// Delegating wrappers for formatters (migrated to js/lib/formatters.js)
 function formatCurrency(value, decimals = 1, currency = 'USD') {
-    if (value == null || isNaN(value)) return 'N/A';
-    
-    const symbols = {
-        USD: '$', EUR: '€', GBP: '£', JPY: '¥', CNY: '¥',
-        DKK: 'kr', CAD: 'C$', KRW: '₩', CHF: 'CHF', TWD: 'NT$'
-    };
-    
-    const symbol = symbols[currency] || currency + ' ';
-    const num = parseFloat(value);
-    const absNum = Math.abs(num);
-    
-    let formatted;
-    if (absNum >= 1e12) formatted = `${(num / 1e12).toFixed(decimals)}T`;
-    else if (absNum >= 1e9) formatted = `${(num / 1e9).toFixed(decimals)}B`;
-    else if (absNum >= 1e6) formatted = `${(num / 1e6).toFixed(decimals)}M`;
-    else if (absNum >= 1e3) formatted = `${(num / 1e3).toFixed(decimals)}K`;
-    else formatted = num.toFixed(decimals);
-    
-    return ['USD', 'EUR', 'GBP', 'CAD', 'CHF'].includes(currency) ?
-        `${symbol}${formatted}` : `${formatted} ${symbol}`;
+    if (window.Formatters && window.Formatters.formatCurrency) return window.Formatters.formatCurrency(value, decimals, currency);
+    return String(value);
 }
-
-// Format large quantities (non-currency) with units (tn/bn/m/k)
 function formatQuantity(value, decimals = 2) {
-    if (value == null || isNaN(value)) return 'N/A';
-    const num = parseFloat(value);
-    const absNum = Math.abs(num);
-    if (absNum >= 1e12) return `${(num / 1e12).toFixed(decimals)} tn`;
-    if (absNum >= 1e9) return `${(num / 1e9).toFixed(decimals)} bn`;
-    if (absNum >= 1e6) return `${(num / 1e6).toFixed(decimals)} m`;
-    if (absNum >= 1e3) return `${(num / 1e3).toFixed(decimals)} k`;
-    return num.toFixed(decimals);
+    if (window.Formatters && window.Formatters.formatQuantity) return window.Formatters.formatQuantity(value, decimals);
+    return String(value);
 }
-
-// Format market cap to human readable format  
 function formatMarketCap(value, currencyCode = 'USD') {
-    if (!value || isNaN(value)) return 'N/A';
-    
-    let symbol = '';
-    switch (currencyCode.toUpperCase()) {
-        case 'USD': symbol = '$'; break;
-        case 'EUR': symbol = '€'; break;
-        case 'GBP': symbol = '£'; break;
-        case 'DKK': symbol = 'kr.'; break;
-        default: symbol = currencyCode + ' '; break;
-    }
-    
-    const num = parseFloat(value);
-    let displayValue;
-    if (num >= 1e12) {
-        displayValue = `${(num / 1e12).toFixed(1)} tn`;
-    } else if (num >= 1e9) {
-        displayValue = `${(num / 1e9).toFixed(1)} bn`;
-    } else if (num >= 1e6) {
-        displayValue = `${(num / 1e6).toFixed(1)} m`;
-    } else if (num >= 1e3) {
-        displayValue = `${(num / 1e3).toFixed(1)} k`;
-    } else {
-        displayValue = num.toFixed(2);
-    }
-    
-    return `${symbol}${displayValue}`;
+    if (window.Formatters && window.Formatters.formatMarketCap) return window.Formatters.formatMarketCap(value, currencyCode);
+    return String(value);
 }
 
 // Initialize mini price chart - keep for backward compatibility
@@ -445,8 +394,10 @@ function getScoreColor(percentage) {
     };
 }
 
-// Map raw IDQ score to tier color (not percentage-based)
+// Map raw IDQ score to tier color (delegates to lib)
 function getIdqTierColors(idqScore) {
+    if (window.Tiers && window.Tiers.getIdqTierColors) return window.Tiers.getIdqTierColors(idqScore);
+    // Fallback mapping (should rarely be used if lib is loaded first)
     if (idqScore >= 11) return { color: '#a855f7', glow: 'rgba(168,85,247,0.3)', rgb: '168,85,247', class: 'score-purple', tier: 'Pioneer' };
     if (idqScore >= 9)  return { color: '#3b82f6', glow: 'rgba(59,130,246,0.3)',  rgb: '59,130,246',  class: 'score-blue',   tier: 'Leader' };
     if (idqScore >= 6)  return { color: '#22c55e', glow: 'rgba(34,197,94,0.3)',   rgb: '34,197,94',   class: 'score-green',  tier: 'Integrator' };
@@ -902,7 +853,7 @@ async function populateCompanyCard() {
     // ========================================================================
     const idqReport = llmReports?.IDQ_Report;
     const idqPercentage = ((idqScore + 3) / 15) * 100; // still used for indicator position only
-    const idqColors = getIdqTierColors(idqScore);
+    const idqColors = (window.Tiers && window.Tiers.getIdqTierColors) ? window.Tiers.getIdqTierColors(idqScore) : getIdqTierColors(idqScore);
     
     // Update score value in chip
     const idqValueEl = document.getElementById('idq-score-value');
@@ -1272,6 +1223,9 @@ function populateAnalysis() {
                     </svg>
                     <span class="synthesis-title">AI-Powered Investment Synthesis</span>
                     <span class="synthesis-subtitle">Based on comprehensive analysis</span>
+                    <button id="copy-insight-btn" class="synthesis-copy-btn" aria-label="Copy insight">
+                        Copy Insight
+                    </button>
                 </div>
                 
                 <div class="synthesis-content">
@@ -1420,6 +1374,33 @@ function populateAnalysis() {
             </div>
         </div>
     `;
+    // Wire copy insight action
+    try {
+        const copyBtn = analysisContainer.querySelector('#copy-insight-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    const text = thesisSummary.join(' ');
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(text);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.setAttribute('readonly', '');
+                        ta.style.position = 'absolute';
+                        ta.style.left = '-9999px';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                    }
+                    const prev = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyBtn.textContent = prev; }, 1200);
+                } catch (_) {}
+            });
+        }
+    } catch (_) {}
     // Ensure analysis tooltip triggers are keyboard-focusable
     try {
         document.querySelectorAll('.analysis-content .cursor-help[data-tooltip]').forEach((el) => {
@@ -1542,6 +1523,9 @@ function populateFinancialMetrics() {
     const ttm = apiFinancials?.TTM || {};
     const ratios = ttm.Ratios || {};
     const getRatio = (...keys) => {
+        if (window.Aliases && typeof window.Aliases.getRatio === 'function') {
+            return window.Aliases.getRatio(ttm, keys);
+        }
         for (const k of keys) {
             const v = ratios[k];
             if (v != null && v !== 'N/A' && v !== '') return v;
@@ -1558,18 +1542,27 @@ function populateFinancialMetrics() {
     const ttmIncome = ttm.Income_Statement || {};
     const y1Income = y1.Income_Statement || {};
     const revenueGrowthFallback = () => {
+        if (window.Aliases && typeof window.Aliases.computeRevenueGrowth === 'function') {
+            return window.Aliases.computeRevenueGrowth(apiFinancials);
+        }
         const a = parseFloat(String(ttmIncome.revenue||'').replace(/,/g,''));
         const b = parseFloat(String(y1Income.revenue||'').replace(/,/g,''));
         if (!isNaN(a) && !isNaN(b) && b !== 0) return ((a-b)/Math.abs(b))*100;
         return null;
     };
     const epsGrowthFallback = () => {
+        if (window.Aliases && typeof window.Aliases.computeEpsGrowth === 'function') {
+            return window.Aliases.computeEpsGrowth(apiFinancials);
+        }
         const a = parseFloat(String(ttmIncome.ePS||'').replace(/,/g,''));
         const b = parseFloat(String(y1Income.ePS||'').replace(/,/g,''));
         if (!isNaN(a) && !isNaN(b) && b !== 0) return ((a-b)/Math.abs(b))*100;
         return null;
     };
     const operatingMarginFallback = () => {
+        if (window.Aliases && typeof window.Aliases.computeOperatingMargin === 'function') {
+            return window.Aliases.computeOperatingMargin(apiFinancials);
+        }
         const op = parseFloat(String(ttmIncome.operatingIncome||'').replace(/,/g,''));
         const rev = parseFloat(String(ttmIncome.revenue||'').replace(/,/g,''));
         if (!isNaN(op) && !isNaN(rev) && rev !== 0) return (op/rev)*100;
@@ -1589,12 +1582,12 @@ function populateFinancialMetrics() {
                     return !isNaN(num) ? formatMarketCap(num, currencyCode) : 'N/A';
                 })() },
                 { label: 'P/E Ratio', value: (() => {
-                    const v = getRatio('priceEarningsRatio','peRatio','trailingPE');
+                    const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'pe') : getRatio('priceEarningsRatio','peRatio','trailingPE');
                     return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A';
                 })() },
                 { label: 'P/B Ratio', value: ratios.priceToBookRatio ? parseFloat(ratios.priceToBookRatio).toFixed(2) : 'N/A' },
                 { label: 'EV/EBITDA', value: (() => {
-                    const v = getRatio('evToEBITDA','enterpriseValueOverEBITDA','EVtoEBITDA');
+                    const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'evEbitda') : getRatio('evToEBITDA','enterpriseValueOverEBITDA','EVtoEBITDA');
                     return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A';
                 })() }
             ]
@@ -1619,7 +1612,7 @@ function populateFinancialMetrics() {
                 })() },
                 { label: 'Gross Margin', value: ratios.grossProfitMargin ? `${parseFloat(ratios.grossProfitMargin).toFixed(1)}%` : 'N/A' },
                 { label: 'Operating Margin', value: (() => {
-                    const v = getRatio('operatingMargin','operatingProfitMargin');
+                    const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'operatingMargin') : getRatio('operatingMargin','operatingProfitMargin');
                     const num = tryPercent(v);
                     const fb = operatingMarginFallback();
                     const res = num != null ? num : fb;
@@ -1653,7 +1646,7 @@ function populateFinancialMetrics() {
             category: 'Financial Health',
             items: [
                 { label: 'Current Ratio', value: ratios.currentRatio ? parseFloat(ratios.currentRatio).toFixed(2) : 'N/A' },
-                { label: 'Debt/Equity', value: (() => { const v = getRatio('debtEquityRatio','debtToEquityRatio','debtToEquity'); return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A'; })() },
+                { label: 'Debt/Equity', value: (() => { const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'debtEquity') : getRatio('debtEquityRatio','debtToEquityRatio','debtToEquity'); return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A'; })() },
                 { label: 'ROE', value: ratios.returnOnEquity ? `${parseFloat(ratios.returnOnEquity).toFixed(1)}%` : 'N/A' },
                 { label: 'ROA', value: ratios.returnOnAssets ? `${parseFloat(ratios.returnOnAssets).toFixed(1)}%` : 'N/A' }
             ]
@@ -2049,11 +2042,22 @@ function populateDetailedFinancials(viewType = 'income') {
             html += `<td class="px-4 py-3 secondary-text" ${ttip ? `data-tooltip="${ttip}"` : ''}>${metric.name}</td>`;
             
             let previousValue = null;
-            periods.forEach(period => {
-                const fullPath = period.isEstimate ? 
-                    `Estimates.${period.key}.${metric.key}` : 
-                    `${period.key}.${metric.key}`;
-                const value = getValue(financials, fullPath);
+        periods.forEach(period => {
+            const fullPath = period.isEstimate ? 
+                `Estimates.${period.key}.${metric.key}` : 
+                `${period.key}.${metric.key}`;
+            let value = getValue(financials, fullPath);
+            // Alias fallbacks for key ratios if missing
+            if ((value == null || value === 'N/A') && window.Aliases && !period.isEstimate) {
+                const ratios = financials?.[period.key]?.Ratios;
+                if (ratios) {
+                    const ratiosObj = { Ratios: ratios };
+                    if (metric.name === 'Operating Margin') value = window.Aliases.getAliasedRatio(ratiosObj, 'operatingMargin');
+                    else if (metric.name === 'Gross Margin') value = window.Aliases.getAliasedRatio(ratiosObj, 'grossMargin');
+                    else if (metric.name === 'Net Margin' || metric.name === 'Net Profit Margin') value = window.Aliases.getAliasedRatio(ratiosObj, 'netMargin');
+                    else if (metric.name === 'Debt to Equity') value = window.Aliases.getAliasedRatio(ratiosObj, 'debtEquity');
+                }
+            }
                 
                 let displayValue = 'N/A';
                 let trendClass = '';
@@ -2439,7 +2443,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupSearchBar();
 
     // Wire panel tabs (desktop)
-    setupPanelTabs();
+    if (window.ScoreCardsView && window.ScoreCardsView.setupPanelTabs) {
+        window.ScoreCardsView.setupPanelTabs();
+    }
     
     // Initialize universal sidebar (default)
     try {
@@ -2491,7 +2497,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     setupEventListeners();
     
     // Setup mobile carousel
-    setupMobileCarousel();
+    if (window.ScoreCardsView && window.ScoreCardsView.setupMobileCarousel) {
+        window.ScoreCardsView.setupMobileCarousel();
+    }
 });
 
 function setupEventListeners() {
@@ -2544,9 +2552,17 @@ function setupEventListeners() {
         const focusedCard = document.activeElement && document.activeElement.closest && document.activeElement.closest('.score-card');
         if (e.key === 'Enter' && focusedCard) {
             const t = focusedCard.getAttribute('data-score');
-            if (t) revealScoreDetails(t);
+            if (t) {
+                if (window.ScoreCardsView && window.ScoreCardsView.revealScoreDetails) window.ScoreCardsView.revealScoreDetails(t);
+                else if (window.revealScoreDetails) window.revealScoreDetails(t);
+            }
         } else if (e.key === 'Escape') {
-            if (typeof currentRevealed === 'string') revealScoreDetails(currentRevealed);
+            const active = document.querySelector('.detail-section.active');
+            if (active) {
+                const type = active.id.replace('-details','');
+                if (window.ScoreCardsView && window.ScoreCardsView.revealScoreDetails) window.ScoreCardsView.revealScoreDetails(type);
+                else if (window.revealScoreDetails) window.revealScoreDetails(type);
+            }
         }
     });
     // React to theme changes (from header, sidebar, or anywhere)
@@ -2771,174 +2787,7 @@ function debounce(func, wait) {
     };
 }
 
-// ============================================
-// REVELATION PANEL FUNCTIONALITY
-// ============================================
-
-// Track currently revealed score
-let currentRevealed = null;
-
-function revealScoreDetails(scoreType) {
-    console.log('=== REVEAL SCORE DETAILS ===');
-    console.log('Score type:', scoreType);
-    console.log('Current revealed:', currentRevealed);
-    
-    // Ensure we have data before proceeding
-    if (!state.currentStockData) {
-        console.error('No stock data available');
-        return;
-    }
-    
-    const panel = document.getElementById('score-revelation-panel');
-    const allCards = document.querySelectorAll('.score-card');
-    const activeCard = document.getElementById(`${scoreType}-card`);
-    const allSections = document.querySelectorAll('.detail-section');
-    const activeSection = document.getElementById(`${scoreType}-details`);
-    
-    if (!panel || !activeCard || !activeSection) {
-        console.error('Required elements not found');
-        return;
-    }
-    
-    // If clicking the same score, close the panel
-    if (currentRevealed === scoreType) {
-        panel.classList.remove('revealed');
-        allCards.forEach(card => {
-            card.classList.remove('active', 'dimmed');
-            // Update button text back to "View Details"
-            const btn = card.querySelector('.reveal-text');
-            if (btn) btn.textContent = 'View Details';
-        });
-        currentRevealed = null;
-        return;
-    }
-    
-    // Populate content if not already populated
-    if (!activeSection.innerHTML || activeSection.innerHTML.trim() === '') {
-        activeSection.innerHTML = generateExpandedContent(scoreType);
-    }
-    
-    // Update card states and button text
-    allCards.forEach(card => {
-        const btn = card.querySelector('.reveal-text');
-        if (card === activeCard) {
-            card.classList.add('active');
-            card.classList.remove('dimmed');
-            // Update active card button to "Hide Details"
-            if (btn) btn.textContent = 'Hide Details';
-        } else {
-            card.classList.add('dimmed');
-            card.classList.remove('active');
-            // Update other cards to "View Details"
-            if (btn) btn.textContent = 'View Details';
-        }
-    });
-    
-    // Update section visibility
-    allSections.forEach(section => {
-        section.classList.remove('active');
-    });
-    activeSection.classList.add('active');
-    
-    // Set the active color for the panel
-    const colorMap = {
-        quality: '168, 85, 247',
-        idq: '59, 130, 246',
-        antifragile: '34, 197, 94'
-    };
-    panel.style.setProperty('--active-color-rgb', colorMap[scoreType]);
-    
-    // Reveal the panel
-    panel.classList.add('revealed');
-    currentRevealed = scoreType;
-
-    // Update panel tabs active state
-    try { updatePanelTabsActive(); } catch (_) {}
-    
-    // Smooth scroll to panel on mobile
-    if (window.innerWidth <= 768) {
-        setTimeout(() => {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 100);
-    }
-}
-
-function setupPanelTabs() {
-    const tabs = document.getElementById('panel-tabs');
-    if (!tabs) return;
-    // Click handlers
-    tabs.addEventListener('click', (e) => {
-        const btn = e.target.closest('.panel-tab');
-        const closeBtn = e.target.closest('#panel-tab-close');
-        if (closeBtn) {
-            // Collapse by toggling the current revealed section
-            const active = document.querySelector('.detail-section.active');
-            if (active) {
-                const type = active.id.replace('-details', '');
-                revealScoreDetails(type);
-            }
-            return;
-        }
-        if (btn) {
-            const target = btn.getAttribute('data-target');
-            if (target) revealScoreDetails(target);
-        }
-    });
-}
-
-function updatePanelTabsActive() {
-    const tabs = document.getElementById('panel-tabs');
-    if (!tabs) return;
-    const active = document.querySelector('.detail-section.active');
-    const activeId = active ? active.id.replace('-details', '') : null;
-    tabs.querySelectorAll('.panel-tab').forEach((el) => {
-        const t = el.getAttribute('data-target');
-        el.classList.toggle('active', t === activeId);
-    });
-}
-
-// Mobile swipe detection for carousel
-function setupMobileCarousel() {
-    if (window.innerWidth > 768) return;
-    
-    const grid = document.querySelector('.score-cards-grid');
-    if (!grid) return;
-    
-    let startX = 0;
-    let scrollLeft = 0;
-    
-    grid.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].pageX - grid.offsetLeft;
-        scrollLeft = grid.scrollLeft;
-    });
-    
-    grid.addEventListener('touchmove', (e) => {
-        const x = e.touches[0].pageX - grid.offsetLeft;
-        const walk = (x - startX) * 2;
-        grid.scrollLeft = scrollLeft - walk;
-    });
-    
-    // Detect which card is centered after scroll
-    grid.addEventListener('scrollend', () => {
-        const cards = grid.querySelectorAll('.score-card');
-        const center = grid.scrollLeft + grid.offsetWidth / 2;
-        
-        cards.forEach(card => {
-            const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-            if (Math.abs(cardCenter - center) < card.offsetWidth / 2) {
-                const scoreType = card.dataset.score;
-                if (scoreType && scoreType !== currentRevealed) {
-                    revealScoreDetails(scoreType);
-                }
-            }
-        });
-    });
-}
-
-// Reinitialize on resize
-window.addEventListener('resize', () => {
-    setupMobileCarousel();
-});
+// REVELATION PANEL moved to js/views/score-cards.js
 
 // Helper function to format numbers
 function formatNumber(value, decimals = 1) {
@@ -4275,7 +4124,9 @@ window.CompanyCard = {
 };
 
 // Export revelation functions
-window.revealScoreDetails = revealScoreDetails;
+if (window.ScoreCardsView && window.ScoreCardsView.revealScoreDetails) {
+    window.revealScoreDetails = window.ScoreCardsView.revealScoreDetails;
+}
 window.showGroupDetails = showGroupDetails;
 
 // ============================================

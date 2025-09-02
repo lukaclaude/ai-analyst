@@ -45,6 +45,10 @@ What works (100%)
 - Detailed Financials: shares outstanding pulls from multiple possible keys (weightedAverageShares / Outstanding / Diluted)
 - IDQ tiers (raw‑score mapping): 11–12 Pioneer (purple), 9–10 Leader (blue), 6–8 Integrator (green), 3–5 Follower (yellow), ≤2 Lagging (orange). The IDQ chip, IDQ label pill, and indicator dot all use the same mapping; indicator position uses normalized percent for layout only.
 - Key Financial Metrics: tooltips added for Revenue, Net Income, EPS, Gross/Operating/Net margins, P/E, P/B, EV/EBITDA, Current Ratio, Debt/Equity, ROE, ROA, Revenue/EPS growth. Grid values formatted with tn/bn/m/k.
+- Central metric aliasing: unified fallbacks for P/E, EV/EBITDA, Operating Margin, and Debt/Equity via `js/lib/aliases.js` so values don’t show N/A when alternates exist.
+- Quality gauge ticks and refined hover states (respect `prefers-reduced-motion`).
+- IDQ label pill with caption (tier dot reflects mapping); Anti‑Fragile shield neutral background fill for clarity across themes.
+- “Copy Insight” action in Company Analysis copies the synthesized thesis with clipboard fallback.
 - Detailed Financial Data tables: tooltips added to common rows across Income/Profit/Balance/Cash Flow (Revenue, Net Income, EPS, Net/EBITDA margin, Operating/Investing/Financing CF, CapEx, FCF, Dividends, Repurchases, Debt Repayment, etc.).
 - Header search uses `DataService.searchStocks()` (single Firestore init + 5‑min cached index) rather than initializing Firebase in components.
 - index.html placeholder now loads (fixed resource paths to `/main.js` and `/main.css`).
@@ -72,6 +76,10 @@ Critical warnings
 - `js/services/DataService.js` — Firestore init + cached search index + recent companies
 - `js/tooltip.js` — Universal tooltip (single element appended to `body`, [data-tooltip] triggers)
 - `js/company-card-complete-fix.js` — Main page logic (data fetch, charts, analysis, sidebar search, score “revelation panel”)
+- `js/lib/aliases.js` — Central metric aliasing + fallbacks
+- `js/lib/formatters.js` — Currency/quantity/market cap formatting
+- `js/lib/tiers.js` — IDQ tier mapping by raw score
+- `js/views/score-cards.js` — Score card orchestration + details panel
 - `company-card-fixed.html` — Working page markup (scores, analysis, financials)
 - `archive/` — Non-runtime references (original single-file versions, variants, manual tests, historical docs). Nothing here is imported by the app.
 
@@ -216,25 +224,25 @@ Do not break:
 - Theme redraw behavior for canvas charts
 - Rank badges and IDQ tier labels; metric bar color tiers
 
-Start with:
-1) Universal Sidebar skeleton (context-aware) + `DataService`
-2) Extract `css/components.css` and route header/sidebar styles there
-3) Desktop polish: Company Analysis dividers/anchors; score card visual refinements (Quality tick marks/stroke)
-4) Refactor `js/company-card-complete-fix.js` into `js/views/*` + `js/lib/*`; consume `js/visualizations/*`
-5) Field alias map: centralize and extend for ratios (P/E, EV/EBITDA, margins) and per‑ticker differences
-6) Expand table tooltips across remaining rows (concise “What it is / Why it matters”)
-7) Mobile responsiveness (cards/tables/sidebar/tooltip affordances), then plan index.html shell reuse
+Start with (next steps):
+1) Phase B — Modularization (in progress): split monolith into `js/views/*` and `js/lib/*`; consume `js/visualizations/*`
+2) Phase C — Mobile responsiveness (stacking, condensed tables, sidebar drawer close, tooltip affordances)
+3) Phase D — Index shell reuse (header/sidebar/DataService; small NavigationService; no duplicate logic)
 
 ## Roadmap (Desktop → Mobile → Index)
-- Desktop lock (now):
+- Phase A — Desktop lock (done):
   - Score cards: finalize visuals (Quality ticks/stroke), confirm IDQ label pill/caption, Anti‑Fragile single‑column rhythm.
   - Company Analysis: anchors/dividers; optional chips/copy‑action; keep content.
   - Details panel: lazy load, no layout shift; keyboard Enter/Esc.
-- Componentization (after desktop):
+- Phase B — Componentization (in progress next):
   - Split monolith into views (`js/views/score-cards.js`, `analysis.js`, `tables.js`) and libs (`js/lib/formatters.js`, `aliases.js`, `tiers.js`).
   - Consume `js/visualizations/*` with a small, consistent interface.
 - Mobile pass: stack cards, condensed tables, sidebar drawer close, tooltip affordance/tap‑to‑pin.
 - Index shell: reuse header/sidebar/DataService and, where useful, score previews that call the same visualizations.
+
+## Change Log
+
+- 2025‑09‑02: Desktop‑first landing polish. Added Quality gauge tick marks and restrained hover glow (reduced‑motion aware). IDQ label pill + caption with tier dot; Anti‑Fragile shield neutral fill in both themes. Centralized metric aliasing (`js/lib/aliases.js`) with fallbacks for P/E, EV/EBITDA, Operating Margin, Debt/Equity; metrics grid and detailed tables use aliases to avoid N/A when alternates exist. Added “Copy Insight” action in analysis with clipboard fallback and feedback. Began Phase B: added `js/lib/formatters.js`, `js/lib/tiers.js`, and `js/views/score-cards.js`; libs are loaded before the main app.
 
 ## Change Log (Reverse Chronological)
 

@@ -156,16 +156,44 @@ This Hero Header must remain but sits BELOW the new universal header
 
 ### Revised Plan (Desktop‑First, Modular, Then Mobile)
 
-- Phase A — Desktop Lock (Company Page)
+- Phase A — Desktop Lock (Company Page) — COMPLETE
   - Finalize Score Cards (Quality tick marks/stroke; IDQ chip + label pill readability; Anti‑Fragile single‑column rhythm).
   - Company Analysis structure: anchors/dividers; optional takeaways chips; copy‑insight action.
   - Details panel: lazy render; Enter/Esc keyboard; no layout shift.
   - Expand financial tooltips; consolidate field aliasing to reduce “N/A”.
 
-- Phase B — Componentization & Reuse
+- Phase B — Componentization & Reuse — IN PROGRESS NEXT
   - Split monolith into views (`js/views/*`) and libs (`js/lib/*`).
   - Consume `js/visualizations/*` via a small interface (state → render(container)).
   - Keep `DataService` as the only Firestore initializer; avoid Firebase init in components.
+
+### Directory Structure (current)
+
+- css/
+- components/
+- js/
+  - services/
+  - tooltip.js
+  - company-card-complete-fix.js
+  - visualizations/
+  - lib/
+    - aliases.js
+    - formatters.js
+    - tiers.js
+  - views/
+    - score-cards.js
+- archive/
+
+### Testing & QA (quick checks)
+
+- Theme change: score numerals and charts redraw and read CSS tokens from `document.body`
+- IDQ tier mapping: visual colors match raw IDQ tier cutoffs (e.g., 9–10 → Leader blue)
+- Tooltips: universal tooltip appears; no native titles/pseudo-tooltips
+- Keyboard: Enter toggles focused score card; Esc collapses details panel
+- Details panel: lazy content render on first reveal; no layout shift
+- Analysis: “Copy Insight” copies thesis; brief “Copied!” feedback
+- Reduced motion: animated dots/shimmers disabled; hover transforms minimized
+- Aliases: P/E, EV/EBITDA, Operating Margin, Debt/Equity use `Aliases` fallbacks; metrics grid and tables consistent
 
 - Phase C — Mobile Responsiveness
   - Cards stack; condensed tables; drawer close affordance; tooltip tap‑to‑pin with clear affordance.
