@@ -1705,7 +1705,11 @@ function populateFinancialMetrics() {
                                 'Free Cash Flow': 'What it is: Cash after operations + investments.\nWhy it matters: Funds growth, buybacks, dividends.',
                                 'P/E Ratio': 'What it is: Price divided by EPS.\nWhy it matters: Common valuation gauge.',
                                 'P/B Ratio': 'What it is: Price to book value.\nWhy it matters: Capital intensity and asset valuation.',
-                                'EV/EBITDA': 'What it is: Enterprise value over EBITDA.\nWhy it matters: Capital-structure-neutral valuation.'
+                                'EV/EBITDA': 'What it is: Enterprise value over EBITDA.\nWhy it matters: Capital-structure-neutral valuation.',
+                                'Current Ratio': 'What it is: Current assets / current liabilities.\nWhy it matters: Near-term liquidity.',
+                                'Debt/Equity': 'What it is: Total debt / shareholders\' equity.\nWhy it matters: Leverage and solvency.',
+                                'ROE': 'What it is: Return on Equity.\nWhy it matters: Efficiency generating returns from equity.',
+                                'ROA': 'What it is: Return on Assets.\nWhy it matters: Efficiency generating returns from assets.'
                             };
                             const labelTooltip = metricTooltips[item.label];
                             
@@ -2322,10 +2326,20 @@ function createEarningsChart(metricType = 'revenue') {
         });
     }
 
-    // Set canvas size responsive to container
-    const width = canvas.width = (canvas.clientWidth || canvas.offsetWidth || 800);
-    const height = canvas.height = (canvas.clientHeight || 360);
-    const padding = 60;
+    // Responsive sizing (mobile-friendly)
+    const isMobile = window.innerWidth < 768;
+    const cssWidth = (canvas.clientWidth || canvas.offsetWidth || 800);
+    const cssHeight = isMobile ? Math.max(260, Math.round(cssWidth * 0.7)) : (canvas.clientHeight || 360);
+    // Improve sharpness on high-DPI
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(cssWidth * dpr);
+    canvas.height = Math.floor(cssHeight * dpr);
+    canvas.style.width = cssWidth + 'px';
+    canvas.style.height = cssHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const width = cssWidth;
+    const height = cssHeight;
+    const padding = isMobile ? 46 : 60;
     
     ctx.clearRect(0, 0, width, height);
 
@@ -2390,20 +2404,24 @@ function createEarningsChart(metricType = 'revenue') {
         // Draw point
         ctx.fillStyle = i >= historicalDataCount ? estimatePointColor : pointColor;
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.arc(x, y, isMobile ? 3 : 5, 0, Math.PI * 2);
         ctx.fill();
         
         // Year label
-        ctx.fillStyle = textColor;
-        ctx.font = '11px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(years[i], x, height - padding + 20);
+        if (!isMobile || i % 2 === 0) {
+            ctx.fillStyle = textColor;
+            ctx.font = '11px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(years[i], x, height - padding + 20);
+        }
         
         // Value label
-        ctx.fillStyle = i >= historicalDataCount ? estimateTextColor : labelColor;
-        ctx.font = '10px Inter';
-        const valueLabel = isCurrency ? formatCurrency(val, 1, currencies[i]) : val.toFixed(2);
-        ctx.fillText(valueLabel, x, y - 10);
+        if (!isMobile) {
+            ctx.fillStyle = i >= historicalDataCount ? estimateTextColor : labelColor;
+            ctx.font = '10px Inter';
+            const valueLabel = isCurrency ? formatCurrency(val, 1, currencies[i]) : val.toFixed(2);
+            ctx.fillText(valueLabel, x, y - 10);
+        }
     });
 
     // Add estimates label
@@ -2416,7 +2434,7 @@ function createEarningsChart(metricType = 'revenue') {
 
     // Chart title
     ctx.fillStyle = labelColor;
-    ctx.font = 'bold 14px Inter';
+    ctx.font = isMobile ? 'bold 13px Inter' : 'bold 14px Inter';
     ctx.textAlign = 'left';
     ctx.fillText(config.label + ' Trend', padding, 30);
 }
