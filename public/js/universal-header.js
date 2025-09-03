@@ -235,9 +235,17 @@ class UniversalHeader {
     setupCompanyChipObserver() {
         const chip = document.getElementById('uh-company-chip');
         if (!chip) return;
+        const ctxAttr = document.body && document.body.getAttribute && document.body.getAttribute('data-page-context');
+        const p = window.location.pathname || '';
+        const isCompanyPage = (ctxAttr === 'company-card') || p.includes('company');
         const hero = document.querySelector('.hero-header');
-        // Only show the chip on company pages with hero present
-        if (!hero) { chip.hidden = true; return; }
+        // Strictly disable/remove chip on non-company pages (e.g., index)
+        if (!isCompanyPage || !hero) {
+            chip.hidden = true;
+            chip.removeAttribute('hidden'); // ensure property sync
+            chip.style.display = 'none';
+            return;
+        }
         const io = new IntersectionObserver((entries) => {
             const entry = entries[0];
             // When hero is mostly out of view, show the chip

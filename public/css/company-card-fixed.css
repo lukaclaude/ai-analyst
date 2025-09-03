@@ -3130,18 +3130,8 @@ body.light-theme #antifragile-score-value {
   #af-summary-grid { display: none !important; }
 }
 
-/* AF chips style mirrors Quality chips */
-.af-group-tabs {
-  /* base styles; visibility handled by active-section rules */
-  gap: 8px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 8px 4px;
-  margin: 4px 0 8px 0;
-}
-.af-group-tabs .chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; font-size:12px; line-height:1; border-radius:9999px; border:1px solid var(--glass-border); background:var(--glass-bg); color:var(--color-text-primary); }
-.af-group-tabs .chip.active { border-color: var(--tier-color, var(--color-score-purple)); box-shadow: 0 0 0 2px rgba(var(--score-color-rgb, 168,85,247), 0.15) inset; }
-.detail-section:not(.active) .af-group-tabs { display:none !important; }
+/* Duplicate AF chip base styles removed — AF chips use the unified
+   .quality-group-tabs, .af-group-tabs rules defined earlier in this file. */
 
 /* Mobile sticky styles for AF chips are defined earlier with the shared rule
    under the main mobile block to avoid duplication. */

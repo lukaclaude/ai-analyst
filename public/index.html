@@ -1,143 +1,331 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Financial Analysis Platform</title>
-    
-    <!-- Preconnect to external domains -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://www.gstatic.com">
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <!-- Favicons -->
-    <link rel="icon" href="/assets/favicons/favicon.ico" sizes="any">
-    <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg">
-    <link rel="apple-touch-icon" href="/assets/favicons/apple-touch-icon.png">
-    <link rel="manifest" href="/assets/favicons/site.webmanifest">
-    <link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#00C88A">
-    <meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
-    <meta name="msapplication-TileColor" content="#00C88A">
-    <meta name="application-name" content="Finalysis">
-    <meta name="apple-mobile-web-app-title" content="Finalysis">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
-    <link rel="shortcut icon" href="/assets/favicons/favicon.ico">
-    <meta name="theme-color" content="#0D1117" media="(prefers-color-scheme: dark)">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    
-    <!-- Main Styles -->
-    <link rel="stylesheet" href="/main.css">
-    
-    <!-- Critical Inline Styles (prevent flash of unstyled content) -->
-    <style>
-        :root {
-            --color-bg-primary: #0D1117;
-            --color-text-primary: #E6EDF3;
-        }
-        
-        body {
-            margin: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--color-bg-primary);
-            color: var(--color-text-primary);
-            min-height: 100vh;
-        }
-        
-        .app-loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        
-        .app-loading.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        .loading-spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid rgba(230, 237, 243, 0.1);
-            border-top-color: #a855f7;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Hide app until loaded */
-        #app {
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        
-        #app.loaded {
-            opacity: 1;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finalysis — Explore Companies</title>
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Favicons / PWA -->
+  <link rel="icon" href="/assets/favicons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicons/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/favicons/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/favicons/site.webmanifest">
+  <link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#00C88A">
+  <meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
+  <meta name="msapplication-TileColor" content="#00C88A">
+  <meta name="application-name" content="Finalysis">
+  <meta name="apple-mobile-web-app-title" content="Finalysis">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+  <link rel="shortcut icon" href="/assets/favicons/favicon.ico">
+  <meta name="theme-color" content="#0D1117" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Styles (shared) -->
+  <link rel="stylesheet" href="./css/theme.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <!-- Reuse mobile nav + glass utilities -->
+  <link rel="stylesheet" href="./css/company-card-fixed.css">
+  <!-- Index-specific styles -->
+  <link rel="stylesheet" href="./css/index.css">
+
+  <!-- Tailwind utilities (light use) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { margin: 0; background: var(--color-bg-primary); color: var(--color-text-primary); font-family: var(--font-sans); }
+    .app-loading { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    #app { opacity: 0; transition: opacity .4s ease; }
+    #app.loaded { opacity: 1; }
+    .home-hero h1 { letter-spacing: -0.02em; }
+    .card { transition: transform var(--transition-fast), box-shadow var(--transition-base), border-color var(--transition-fast); }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .company-chip-mini { display:inline-flex; align-items:center; gap:6px; font-size:12px; opacity:.9; }
+    .logo-fallback-mini { width: 28px; height: 28px; border-radius: 6px; display:flex; align-items:center; justify-content:center; font-weight:700; background: var(--glass-bg); border:1px solid var(--glass-border); }
+    .mini-meta { font-size: 11px; color: var(--color-text-secondary); }
+  </style>
 </head>
-<body>
-    <!-- Loading State -->
-    <div class="app-loading" id="app-loading">
-        <div class="loading-spinner"></div>
-    </div>
-    
-    <!-- Main Application Container -->
-    <div id="app">
-        <!-- Navigation Sidebar -->
-        <nav id="navigation-sidebar" class="navigation-sidebar"></nav>
-        
-        <!-- Main Content Area -->
-        <main id="main-content" class="main-content">
-            <!-- Header -->
-            <header id="main-header" class="main-header"></header>
-            
-            <!-- Dynamic Content Area -->
-            <div id="content-view" class="content-view"></div>
-        </main>
-        
-        <!-- Global Tooltip -->
-        <div id="global-tooltip" class="tooltip"></div>
-        
-        <!-- Theme Toggle -->
-        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
-            <svg class="theme-icon theme-icon--dark" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-            </svg>
-            <svg class="theme-icon theme-icon--light" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
-            </svg>
-        </button>
-    </div>
-    
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-functions-compat.js"></script>
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Main Application -->
-    <script type="module" src="/main.js"></script>
-    
-    <!-- Initialize Theme (prevent flash) -->
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+<body data-page-context="index">
+  <!-- Loading State -->
+  <div class="app-loading" id="app-loading">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Universal Header -->
+  <div id="universal-header-container"></div>
+
+  <!-- App Layout -->
+  <div id="app" class="app-layout" style="padding-top: 45px;">
+    <!-- Mobile Nav Trigger -->
+    <button class="mobile-nav-trigger" id="mobile-nav-trigger" aria-label="Open navigation menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Universal Sidebar Container (will be hydrated) -->
+    <div class="navigation-sidebar" id="universal-sidebar-container" aria-label="Universal sidebar"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="container-centered">
+        <section class="section-surface home-hero" id="top">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h1 class="text-2xl md:text-3xl font-bold">Explore the Score Trinity Universe</h1>
+              <p class="text-sm md:text-base" style="color: var(--color-text-secondary); margin-top: 6px;">
+                Search for a company above or browse top performers across Quality, Innovation, and Anti‑Fragile scores.
+              </p>
+            </div>
+            <div class="hidden md:block mini-meta">Tip: Press / to focus search</div>
+          </div>
+        </section>
+
+        <section class="py-6" id="top-companies">
+          <div class="section-surface">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-xl font-semibold">Companies</h2>
+              <div class="flex items-center gap-2">
+                <div class="mini-meta" id="dataset-meta">Loading...</div>
+                <button id="export-csv" class="nav-link px-3 py-2 rounded-lg">Export CSV</button>
+              </div>
+            </div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <button id="view-toggle-list" class="nav-link px-3 py-1 rounded-lg" aria-pressed="true">List</button>
+                <button id="view-toggle-grid" class="nav-link px-3 py-1 rounded-lg" aria-pressed="false">Grid</button>
+                <button id="view-toggle-table" class="nav-link px-3 py-1 rounded-lg">Table</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="open-filters" class="nav-link px-3 py-1 rounded-lg">Filters</button>
+                <label class="mini-meta" for="items-per-page">Per page</label>
+                <select id="items-per-page" class="sidebar-input px-2 py-1 rounded-md">
+                  <option value="24">24</option>
+                  <option value="48">48</option>
+                  <option value="96">96</option>
+                </select>
+              </div>
+            </div>
+            <div class="mobile-sort-container" style="margin-bottom:10px;">
+              <label class="mini-meta" for="mobile-sort">Sort by:</label>
+              <select id="mobile-sort" class="sidebar-input px-2 py-2 rounded-md" style="flex:1;">
+                <option value="name-asc">Company Name (A–Z)</option>
+                <option value="name-desc">Company Name (Z–A)</option>
+                <option value="lastUpdateDate-desc" selected>Last Update (Recent First)</option>
+                <option value="lastUpdateDate-asc">Last Update (Oldest First)</option>
+                <option value="overall-desc">Overall Score (High–Low)</option>
+                <option value="overall-asc">Overall Score (Low–High)</option>
+                <option value="quality-desc">Quality (High–Low)</option>
+                <option value="quality-asc">Quality (Low–High)</option>
+                <option value="idq-desc">IDQ (High–Low)</option>
+                <option value="idq-asc">IDQ (Low–High)</option>
+                <option value="af-desc">Anti‑Fragile (High–Low)</option>
+                <option value="af-asc">Anti‑Fragile (Low–High)</option>
+              </select>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mb-3" id="quick-sort-chips">
+              <button class="nav-link px-2 py-1 rounded-lg active" data-sort="lastUpdateDate-desc" data-label="Updated">Updated</button>
+              <button class="nav-link px-2 py-1 rounded-lg" data-sort="overall-desc" data-label="Overall">Overall</button>
+              <button class="nav-link px-2 py-1 rounded-lg" data-sort="quality-desc" data-label="Quality">Quality</button>
+              <button class="nav-link px-2 py-1 rounded-lg" data-sort="idq-desc" data-label="IDQ">IDQ</button>
+              <button class="nav-link px-2 py-1 rounded-lg" data-sort="af-desc" data-label="AF">AF</button>
+              <button class="nav-link px-2 py-1 rounded-lg" data-sort="marketCap-desc" data-label="Mkt Cap">Mkt Cap</button>
+              <button class="nav-link px-2 py-1 rounded-lg" data-sort="price-desc" data-label="Price">Price</button>
+              <button id="favorites-only-toggle" class="nav-link px-2 py-1 rounded-lg" aria-pressed="false" title="Show favorites only">⭐ Favorites</button>
+            </div>
+            <div id="content-container"></div>
+            <div id="pagination-controls" class="mt-4 flex items-center justify-between" style="display:none;">
+              <button id="prev-page" class="nav-link px-3 py-2 rounded-lg">Previous</button>
+              <div class="mini-meta" id="page-info">Page 1</div>
+              <button id="next-page" class="nav-link px-3 py-2 rounded-lg">Next</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" role="navigation" aria-label="Mobile navigation">
+    <a href="/" aria-label="Home" class="mobile-nav-item active" id="mobile-nav-home">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="#search" aria-label="Search" class="mobile-nav-item" id="mobile-nav-search">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <span>Search</span>
+    </a>
+    <a href="#watchlist" aria-label="Watchlist" class="mobile-nav-item" id="mobile-nav-favorites">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+      </svg>
+      <span>Watchlist</span>
+    </a>
+    <a href="#menu" aria-label="Menu" class="mobile-nav-item" id="mobile-bottom-menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+      <span>Menu</span>
+    </a>
+  </nav>
+
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+
+  <!-- Utilities & Services -->
+  <script src="./js/tooltip.js"></script>
+  <script src="./js/services/ThemeService.js"></script>
+  <script src="./js/services/DataService.js"></script>
+  <script src="./js/universal-sidebar.js"></script>
+  <script src="./js/lib/aliases.js"></script>
+  <script src="./js/lib/formatters.js"></script>
+  <script src="./js/lib/tiers.js"></script>
+  <script src="./js/universal-header.js"></script>
+
+  <script>
+    // Basic toast fallback
+    window.showToast = function(msg) {
+      const el = document.createElement('div');
+      el.textContent = msg;
+      el.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);padding:10px 14px;border-radius:8px;background:rgba(0,0,0,0.8);color:#fff;font-size:14px;z-index:2147483647;box-shadow:0 6px 20px rgba(0,0,0,0.3)';
+      document.body.appendChild(el);
+      setTimeout(()=>{ el.style.transition='opacity 300ms ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }, 1400);
+    }
+
+    // Prevent FOUC: ensure ThemeService applies early
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initIndex);
+    } else {
+      initIndex();
+    }
+
+    async function initIndex() {
+      const app = document.getElementById('app');
+      const loading = document.getElementById('app-loading');
+
+      // Load universal sidebar markup
+      try {
+        const cont = document.getElementById('universal-sidebar-container');
+        if (cont) {
+          const resp = await fetch('/components/universal-sidebar.html');
+          cont.innerHTML = await resp.text();
+          if (window.UniversalSidebar && typeof window.UniversalSidebar.init === 'function') {
+            window.UniversalSidebar.init();
+            if (window.UniversalSidebar.setContext) window.UniversalSidebar.setContext('index');
+          }
+          // Wire collapse/close behavior similar to company page
+          const closeBtn = cont.querySelector('.sidebar-close-btn');
+          const sidebarOverlay = document.getElementById('sidebar-overlay');
+          if (closeBtn) closeBtn.addEventListener('click', () => {
+            const isDesktop = window.innerWidth >= 1024;
+            const main = document.querySelector('.main-content');
+            if (isDesktop) {
+              const collapsed = cont.classList.toggle('collapsed');
+              if (main) main.style.marginLeft = collapsed ? '80px' : '240px';
+              closeBtn.textContent = collapsed ? '>' : '<';
+            } else {
+              cont.classList.remove('active');
+              if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+              document.body.style.overflow = '';
+            }
+          });
+        }
+      } catch (e) { console.warn('Sidebar init failed', e); }
+
+      // Mobile sidebar toggles
+      const mobileNavTrigger = document.getElementById('mobile-nav-trigger');
+      const sidebar = document.getElementById('universal-sidebar-container');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      if (mobileNavTrigger && sidebar && sidebarOverlay) {
+        mobileNavTrigger.addEventListener('click', () => {
+          document.body.classList.remove('show-mobile-search');
+          sidebar.classList.toggle('active');
+          sidebarOverlay.classList.toggle('active');
+          document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+        });
+        sidebarOverlay.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          sidebarOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        });
+      }
+
+      // Mobile bottom nav actions
+      const homeBtn = document.getElementById('mobile-nav-home');
+      const searchBtn = document.getElementById('mobile-nav-search');
+      const favBtn = document.getElementById('mobile-nav-favorites');
+      const menuBtn = document.getElementById('mobile-bottom-menu');
+      if (homeBtn) homeBtn.addEventListener('click', (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      if (searchBtn) {
+        searchBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const input = document.getElementById('global-search');
+          if (input) {
+            document.body.classList.add('show-mobile-search');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => input.focus(), 150);
+            const onBlur = () => { setTimeout(() => document.body.classList.remove('show-mobile-search'), 300); input.removeEventListener('blur', onBlur); };
+            input.addEventListener('blur', onBlur);
+            const onEsc = (ev) => { if (ev.key === 'Escape') { document.body.classList.remove('show-mobile-search'); document.removeEventListener('keydown', onEsc); input.blur(); } };
+            document.addEventListener('keydown', onEsc);
+          }
+        });
+      }
+      if (favBtn) favBtn.addEventListener('click', (e) => { e.preventDefault(); showToast('Watchlists are coming soon'); });
+      if (menuBtn && sidebar && sidebarOverlay) {
+        menuBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          document.body.classList.remove('show-mobile-search');
+          sidebar.classList.add('active');
+          sidebarOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+      }
+
+      // Intercept header search result clicks to navigate to company page
+      document.addEventListener('click', (e) => {
+        const link = e.target && e.target.closest && e.target.closest('a.search-result-item--header');
+        if (link) {
+          try {
+            e.preventDefault();
+            const url = new URL(link.getAttribute('href'), window.location.href);
+            const t = url.searchParams.get('ticker');
+            if (t) window.location.href = `/company-card-fixed.html?ticker=${t}`;
+          } catch (_) {}
+        }
+      }, true);
+
+      // Index data and views are handled by js/index-page.js
+
+      // Reveal app
+      if (loading) loading.style.display = 'none';
+      if (app) app.classList.add('loaded');
+    }
+
+    // View + data rendering handled by js/index-page.js
+  </script>
+  <!-- Index page logic -->
+  <script src="./js/index-page.js"></script>
 </body>
 </html>

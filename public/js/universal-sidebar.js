@@ -2,18 +2,23 @@
 // Not wired into existing page yet to avoid regressions.
 
 (function() {
+  let currentContext = null;
   function detectContext() {
+    const ctxAttr = document.body && document.body.getAttribute && document.body.getAttribute('data-page-context');
+    if (ctxAttr) return ctxAttr;
     const p = window.location.pathname;
+    if (p === '/' || p === '' || /\/$/.test(p)) return 'index';
     if (p.includes('company')) return 'company-card';
     if (p.includes('index')) return 'index';
     if (p.includes('comparison')) return 'comparison';
     if (p.includes('portfolio')) return 'portfolio';
-    return 'company-card';
+    return 'index';
   }
 
   function renderTop(context) {
     const top = document.getElementById('sidebar-top');
     if (!top) return;
+    currentContext = context;
     if (context === 'company-card') {
       const params = new URLSearchParams(window.location.search);
       const urlTicker = (params.get('ticker') || '').toUpperCase();
@@ -42,7 +47,82 @@
         </nav>`;
       wireNav();
     } else if (context === 'index') {
-      top.innerHTML = `<div class="p-2 subtle-text">Filters (context-aware) – TBD</div>`;
+      // Index page: render search + filters UI in the top area
+      top.innerHTML = `
+        <div id="filters-mini" style="display:none;padding:6px 8px;">
+          <button id="filters-mini-btn" class="nav-link w-full px-2 py-1 rounded-lg" aria-label="Show filters" title="Show filters">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18v2l-7 7v5l-4-2v-3L3 7z"/></svg>
+          </button>
+        </div>
+        <h3 class="sidebar-section-title sidebar-muted-text" style="display:flex;align-items:center;gap:8px;margin:4px 0 10px 0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="opacity:.8;"><path d="M3 5h18v2l-7 7v5l-4-2v-3L3 7z"/></svg>
+          <span class="sidebar-section-title-text">Filters</span>
+        </h3>
+        <div class="sidebar-search-container" style="margin-bottom: 10px;">
+          <input id="sidebar-search" type="text" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Search companies..." aria-label="Search companies" autocomplete="off" />
+          <div id="sidebar-search-results" class="search-results-dropdown" style="display:none;"></div>
+        </div>
+        <div class="section-surface" style="padding:12px;border-radius:12px;">
+          <div class="filter-group" style="margin-bottom:10px;">
+            <label class="text-xs sidebar-muted-text" for="filter-sector">Sector</label>
+            <select id="filter-sector" class="sidebar-input w-full px-3 py-2 rounded-md">
+              <option value="">All sectors</option>
+            </select>
+          </div>
+          <div class="filter-group" style="margin-bottom:10px;">
+            <label class="text-xs sidebar-muted-text" for="filter-industry">Industry</label>
+            <select id="filter-industry" class="sidebar-input w-full px-3 py-2 rounded-md">
+              <option value="">All industries</option>
+            </select>
+          </div>
+          <div class="filter-group" style="margin-bottom:10px;">
+            <label class="text-xs sidebar-muted-text" for="filter-marketcap">Market Cap</label>
+            <select id="filter-marketcap" class="sidebar-input w-full px-3 py-2 rounded-md">
+              <option value="">Any size</option>
+              <option value="mega">Mega (&gt;$200B)</option>
+              <option value="large">Large ($10B–$200B)</option>
+              <option value="mid">Mid ($2B–$10B)</option>
+              <option value="small">Small ($300M–$2B)</option>
+              <option value="micro">Micro (&lt;$300M)</option>
+            </select>
+          </div>
+          <div class="filter-group" style="margin-bottom:10px;">
+            <div class="text-xs sidebar-muted-text" style="margin-bottom:6px;">Overall (0–100)</div>
+            <div class="flex items-center gap-2">
+              <input id="filter-overall-min" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Min" min="0" max="100" />
+              <span class="sidebar-muted-text" style="font-size:12px;">to</span>
+              <input id="filter-overall-max" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Max" min="0" max="100" />
+            </div>
+          </div>
+          <div class="filter-group" style="margin-bottom:10px;">
+            <div class="text-xs sidebar-muted-text" style="margin-bottom:6px;">Quality (0–109)</div>
+            <div class="flex items-center gap-2">
+              <input id="filter-quality-min" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Min" min="0" max="109" />
+              <span class="sidebar-muted-text" style="font-size:12px;">to</span>
+              <input id="filter-quality-max" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Max" min="0" max="109" />
+            </div>
+          </div>
+          <div class="filter-group" style="margin-bottom:10px;">
+            <div class="text-xs sidebar-muted-text" style="margin-bottom:6px;">IDQ (−3–12)</div>
+            <div class="flex items-center gap-2">
+              <input id="filter-idq-min" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Min" step="1" min="-3" max="12" />
+              <span class="sidebar-muted-text" style="font-size:12px;">to</span>
+              <input id="filter-idq-max" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Max" step="1" min="-3" max="12" />
+            </div>
+          </div>
+          <div class="filter-group" style="margin-bottom:10px;">
+            <div class="text-xs sidebar-muted-text" style="margin-bottom:6px;">Anti‑Fragile (−7–17)</div>
+            <div class="flex items-center gap-2">
+              <input id="filter-af-min" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Min" step="1" min="-7" max="17" />
+              <span class="sidebar-muted-text" style="font-size:12px;">to</span>
+              <input id="filter-af-max" type="number" class="sidebar-input w-full px-3 py-2 rounded-md" placeholder="Max" step="1" min="-7" max="17" />
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="apply-filters" class="nav-link px-3 py-2 rounded-lg" style="width:100%;">Apply Filters</button>
+            <button id="reset-filters" class="nav-link px-3 py-2 rounded-lg" style="width:100%;">Clear</button>
+          </div>
+        </div>`;
     } else {
       top.innerHTML = `<div class="p-2 subtle-text">Context: ${context}</div>`;
     }
@@ -180,11 +260,21 @@
         </div>
       </div>
     `).join('');
-    // Click handlers
+    // Click handlers (context-aware)
     cont.querySelectorAll('.recent-company-item').forEach((el) => {
       el.addEventListener('click', () => {
         const t = el.getAttribute('data-ticker');
-        if (t) window.location.href = `?ticker=${t}`;
+        if (!t) return;
+        const ctx = (window.UniversalSidebar && typeof window.UniversalSidebar.getContext === 'function') ? window.UniversalSidebar.getContext() : null;
+        if (ctx === 'index') {
+          window.location.href = `/company-card-fixed.html?ticker=${t}`;
+          return;
+        }
+        if (typeof window.navigateToCompany === 'function') {
+          window.navigateToCompany(t);
+          return;
+        }
+        window.location.href = `?ticker=${t}`;
       });
     });
     // Logo handlers
@@ -250,10 +340,19 @@
     if (themeBtn && window.ThemeService && typeof window.ThemeService.toggle === 'function') {
       themeBtn.addEventListener('click', () => window.ThemeService.toggle());
     }
+    // Filters mini expand (desktop collapsed)
+    const mini = document.getElementById('filters-mini-btn');
+    if (mini) mini.addEventListener('click', () => {
+      const cont = document.getElementById('universal-sidebar-container');
+      if (cont) cont.classList.remove('collapsed');
+    });
   }
 
   // Expose for later wiring
-  window.UniversalSidebar = { init };
-  // Expose update method for when data arrives
-  window.UniversalSidebar.updateTopFromState = updateTopFromState;
+  window.UniversalSidebar = {
+    init,
+    setContext: function(ctx) { renderTop(ctx || detectContext()); renderRecent(); },
+    getContext: function() { return currentContext || detectContext(); },
+    updateTopFromState
+  };
 })();

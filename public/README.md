@@ -57,6 +57,20 @@ What works (100%)
 - Header search uses `DataService.searchStocks()` (single Firestore init + 5‑min cached index) rather than initializing Firebase in components.
 - index.html placeholder now loads (fixed resource paths to `/main.js` and `/main.css`).
 
+Score Cards Revamp (done)
+- Visual polish: glass gradients, tier glow, stronger active states; numerals read theme text color; ranking badges clarified.
+- Interactions: reveal panel with sticky top tabs + chip bars (Quality/AF); keyboard Enter/Esc; lazy render to avoid layout shift.
+- Consistency: IDQ/AF detail blocks now use the same panel wrapper and rhythm as Quality.
+- Accessibility: universal tooltip replaces legacy pseudo‑tooltips; better contrast for labels and meters.
+
+Recent mobile fixes (score details panel)
+- Sticky tabs/chips: content now reserves correct space; no overlap under header. Added dynamic `--tabs-offset` and moved chip spacing to content only.
+- Mobile close UX: top‑level tabs do not close the panel when tapping the active tab; a dedicated “✕” button closes it (accessibility label included).
+- Consistent panel layout: IDQ and Anti‑Fragile detail blocks use the same inner panel as Quality.
+- Anti‑Fragile header spacing: matched to IDQ for consistent rhythm.
+- Stronger active states: clearer active highlight on top tabs and Quality/AF chips.
+- Gauntlet: user‑friendly labels mapped; negatives are red using theme tokens; zero/positive use normal text color.
+
 Known issues / gaps
 - Mobile responsiveness: layout still desktop‑first in places (score card stacking, tables, hero compact mode)
 - Sidebar drawer on mobile: needs a visible close control and refined drawer width/behavior
@@ -65,6 +79,10 @@ Known issues / gaps
 - Mobile tooltips: tap-to-pin supported; visual affordance added (dotted underline/icon), but we may want a richer bottom-sheet for long content
 - Universal header: consider additional quick actions on mobile (e.g., favorite toggle or quick nav) in later iterations.
 - Financial metrics mapping: EV/EBITDA and some ratios vary by source; we added fallbacks (enterpriseValueOverEBITDA, computed margins), but confirm field names across collections
+ - Score Cards (mobile) density: additional cascade still influences card height/transform. We added overrides, but a follow‑up pass should verify no later rules restore larger min‑height.
+ - Tabs/Chips seam (visual): decide whether to remove one border to present as a single bar.
+ - Typography consistency: align mobile h3/h4 scale and margins across Quality/IDQ/AF.
+ - Hero header (mobile): final pass to tighten spacing without harming clarity.
 
 Critical warnings
 - Many numeric values are strings; always `parseFloat()` when needed
@@ -186,10 +204,15 @@ Phase 2 — Mobile Responsiveness
 - [ ] Tables: card view (mobile), condensed (tablet), full (desktop) (blueprint.md §4.2)
 - [ ] Hero header: simplified on mobile; mini chart desktop‑only (blueprint.md §4.2)
 - [ ] Sidebar drawer: add close control and refine width/behavior per breakpoint (README “Known issues / gaps”)
+ - [ ] Score details panel: verify tabs/chips sticky offsets on scroll/orientation/theme change; ensure active tab click does not close (✕ only)
+ - [ ] Score cards (mobile) density: finalize min-height/padding/active transform and audit cascade so overrides always apply
+ - [ ] Active states: confirm stronger highlight for both top tabs and Quality/AF chips across themes
 
 Phase 3 — Visual Polish
 - [ ] Typography scale and rhythm; depth system (consistent shadows/elevations) (blueprint.md §4.x)
 - [ ] Performance: reduce blur intensity on mobile; use `content-visibility` where helpful
+ - [ ] Tabs/Chips seam: optional visual unification (single bar) pending decision
+ - [ ] Hero header (mobile): tune logo size, name/ticker/price clamp values for compactness (verify legibility)
 
 Phase 4 — Premium Effects
 - [ ] Enhance score visualizations; progressive enhancement (desktop‑first), respect reduced‑motion (blueprint.md §4.1)
@@ -202,11 +225,14 @@ Functionality
 - Score card expansions (revelation panel)
 - Theme toggle persists; charts/canvas redraw
 - No console errors
+ - Mobile close UX: active top tab does NOT close panel; ✕ closes
+ - Gauntlet: negatives show red (theme token), zeros/positives use normal text color; labels use user‑friendly names
 
 Visual & Responsive
 - Section surfaces visible and subtle in both themes
 - Mobile: text readable, touch targets ≥44px, score cards stack, drawer close control (pending)
 - Tablet/Desktop: grids and tables align; no overflow issues
+ - Sticky stack (mobile): Header → Tabs → Chips → Content (no overlap); verify on scroll/orientation/theme change
 
 Accessibility
 - Focus states visible; contrast sufficient; tooltips readable; reduced motion respected
@@ -253,6 +279,7 @@ Start with (next steps):
 
 ## Change Log (Reverse Chronological)
 
+- 2025‑09‑02: Mobile sticky/layout fixes — added dynamic `--tabs-offset`, moved chip spacing to content only, removed legacy section padding for chip sections; consistent panel wrappers for IDQ/AF; Anti‑Fragile header spacing aligned with IDQ; mobile close UX (✕) and prevented active tab from closing; stronger active states for top tabs and chips; Gauntlet label mapping and negative‑only red using theme tokens; initial mobile density pass for cards and compact hero header. Files: css/company-card-fixed.css, js/views/score-cards.js, js/company-card-complete-fix.js
 - 2025‑09‑02: Header chip + ranks + IDQ caption — add universal header company chip (logo/ticker/overall score/price on scroll); fix overall score event flow and tier color; remove redundant IDQ caption; correct rank Top% math (Top = rank/total), keep copy order “#Y of N • Top X%”, and remove tilde for fallback ranks. Files: components/universal-header.html, js/universal-header.js, company-card-fixed.html, js/company-card-complete-fix.js
 - 2025‑09‑02: Branding & icons — header brand updated to “Finalysis”; transparent favicon pack wired (ico/svg/png/apple‑touch), Safari pinned‑tab, MS tile; site.webmanifest updated (maskable icons, theme/background). Ensures correct icons for tabs, bookmarks, and PWA installs. Files: components/universal-header.html, index.html, company-card-fixed.html, assets/favicons/*
 - 2025‑09‑02: Views extraction (Phase B) — moved Company Analysis and Detailed Financials rendering into `js/views/analysis.js` and `js/views/tables.js`; bootstrapping prefers new views but keeps legacy fallbacks. No behavior changes.

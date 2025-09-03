@@ -88,6 +88,11 @@
   #universal-sidebar-container.collapsed {
     width: 80px !important;
   }
+  /* Hide bulky filters in collapsed state; show a mini button instead */
+  #universal-sidebar-container.collapsed #sidebar-top .sidebar-search-container,
+  #universal-sidebar-container.collapsed #sidebar-top .section-surface,
+  #universal-sidebar-container.collapsed #sidebar-top .sidebar-section-title { display: none; }
+  #universal-sidebar-container.collapsed #sidebar-top #filters-mini { display: block !important; }
   #universal-sidebar-container.collapsed .sidebar-nav .nav-link {
     justify-content: center;
     gap: 0;

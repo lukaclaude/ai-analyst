@@ -1,0 +1,77 @@
+/* Index page scoped styles — enhanced grid/list/table inspired by legacy */
+
+/* Grid preview card */
+.preview-card {
+  position: relative;
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-fast);
+}
+.preview-card:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(0,0,0,0.35); border-color: color-mix(in oklab, var(--color-score-purple) 45%, var(--color-border-primary)); }
+.preview-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(to bottom, transparent 30%, color-mix(in oklab, var(--color-score-blue) 35%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; pointer-events: none; transition: opacity var(--transition-base);
+}
+.preview-card:hover::after { opacity: .7; }
+
+/* Hover sparkline overlay */
+.chart-container { position: absolute; top: 0; left: 0; right: 0; height: 58%; opacity: 0; pointer-events: none; transition: opacity var(--transition-base); }
+.preview-card:hover .chart-container { opacity: 1; transition-delay: .12s; }
+.chart-container canvas { width: 100%; height: 100%; }
+
+/* Data table styling (list/table views) */
+.data-table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.data-table { width: 100%; border-collapse: collapse; min-width: 1024px; }
+.data-table th, .data-table td { padding: .5rem .625rem; text-align: left; white-space: nowrap; font-size: .85rem; }
+.data-table th { position: sticky; top: 0; z-index: 1; background: var(--color-bg-secondary); color: var(--color-text-secondary); border-bottom: 2px solid var(--color-border-primary); text-transform: uppercase; font-weight: 600; }
+.data-table tr { border-bottom: 1px solid var(--color-border-primary); transition: background var(--transition-fast); }
+.data-table tbody tr:hover { background: var(--color-bg-tertiary); }
+.ticker-cell a { color: #58a6ff; text-decoration: none; font-weight: 600; }
+.sort-header { cursor: pointer; }
+.sort-header .sort-indicator { opacity: .5; margin-left: 4px; }
+.sort-header:hover .sort-indicator { opacity: 1; }
+
+/* Quick sort chips */
+#quick-sort-chips .nav-link { background: var(--glass-bg); border: 1px solid var(--glass-border); }
+#quick-sort-chips .nav-link.active { border-color: var(--color-score-purple); box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-score-purple) 30%, transparent); }
+
+/* Sidebar filter polish */
+#universal-sidebar-container .section-surface { padding: 14px; }
+#universal-sidebar-container .filter-group label { display: block; margin-bottom: 6px; color: var(--color-text-secondary); letter-spacing: .02em; }
+#universal-sidebar-container #apply-filters, #universal-sidebar-container #reset-filters { background: var(--glass-bg); border: 1px solid var(--glass-border); }
+#universal-sidebar-container #apply-filters:hover { border-color: var(--color-score-green); }
+#universal-sidebar-container #reset-filters:hover { border-color: var(--color-border-primary); }
+
+/* Small utilities */
+.mini-meta { font-size: 11px; color: var(--color-text-secondary); }
+.logo-fallback-mini { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--glass-bg); border: 1px solid var(--glass-border); }
+
+/* Mobile helpers */
+@media (max-width: 767px) {
+  .data-table th, .data-table td { font-size: .78rem; }
+  .mobile-sort-container { display: flex; align-items: center; gap: 8px; }
+  /* Hide quick sort chips on mobile in favor of the dropdown */
+  #quick-sort-chips { display: none; }
+  /* Hide right-side meta (price/mcap/updated/star) on mobile to keep two-row layout */
+  .list-meta { display: none !important; }
+  /* Allow company title to wrap and size down on mobile */
+  .list-row-title { font-size: clamp(0.9rem, 3.5vw, 1.05rem); line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+}
+@media (min-width: 768px) { .mobile-sort-container { display: none; } }
+
+/* Desktop: single-line title and show meta */
+@media (min-width: 768px) {
+  .list-row-title { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-meta { display: flex; }
+}
+.list-row-card { position: relative; }
