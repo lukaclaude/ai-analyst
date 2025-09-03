@@ -2523,12 +2523,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                     const collapsed = newSidebar.classList.toggle('collapsed');
                     if (main) main.style.marginLeft = collapsed ? '80px' : '240px';
                     closeBtn.textContent = collapsed ? '>' : '<';
+                    document.body.classList.toggle('sidebar-expanded', !collapsed);
                 } else {
                     newSidebar.classList.remove('active');
                     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
                     document.body.style.overflow = '';
                 }
             });
+            // Initialize body class based on current state (desktop)
+            if (window.innerWidth >= 1024) {
+                document.body.classList.toggle('sidebar-expanded', !newSidebar.classList.contains('collapsed'));
+            }
         }
     } catch (e) {
         console.warn('Universal sidebar init failed:', e);
@@ -2662,44 +2667,8 @@ function setupEventListeners() {
     if (searchBtn) {
         searchBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const input = document.getElementById('global-search');
-            if (input) {
-                // Reveal header search on mobile
-                document.body.classList.add('show-mobile-search');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setTimeout(() => input.focus(), 150);
-                const onBlur = () => {
-                    // Delay hiding so taps on results can navigate on mobile
-                    setTimeout(() => {
-                        document.body.classList.remove('show-mobile-search');
-                    }, 300);
-                    input.removeEventListener('blur', onBlur);
-                };
-                input.addEventListener('blur', onBlur);
-                const onEsc = (ev) => {
-                    if (ev.key === 'Escape') {
-                        document.body.classList.remove('show-mobile-search');
-                        document.removeEventListener('keydown', onEsc);
-                        input.blur();
-                    }
-                };
-                document.addEventListener('keydown', onEsc);
-            } else {
-                // Fallback: open sidebar and focus its search field
-                const sidebar = document.getElementById('navigation-sidebar');
-                const sidebarOverlay = document.getElementById('sidebar-overlay');
-                if (sidebar && sidebarOverlay) {
-                    sidebar.classList.add('active');
-                    sidebarOverlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                    setTimeout(() => {
-                        const sbInput = document.getElementById('sidebar-search');
-                        if (sbInput) sbInput.focus();
-                    }, 150);
-                } else {
-                    showToast('Search field unavailable');
-                }
-            }
+            if (window.focusHeaderSearch && window.focusHeaderSearch()) return;
+            showToast('Search field unavailable');
         });
     }
 

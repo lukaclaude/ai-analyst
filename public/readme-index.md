@@ -47,7 +47,8 @@ Data & Calculations
   - Quality & AF: 6-tier mapping by percentile (≥80 purple, ≥74 blue, ≥65 green, ≥55 yellow, ≥32 orange, else red).
   - IDQ: use raw-score tiers via Tiers.getIdqTierColors (Pioneer/Leader/Integrator/Follower/Lagging).
 - Last Updated date
-  - Uses `Portfolio.lastUpdate` or `API_Financials.General.lastUpdated`. Safe parse for DD/MM/YYYY or native date.
+  - Sorts by `LLM_Reports.IDQ_Report.lastUpdated` (ISO‑like) for consistency.
+  - Displays the first line of `LLM_Research_and_Comments.Summaries_Group.lastUpdate` (up to any “ - …” suffix) when available; falls back to Portfolio/General.
 - Table metrics (via aliases)
   - P/E: pe alias group; EV/EBITDA: evEbitda; margins: netMargin/operatingMargin (computeOperatingMargin as fallback); growth: computeRevenueGrowth/computeEpsGrowth.
 
@@ -82,3 +83,6 @@ Implementation map (files)
 - js/universal-header.js — chip hidden on index via page-context.
 - documentation/universal-cleanup.md — outstanding universal component cleanups.
 
+## Change Log
+
+- 2025‑09‑03: Mobile List two‑row layout; sort chips hidden on mobile (dropdown controls sorting and reflects on chips); favorites‑only toggle; removed index sidebar search; “Last Update” corrected (sort by IDQ lastUpdated, display using Summaries_Group first line); mobile search focus helper added.

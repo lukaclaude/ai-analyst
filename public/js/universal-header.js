@@ -272,6 +272,31 @@ class UniversalHeader {
         if (prc && typeof detail.price === 'number') prc.textContent = (detail.currency === 'USD' ? '$' : '') + detail.price.toFixed(2);
         if (cur && detail.currency) cur.textContent = detail.currency !== 'USD' ? detail.currency : '';
     }
+
+    // Expose a robust search focus helper for mobile/desktop
+    static focusHeaderSearch() {
+        function tryFocus() {
+            const input = document.getElementById('global-search');
+            if (!input) return false;
+            if (window.innerWidth <= 768) {
+                document.body.classList.add('show-mobile-search');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            setTimeout(() => {
+                try { input.focus({ preventScroll: true }); } catch(_) { input.focus(); }
+                try { const len = input.value.length; input.setSelectionRange(len, len); } catch(_) {}
+            }, 50);
+            return true;
+        }
+        if (tryFocus()) return true;
+        // Retry a few times if header is still loading
+        let attempts = 0;
+        const t = setInterval(() => {
+            attempts++;
+            if (tryFocus() || attempts > 10) clearInterval(t);
+        }, 80);
+        return true;
+    }
 }
 
 // Initialize when DOM is ready
@@ -287,3 +312,6 @@ if (document.readyState === 'loading') {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UniversalHeader;
 }
+
+// Global helper
+window.focusHeaderSearch = UniversalHeader.focusHeaderSearch;

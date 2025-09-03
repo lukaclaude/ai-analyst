@@ -84,9 +84,9 @@
         <section class="section-surface home-hero" id="top">
           <div class="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h1 class="text-2xl md:text-3xl font-bold">Explore the Score Trinity Universe</h1>
+              <h1 class="text-2xl md:text-3xl font-bold">Explore the Trinity Score Database</h1>
               <p class="text-sm md:text-base" style="color: var(--color-text-secondary); margin-top: 6px;">
-                Search for a company above or browse top performers across Quality, Innovation, and Anti‑Fragile scores.
+                Search for a company or browse top performers based on extensive AI research.
               </p>
             </div>
             <div class="hidden md:block mini-meta">Tip: Press / to focus search</div>
@@ -280,16 +280,8 @@
       if (searchBtn) {
         searchBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          const input = document.getElementById('global-search');
-          if (input) {
-            document.body.classList.add('show-mobile-search');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setTimeout(() => input.focus(), 150);
-            const onBlur = () => { setTimeout(() => document.body.classList.remove('show-mobile-search'), 300); input.removeEventListener('blur', onBlur); };
-            input.addEventListener('blur', onBlur);
-            const onEsc = (ev) => { if (ev.key === 'Escape') { document.body.classList.remove('show-mobile-search'); document.removeEventListener('keydown', onEsc); input.blur(); } };
-            document.addEventListener('keydown', onEsc);
-          }
+          if (window.focusHeaderSearch && window.focusHeaderSearch()) return;
+          showToast('Search field unavailable');
         });
       }
       if (favBtn) favBtn.addEventListener('click', (e) => { e.preventDefault(); showToast('Watchlists are coming soon'); });

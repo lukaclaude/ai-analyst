@@ -755,7 +755,6 @@
       loadFilterPrefs();
       wireViewToggles();
       wirePagination();
-      wireSidebarSearch();
       wireQuickSortChips();
       wireMobileSort();
       wireFilters();

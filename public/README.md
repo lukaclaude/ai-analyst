@@ -118,6 +118,14 @@ Critical warnings
 - Nothing in `archive/` should be imported by production code.
 - Timing: after current desktop polish; before componentization. We’ll move files in a single patch and verify no references remain (ripgrep checks).
 
+### Recent Mobile Refinements (2025‑09‑03)
+- Performance Trends: mobile canvas height scales with container; HiDPI backing store for sharper rendering; fewer x‑axis labels and smaller points; redraws on resize/theme.
+- Key Financial Metrics: on mobile, category tiles render as a two‑column grid with compact padding/typography.
+- Financial Health tooltips: labels use the universal tooltip (tap‑to‑pin), avoiding ephemeral touch tooltips.
+- Universal header: brand label set to “./AI/ANALYST” (monospace); chip logo background transparent for dark theme.
+- Company chip alignment (desktop): chip offset respects expanded sidebar (body.sidebar-expanded toggled by sidebar control).
+- Mobile search focus: bottom Search focuses header search and places the caret via `window.focusHeaderSearch()`.
+
 ## Architecture Fundamentals
 
 Theme system
@@ -232,7 +240,11 @@ Visual & Responsive
 - Section surfaces visible and subtle in both themes
 - Mobile: text readable, touch targets ≥44px, score cards stack, drawer close control (pending)
 - Tablet/Desktop: grids and tables align; no overflow issues
- - Sticky stack (mobile): Header → Tabs → Chips → Content (no overlap); verify on scroll/orientation/theme change
+- Sticky stack (mobile): Header → Tabs → Chips → Content (no overlap); verify on scroll/orientation/theme change
+- Performance Trends (mobile): chart height readable; labels/points legible; redraws on rotate/theme change
+- Key Financial Metrics (mobile): category tiles in two columns; no overflow; tap targets ≥44px
+- Financial Health tooltips: tap‑to‑pin works; no native title tooltips
+- Header chip alignment (desktop): chip offset updates when sidebar expands/collapses
 
 Accessibility
 - Focus states visible; contrast sufficient; tooltips readable; reduced motion respected
@@ -251,6 +263,8 @@ If you only read one section, read this:
 - Anti‑Fragile sub‑scores: single column (3 metrics). Quality sub‑scores: 2‑column on desktop. This avoids awkward gaps.
 - Key financials: tn/bn/m/k formatting; shares outstanding as quantities; Debt/Equity aliasing across `debtEquityRatio|debtToEquityRatio|debtToEquity`.
 - Header search: `DataService` provides a 5‑min cached index and single Firestore init.
+- Use `window.focusHeaderSearch()` to reveal + focus header search on mobile and place caret at end (reusable helper).
+- Sidebar collapse/expand toggles `body.sidebar-expanded` on desktop so header can align the company chip predictably.
 
 Do not break:
 - `fetchAndDisplayCompanyData()`, `revealScoreDetails()`, calculation and chart flows
@@ -275,6 +289,7 @@ Start with (next steps):
 
 ## Change Log
 
+- 2025‑09‑03: Mobile refinements — Performance Trends canvas now scales in height with HiDPI support; reduced label density and smaller points. Key Financial Metrics render as two‑column tiles on mobile; Financial Health tooltips use the universal tooltip with tap‑to‑pin. Brand label changed to “./AI/ANALYST”; chip logo background transparent; company chip alignment respects expanded sidebar (desktop). Shared `window.focusHeaderSearch()` added to focus header search on mobile.
 - 2025‑09‑02: Desktop‑first landing polish. Added Quality gauge tick marks and restrained hover glow (reduced‑motion aware). IDQ label pill + caption with tier dot; Anti‑Fragile shield neutral fill in both themes. Centralized metric aliasing (`js/lib/aliases.js`) with fallbacks for P/E, EV/EBITDA, Operating Margin, Debt/Equity; metrics grid and detailed tables use aliases to avoid N/A when alternates exist. Added “Copy Insight” action in analysis with clipboard fallback and feedback. Began Phase B: added `js/lib/formatters.js`, `js/lib/tiers.js`, and `js/views/score-cards.js`; libs are loaded before the main app.
 
 ## Change Log (Reverse Chronological)

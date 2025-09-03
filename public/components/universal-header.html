@@ -8,7 +8,7 @@
         <div class="header-left">
             <a href="/" class="logo-container" aria-label="Finalysis Home">
                 <img class="logo" src="/assets/favicons/favicon.svg" alt="Finalysis" width="32" height="32"/>
-                <span class="logo-text">Finalysis</span>
+                <span class="logo-text logo-mono"><./AI/ANALYST></span>
             </a>
 
             <!-- Dynamic company chip (visible on company page when hero scrolled away) -->
@@ -127,6 +127,7 @@
     font-weight: 600;
     letter-spacing: -0.5px;
 }
+.logo-mono { font-family: var(--font-mono, 'JetBrains Mono', monospace); font-weight: 700; letter-spacing: 0; }
 
 /* Global Search */
 .global-search-container {
@@ -257,13 +258,7 @@
     background: linear-gradient(135deg, var(--glass-gradient-start, rgba(255,255,255,0.08)) 0%, var(--glass-gradient-end, rgba(255,255,255,0.02)) 100%);
     backdrop-filter: var(--glass-blur, blur(10px)) var(--glass-saturate, saturate(160%));
 }
-.company-chip img {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    background: #fff;
-    object-fit: contain;
-}
+.company-chip img { width: 18px; height: 18px; border-radius: 4px; background: transparent; object-fit: contain; }
 .company-chip .chip-texts { display: flex; flex-direction: column; line-height: 1; }
 .company-chip .chip-line1 { display: flex; align-items: center; gap: 6px; }
 .company-chip .chip-line2 { font-size: 11px; opacity: 0.9; }
@@ -274,6 +269,11 @@
 
 @media (max-width: 768px) {
   .company-chip { display: none; }
+}
+
+/* Align chip after expanded sidebar on company pages (desktop) */
+@media (min-width: 1024px) {
+  body[data-page-context="company-card"].sidebar-expanded .company-chip { margin-left: 240px; }
 }
 
 .header-button.icon-only {

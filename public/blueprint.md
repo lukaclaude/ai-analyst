@@ -92,6 +92,8 @@ Firebase Firestore → Service Layer → State Manager → Components → UI
 - **Theme System (Centralized)**: Shared CSS variables in `css/theme.css`; `ThemeService` (`js/services/ThemeService.js`) controls theme (light/dark), persists to localStorage, and emits a global `themeChanged` event. Components read tokens from `document.body` and subscribe for canvas redraws.
 - **Universal Tooltip**: Single tooltip in `js/tooltip.js` for all `[data-tooltip]`; legacy pseudo-tooltips disabled globally.
 - **Section Surface Pattern**: Use `.section-surface` as the standard, theme-aware background panel for top-level sections across pages.
+ - **Page Context Flag**: Universal header/sidebar read `body[data-page-context]` to determine per‑page behavior (e.g., `index`, `company-card`), replacing URL heuristics.
+ - **Search Focus Helper**: `window.focusHeaderSearch()` reveals + focuses the header search on mobile and places the caret at end; reuse across pages for bottom “Search”.
 
 ## 4. Visual Design System
 
@@ -113,6 +115,9 @@ Firebase Firestore → Service Layer → State Manager → Components → UI
 - **Adaptive Components**: Restructure for mobile, not just resize
 - **Touch Gestures**: Swipe navigation, pull-to-refresh, pinch-to-zoom
 - **Performance**: Reduced animations on low-power devices
+ - **Performance Trends (Mobile)**: Canvas height scales with container; HiDPI backing store; fewer x‑labels and smaller points; redraw on resize/theme.
+ - **Key Financial Metrics (Mobile)**: Category tiles render as a two‑column grid with compact spacing.
+ - **Score Cards (Mobile)**: Vertical density tightened (reduced min‑height/padding and slightly smaller visuals) while preserving readability.
 
 ### 4.3 Theme System
 - **Dark Theme** (Default): Premium feel with high contrast
@@ -151,6 +156,8 @@ This Hero Header must remain but sits BELOW the new universal header
 - **Offline**: IndexedDB caching, PWA capabilities
 - **Analytics**: Enhanced tracking, performance monitoring
 - **Accessibility**: ARIA labels, keyboard navigation, screen reader support
+ - **Mobile Sorting UX**: Chips display direction arrows and toggle on repeated press; mobile dropdown controls sorting and reflects on chips.
+ - **Favorites Filter**: Optional favorites‑only toggle on index; persisted user preference.
 
 ## 6. Implementation Phases
 
@@ -173,6 +180,7 @@ This Hero Header must remain but sits BELOW the new universal header
   - Sidebar drawer: explicit close, overlay, body scroll lock.
   - Tooltips: mobile affordances (dotted underline/ⓘ), tap‑to‑pin, viewport clamping.
   - Universal header: compact “company chip” (logo + ticker + price + overall score) appears when hero scrolls out on company pages.
+  - Page context: adopt `body[data-page-context]` for universal components; remove path heuristics.
 
 ### Directory Structure (current)
 
