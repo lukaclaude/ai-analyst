@@ -50,7 +50,7 @@ What works (100%)
 - IDQ label pill (tier dot reflects mapping); Anti‑Fragile shield neutral background fill for clarity across themes. Removed redundant static IDQ caption under chip (kept moving label above the position bar).
 - “Copy Insight” action in Company Analysis copies the synthesized thesis with clipboard fallback.
 - Finalysis branding and favicon/PWA setup: header brand switched to “Finalysis”; transparent favicon pack wired (ico/svg/png/apple-touch), Safari pinned-tab, MS tile, and site.webmanifest (maskable icons, theme/background colors) for proper tabs/bookmarks/PWA icons.
-- Universal header “company chip”: on company pages, when the hero scrolls away, the header shows a compact chip (logo, ticker, overall score, price). Chip uses tier color and live price updates.
+- Universal header + Compact hero: the header is truly universal (logo + brand, anchored search, actions). On company pages, when the main hero scrolls out of view, a sticky compact hero bar appears below the header showing logo, ticker, company name, price, overall score and tier label (with tooltip). The old header chip is deprecated. Mobile search focus is handled programmatically for Safari/Chrome: tapping the bottom Search icon reveals and focuses the header search input with an immediate attempt and short retry loop for reliability.
 - Rank badges: copy reads “#Y of N • Top X%” where Top X% = round(rank/total×100) (lower is better). Fallback ranks no longer include a tilde (~).
 - Sub‑score rounding: quality sub‑scores display rounded to 1 decimal to prevent float artifacts (e.g., 12.3999999 → 12.4).
 - Detailed Financial Data tables: tooltips added to common rows across Income/Profit/Balance/Cash Flow (Revenue, Net Income, EPS, Net/EBITDA margin, Operating/Investing/Financing CF, CapEx, FCF, Dividends, Repurchases, Debt Repayment, etc.).
@@ -127,6 +127,16 @@ Critical warnings
 - Mobile search focus: bottom Search focuses header search and places the caret via `window.focusHeaderSearch()`.
 
 ## Architecture Fundamentals
+Universal header contract
+- Single structure across all pages: Left (logo + brand), Middle (anchored search), Right (actions). No per‑page shifts.
+- Anchored search: fixed horizontal position aligned with content (desktop). Mobile shows the search only when invoked.
+
+Compact hero (company page)
+- Sticky bar below the header; appears when the main hero scrolls away.
+- Desktop: single row — logo • TICKER • Company Name | price • overall • tier badge.
+- Mobile: two rows — Row 1: logo • TICKER • Company Name; Row 2: price • overall • tier badge.
+- Tier badge tooltip explains tier ranges and the overall formula (40% Q, 35% IDQ, 25% AF).
+- Light/dark theme aware; no stacked shadows in light mode; compact entrance animation.
 
 Theme system
 - CSS variables live in `css/theme.css`; light theme overrides via `body.light-theme`
@@ -138,6 +148,7 @@ Universal tooltip
 - Single node appended to `body`; positions and clamps to viewport edges
 - Triggers: `[data-tooltip]` elements (rank badges, metric items, etc.)
 - Pseudo‑element tooltips disabled globally to avoid clipping/stacking problems
+ - Policy: never use native `title` attributes for UI hints; always use `data-tooltip` so content is styled, theme-aware, clamped and accessible.
 
 Section surfaces
 - `.section-surface` applies a subtle, theme‑aware glass background with ambient gradients
@@ -167,6 +178,8 @@ Services (plan)
   - Hero: simplified on mobile; mini chart desktop‑only.
 - Universal sidebar behavior (see blueprint.md §3.3, §7.1):
   - Context‑aware top content per page; always “Recent Companies” at bottom.
+  - See also: documentation/docs/index.md for index page structure.
+  - Universal components contract: documentation/docs/universal-components.md
 
 ## Must‑Preserve Visuals & Interactions
 

@@ -6,12 +6,7 @@
   function detectContext() {
     const ctxAttr = document.body && document.body.getAttribute && document.body.getAttribute('data-page-context');
     if (ctxAttr) return ctxAttr;
-    const p = window.location.pathname;
-    if (p === '/' || p === '' || /\/$/.test(p)) return 'index';
-    if (p.includes('company')) return 'company-card';
-    if (p.includes('index')) return 'index';
-    if (p.includes('comparison')) return 'comparison';
-    if (p.includes('portfolio')) return 'portfolio';
+    try { console.warn('[UniversalSidebar] Missing data-page-context on <body>; defaulting to "index"'); } catch (_) {}
     return 'index';
   }
 
@@ -50,7 +45,7 @@
       // Index page: render search + filters UI in the top area
       top.innerHTML = `
         <div id="filters-mini" style="display:none;padding:6px 8px;">
-          <button id="filters-mini-btn" class="nav-link w-full px-2 py-1 rounded-lg" aria-label="Show filters" title="Show filters">
+          <button id="filters-mini-btn" class="nav-link w-full px-2 py-1 rounded-lg" aria-label="Show filters" data-tooltip="Show filters">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18v2l-7 7v5l-4-2v-3L3 7z"/></svg>
           </button>
         </div>
@@ -261,16 +256,13 @@
       el.addEventListener('click', () => {
         const t = el.getAttribute('data-ticker');
         if (!t) return;
-        const ctx = (window.UniversalSidebar && typeof window.UniversalSidebar.getContext === 'function') ? window.UniversalSidebar.getContext() : null;
-        if (ctx === 'index') {
-          window.location.href = `/company-card-fixed.html?ticker=${t}`;
-          return;
-        }
-        if (typeof window.navigateToCompany === 'function') {
+        if (window.NavigationService && typeof window.NavigationService.goToCompany === 'function') {
+          window.NavigationService.goToCompany(t);
+        } else if (typeof window.navigateToCompany === 'function') {
           window.navigateToCompany(t);
-          return;
+        } else {
+          window.location.href = `/company-card-fixed.html?ticker=${t}`;
         }
-        window.location.href = `?ticker=${t}`;
       });
     });
     // Logo handlers

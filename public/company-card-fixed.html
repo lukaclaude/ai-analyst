@@ -44,7 +44,7 @@
         #app.loaded { opacity: 1; }
     </style>
 </head>
-<body>
+<body id="company" data-page-context="company-card">
     <!-- Loading State -->
     <div class="app-loading" id="app-loading">
         <div class="loading-spinner"></div>
@@ -52,6 +52,24 @@
     
     <!-- Universal Header Container -->
     <div id="universal-header-container"></div>
+    
+    <!-- Compact Hero (company context) -->
+    <div id="compact-hero" class="compact-hero" role="region" aria-label="Company summary bar" hidden>
+        <div class="compact-hero-content container-centered">
+            <div class="ch-left">
+                <img id="ch-logo" alt="Company logo" class="ch-logo" />
+                <span id="ch-ticker" class="ch-ticker">TICKER</span>
+                <span id="ch-name" class="ch-name">Company Name</span>
+            </div>
+            <div class="ch-right">
+                <span id="ch-price" class="ch-price" aria-live="polite">$0.00</span>
+                <span id="ch-currency" class="ch-currency">USD</span>
+                <span class="ch-sep">•</span>
+                <span id="ch-overall" class="ch-overall">0.0</span>
+                <span id="ch-tier" class="ch-tier-badge" aria-label="Tier" tabindex="0"><span class="tier-dot"></span><span id="ch-tier-label">Tier</span></span>
+            </div>
+        </div>
+    </div>
     
     <!-- Main Application -->
     <div id="app" class="app-layout" style="padding-top: 45px;">
@@ -489,6 +507,7 @@
     <script src="./js/tooltip.js"></script>
     <script src="./js/services/ThemeService.js"></script>
     <script src="./js/services/DataService.js"></script>
+    <script src="./js/services/NavigationService.js"></script>
     <script src="./js/universal-sidebar.js"></script>
     
     <!-- Application Scripts -->
@@ -496,6 +515,7 @@
     <script src="./js/lib/formatters.js"></script>
     <script src="./js/lib/tiers.js"></script>
     <script src="./js/universal-header.js"></script>
+    <script src="./js/controllers/company.js"></script>
     <script src="./js/views/score-cards.js"></script>
     <script src="./js/views/analysis.js"></script>
     <script src="./js/views/tables.js"></script>

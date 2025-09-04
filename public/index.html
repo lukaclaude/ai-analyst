@@ -52,7 +52,7 @@
     .mini-meta { font-size: 11px; color: var(--color-text-secondary); }
   </style>
 </head>
-<body data-page-context="index">
+<body id="index" data-page-context="index">
   <!-- Loading State -->
   <div class="app-loading" id="app-loading">
     <div class="loading-spinner"></div>
@@ -143,7 +143,10 @@
               <button class="nav-link px-2 py-1 rounded-lg" data-sort="af-desc" data-label="AF">AF</button>
               <button class="nav-link px-2 py-1 rounded-lg" data-sort="marketCap-desc" data-label="Mkt Cap">Mkt Cap</button>
               <button class="nav-link px-2 py-1 rounded-lg" data-sort="price-desc" data-label="Price">Price</button>
-              <button id="favorites-only-toggle" class="nav-link px-2 py-1 rounded-lg" aria-pressed="false" title="Show favorites only">⭐ Favorites</button>
+              <button id="favorites-only-toggle" class="nav-link px-2 py-1 rounded-lg" aria-pressed="false" data-tooltip="Show favorites only">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+                <span class="ml-1">Favorites</span>
+              </button>
             </div>
             <div id="content-container"></div>
             <div id="pagination-controls" class="mt-4 flex items-center justify-between" style="display:none;">
@@ -197,11 +200,13 @@
   <script src="./js/tooltip.js"></script>
   <script src="./js/services/ThemeService.js"></script>
   <script src="./js/services/DataService.js"></script>
+  <script src="./js/services/NavigationService.js"></script>
   <script src="./js/universal-sidebar.js"></script>
   <script src="./js/lib/aliases.js"></script>
   <script src="./js/lib/formatters.js"></script>
   <script src="./js/lib/tiers.js"></script>
   <script src="./js/universal-header.js"></script>
+  <script src="./js/controllers/index.js"></script>
 
   <script>
     // Basic toast fallback
@@ -242,7 +247,7 @@
             const main = document.querySelector('.main-content');
             if (isDesktop) {
               const collapsed = cont.classList.toggle('collapsed');
-              if (main) main.style.marginLeft = collapsed ? '80px' : '240px';
+              if (main) main.style.marginLeft = collapsed ? '80px' : '256px';
               closeBtn.textContent = collapsed ? '>' : '<';
             } else {
               cont.classList.remove('active');
@@ -262,12 +267,15 @@
           document.body.classList.remove('show-mobile-search');
           sidebar.classList.toggle('active');
           sidebarOverlay.classList.toggle('active');
-          document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+          const open = sidebar.classList.contains('active');
+          document.body.style.overflow = open ? 'hidden' : '';
+          document.body.classList.toggle('sidebar-drawer-open', open);
         });
         sidebarOverlay.addEventListener('click', () => {
           sidebar.classList.remove('active');
           sidebarOverlay.classList.remove('active');
           document.body.style.overflow = '';
+          document.body.classList.remove('sidebar-drawer-open');
         });
       }
 
@@ -292,21 +300,11 @@
           sidebar.classList.add('active');
           sidebarOverlay.classList.add('active');
           document.body.style.overflow = 'hidden';
+          document.body.classList.add('sidebar-drawer-open');
         });
       }
 
-      // Intercept header search result clicks to navigate to company page
-      document.addEventListener('click', (e) => {
-        const link = e.target && e.target.closest && e.target.closest('a.search-result-item--header');
-        if (link) {
-          try {
-            e.preventDefault();
-            const url = new URL(link.getAttribute('href'), window.location.href);
-            const t = url.searchParams.get('ticker');
-            if (t) window.location.href = `/company-card-fixed.html?ticker=${t}`;
-          } catch (_) {}
-        }
-      }, true);
+      // Header search navigation is handled globally by universal-header.js
 
       // Index data and views are handled by js/index-page.js
 

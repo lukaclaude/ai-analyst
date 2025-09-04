@@ -13,6 +13,9 @@ class ScoreVisualizationEngine {
         
         // Listen for resize events
         this.setupResponsiveHandling();
+
+        // Listen for theme/orientation to keep visuals in sync with tokens/layout
+        this.setupThemeAndOrientationHandling();
     }
 
     /**
@@ -212,6 +215,20 @@ class ScoreVisualizationEngine {
     }
 
     /**
+     * Setup theme/orientation handling
+     */
+    setupThemeAndOrientationHandling() {
+        // On theme change, let visuals re-read CSS tokens or refresh their style
+        window.addEventListener('themeChanged', () => {
+            this.refreshVisuals();
+        });
+        // Orientation change may affect layout similarly to a breakpoint change
+        window.addEventListener('orientationchange', () => {
+            this.handleBreakpointChange();
+        });
+    }
+
+    /**
      * Handle breakpoint changes
      */
     handleBreakpointChange() {
@@ -219,6 +236,17 @@ class ScoreVisualizationEngine {
             if (viz && viz.handleResize) {
                 viz.handleResize(this.currentBreakpoint);
             }
+        });
+    }
+
+    /**
+     * Ask visualizations to refresh colors/styles after theme change
+     */
+    refreshVisuals() {
+        Object.values(this.visualizations).forEach(viz => {
+            if (!viz) return;
+            if (viz.refreshStyle) viz.refreshStyle();
+            else if (viz.handleResize) viz.handleResize(this.currentBreakpoint);
         });
     }
 

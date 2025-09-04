@@ -30,6 +30,8 @@ const state = {
     metricsChart: null,
     searchableStocks: []
 };
+// Expose state for controllers
+window.state = state;
 
 // ============================================
 // UTILITY FUNCTIONS
@@ -579,11 +581,7 @@ async function populateCompanyCard() {
         const currencyEl = document.getElementById('currency');
         
         if (priceEl) {
-            let priceDisplay = '';
-            if (curr === 'USD') priceDisplay = `$${priceNum.toFixed(2)}`;
-            else if (curr === 'EUR') priceDisplay = `€${priceNum.toFixed(2)}`;
-            else if (curr === 'GBP') priceDisplay = `£${priceNum.toFixed(2)}`;
-            else priceDisplay = `${priceNum.toFixed(2)} ${curr}`;
+            const priceDisplay = formatCurrency(priceNum, 2, curr);
             priceEl.textContent = priceDisplay;
         }
         if (currencyEl) currencyEl.textContent = curr;
@@ -600,13 +598,10 @@ async function populateCompanyCard() {
 
             const priceTargetEl = document.getElementById('analyst-price-target');
             if (priceTargetEl) {
-                let currencySymbol = '$';
-                if (curr === 'EUR') currencySymbol = '€';
-                else if (curr === 'GBP') currencySymbol = '£';
-                
+                const formattedTarget = formatCurrency(priceTargetNum, 2, curr);
                 priceTargetEl.innerHTML = `
                     <span class="font-medium price-target-label secondary-text">1Y Target Est:</span> 
-                    <span class="font-bold font-mono ${textColorClass}">${currencySymbol}${priceTargetNum.toFixed(2)}</span>
+                    <span class="font-bold font-mono ${textColorClass}">${formattedTarget}</span>
                     <span class="font-mono ${textColorClass}">(${upside > 0 ? '+' : ''}${upside.toFixed(1)}%)</span>
                 `;
             }
@@ -614,8 +609,8 @@ async function populateCompanyCard() {
             // Update mobile target
             const mobileTarget = document.getElementById('mobile-target');
             if (mobileTarget) {
-                const currencySymbol = curr === 'USD' ? '$' : curr === 'EUR' ? '€' : curr === 'GBP' ? '£' : '';
-                mobileTarget.innerHTML = `<span class="${textColorClass}">${currencySymbol}${priceTargetNum.toFixed(2)} (${upside > 0 ? '+' : ''}${upside.toFixed(1)}%)</span>`;
+                const formattedTarget = formatCurrency(priceTargetNum, 2, curr);
+                mobileTarget.innerHTML = `<span class="${textColorClass}">${formattedTarget} (${upside > 0 ? '+' : ''}${upside.toFixed(1)}%)</span>`;
             }
         }
         
@@ -693,7 +688,7 @@ async function populateCompanyCard() {
         const upsideColor = upside > 0 ? 'text-green-400' : 'text-red-400';
         targetEl.innerHTML = `
             <span class="font-medium price-target-label secondary-text">1Y Target Est:</span> 
-            <span class="font-bold font-mono ${upsideColor}">$${targetPrice.toFixed(2)}</span>
+            <span class="font-bold font-mono ${upsideColor}">${formatCurrency(targetPrice, 2, currency)}</span>
             <span class="font-mono ${upsideColor}">(${upside > 0 ? '+' : ''}${upside}%)</span>
         `;
         
@@ -704,7 +699,7 @@ async function populateCompanyCard() {
         
         if (mobilePrice) mobilePrice.textContent = currentPrice.toFixed(2);
         if (mobileCurrency) mobileCurrency.textContent = currency;
-        if (mobileTarget) mobileTarget.innerHTML = `<span class="${upsideColor}">$${targetPrice.toFixed(2)} (${upside > 0 ? '+' : ''}${upside}%)</span>`;
+        if (mobileTarget) mobileTarget.innerHTML = `<span class="${upsideColor}">${formatCurrency(targetPrice, 2, currency)} (${upside > 0 ? '+' : ''}${upside}%)</span>`;
     }
     
     // Overall assessment badge using proper tier calculation
@@ -1617,13 +1612,19 @@ function populateFinancialMetrics() {
                     return !isNaN(num) ? formatMarketCap(num, currencyCode) : 'N/A';
                 })() },
                 { label: 'P/E Ratio', value: (() => {
-                    const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'pe') : getRatio('priceEarningsRatio','peRatio','trailingPE');
-                    return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A';
+                    const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'pe') : getRatio('priceEarningsRatio','peRatio','trailingPE');
+                    const num = v != null ? parseFloat(String(v).replace(/,/g,'')) : NaN;
+                    return isNaN(num) ? 'N/A' : num.toFixed(2);
                 })() },
-                { label: 'P/B Ratio', value: ratios.priceToBookRatio ? parseFloat(ratios.priceToBookRatio).toFixed(2) : 'N/A' },
+                { label: 'P/B Ratio', value: (() => {
+                    const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'priceToBook') : ratios.priceToBookRatio;
+                    const num = v != null ? parseFloat(String(v).replace(/,/g,'')) : NaN;
+                    return isNaN(num) ? 'N/A' : num.toFixed(2);
+                })() },
                 { label: 'EV/EBITDA', value: (() => {
-                    const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'evEbitda') : getRatio('evToEBITDA','enterpriseValueOverEBITDA','EVtoEBITDA');
-                    return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A';
+                    const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'evEbitda') : getRatio('evToEBITDA','enterpriseValueOverEBITDA','EVtoEBITDA');
+                    const num = v != null ? parseFloat(String(v).replace(/,/g,'')) : NaN;
+                    return isNaN(num) ? 'N/A' : num.toFixed(2);
                 })() }
             ]
         },
@@ -1645,33 +1646,37 @@ function populateFinancialMetrics() {
                     const num = raw != null ? parseFloat(String(raw).replace(/,/g, '')) : NaN;
                     return !isNaN(num) ? formatCurrency(num, 1, currencyCode) : 'N/A';
                 })() },
-                { label: 'Gross Margin', value: ratios.grossProfitMargin ? `${parseFloat(ratios.grossProfitMargin).toFixed(1)}%` : 'N/A' },
+                { label: 'Gross Margin', value: (() => {
+                    const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'grossMargin') : ratios.grossProfitMargin;
+                    const num = tryPercent(v);
+                    return num != null ? `${num.toFixed(1)}%` : 'N/A';
+                })() },
                 { label: 'Operating Margin', value: (() => {
-                    const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'operatingMargin') : getRatio('operatingMargin','operatingProfitMargin');
+                    const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'operatingMargin') : getRatio('operatingMargin','operatingProfitMargin');
                     const num = tryPercent(v);
                     const fb = operatingMarginFallback();
                     const res = num != null ? num : fb;
                     return res != null ? `${res.toFixed(1)}%` : 'N/A';
                 })() },
-                { label: 'Net Margin', value: ratios.netProfitMargin ? `${parseFloat(ratios.netProfitMargin).toFixed(1)}%` : 'N/A' }
+                { label: 'Net Margin', value: (() => {
+                    const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'netMargin') : ratios.netProfitMargin;
+                    const num = tryPercent(v);
+                    return num != null ? `${num.toFixed(1)}%` : 'N/A';
+                })() }
             ]
         },
         {
             category: 'Growth',
             items: [
                 { label: 'Revenue Growth', value: (() => {
-                    const v = getRatio('revenueGrowth');
+                    const v = window.Aliases?.computeRevenueGrowth ? window.Aliases.computeRevenueGrowth(state.currentStockData?.API_Financials) : getRatio('revenueGrowth');
                     const num = tryPercent(v);
-                    const fb = revenueGrowthFallback();
-                    const res = num != null ? num : fb;
-                    return res != null ? `${res.toFixed(1)}%` : 'N/A';
+                    return num != null ? `${num.toFixed(1)}%` : 'N/A';
                 })() },
                 { label: 'EPS Growth', value: (() => {
-                    const v = getRatio('epsGrowth');
+                    const v = window.Aliases?.computeEpsGrowth ? window.Aliases.computeEpsGrowth(state.currentStockData?.API_Financials) : getRatio('epsGrowth');
                     const num = tryPercent(v);
-                    const fb = epsGrowthFallback();
-                    const res = num != null ? num : fb;
-                    return res != null ? `${res.toFixed(1)}%` : 'N/A';
+                    return num != null ? `${num.toFixed(1)}%` : 'N/A';
                 })() },
                 { label: 'Altman Z-Score', value: healthScores.altmanZScore || 'N/A' },
                 { label: 'Piotroski F-Score', value: healthScores.piotroskiFScore || 'N/A' }
@@ -1681,7 +1686,7 @@ function populateFinancialMetrics() {
             category: 'Financial Health',
             items: [
                 { label: 'Current Ratio', value: ratios.currentRatio ? parseFloat(ratios.currentRatio).toFixed(2) : 'N/A' },
-                { label: 'Debt/Equity', value: (() => { const v = (window.Aliases && window.Aliases.getAliasedRatio) ? window.Aliases.getAliasedRatio(ttm, 'debtEquity') : getRatio('debtEquityRatio','debtToEquityRatio','debtToEquity'); return v ? parseFloat(String(v).replace(/,/g,'')).toFixed(2) : 'N/A'; })() },
+                { label: 'Debt/Equity', value: (() => { const v = window.Aliases?.getAliasedRatio ? window.Aliases.getAliasedRatio(ttm, 'debtEquity') : getRatio('debtEquityRatio','debtToEquityRatio','debtToEquity'); const num = v != null ? parseFloat(String(v).replace(/,/g,'')) : NaN; return isNaN(num) ? 'N/A' : num.toFixed(2); })() },
                 { label: 'ROE', value: ratios.returnOnEquity ? `${parseFloat(ratios.returnOnEquity).toFixed(1)}%` : 'N/A' },
                 { label: 'ROA', value: ratios.returnOnAssets ? `${parseFloat(ratios.returnOnAssets).toFixed(1)}%` : 'N/A' }
             ]
@@ -2256,9 +2261,11 @@ function populateDetailedFinancials(viewType = 'income') {
 // ============================================
 
 let currentChartMetric = 'revenue';
+window.currentChartMetric = currentChartMetric;
 
 function createEarningsChart(metricType = 'revenue') {
     currentChartMetric = metricType;
+    window.currentChartMetric = currentChartMetric;
     const canvas = document.getElementById('earnings-chart');
     if (!canvas || !state.currentStockData) return;
 
@@ -2328,7 +2335,8 @@ function createEarningsChart(metricType = 'revenue') {
 
     // Responsive sizing (mobile-friendly)
     const isMobile = window.innerWidth < 768;
-    const cssWidth = (canvas.clientWidth || canvas.offsetWidth || 800);
+    const container = canvas.parentElement;
+    const cssWidth = (container && container.clientWidth) || canvas.clientWidth || canvas.offsetWidth || 800;
     const cssHeight = isMobile ? Math.max(260, Math.round(cssWidth * 0.7)) : (canvas.clientHeight || 360);
     // Improve sharpness on high-DPI
     const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -2521,13 +2529,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const main = document.querySelector('.main-content');
                 if (isDesktop) {
                     const collapsed = newSidebar.classList.toggle('collapsed');
-                    if (main) main.style.marginLeft = collapsed ? '80px' : '240px';
+                    if (main) main.style.marginLeft = collapsed ? '80px' : '256px';
                     closeBtn.textContent = collapsed ? '>' : '<';
                     document.body.classList.toggle('sidebar-expanded', !collapsed);
                 } else {
                     newSidebar.classList.remove('active');
                     if (sidebarOverlay) sidebarOverlay.classList.remove('active');
                     document.body.style.overflow = '';
+                    document.body.classList.remove('sidebar-drawer-open');
                 }
             });
             // Initialize body class based on current state (desktop)
@@ -2583,6 +2592,7 @@ function setupEventListeners() {
             sidebar.classList.remove('active');
             sidebarOverlay.classList.remove('active');
             document.body.style.overflow = '';
+            document.body.classList.remove('sidebar-drawer-open');
         });
     }
     
@@ -2623,32 +2633,10 @@ function setupEventListeners() {
             }
         }
     });
-    // React to theme changes (from header, sidebar, or anywhere)
-    window.addEventListener('themeChanged', () => {
-        if (state.currentStockData) {
-            createEarningsChart(currentChartMetric);
-            const qualityScore = state.currentStockData?.Portfolio?.Quality_Score || 0;
-            const idqScore = state.currentStockData?.LLM_Reports?.IDQ_Report?.totalIDQScore || 0;
-            const antiFragileScore = state.currentStockData?.Anti_Fragile_Score?.totalScore || 0;
-            const companyTier = calculateCompanyTier(qualityScore, idqScore, antiFragileScore);
-            drawScoreBreakdownChart(qualityScore, idqScore, antiFragileScore, companyTier);
+    // Theme/resize handling moved to controllers/company.js for centralization
 
-            // Ensure main score numerals adopt current theme text color
-            const cs = getComputedStyle(document.body);
-            const textPrimary = (cs.getPropertyValue('--color-text-primary') || '#E6EDF3').trim();
-            const qEl = document.getElementById('quality-score-value');
-            if (qEl) qEl.style.color = textPrimary;
-            const idqEl = document.getElementById('idq-score-value');
-            if (idqEl) idqEl.setAttribute('fill', textPrimary);
-            const afEl = document.getElementById('antifragile-score-value');
-            if (afEl) { afEl.setAttribute('fill', textPrimary); afEl.style.color = textPrimary; }
-        }
-    });
-
-    // Redraw performance chart on resize for responsiveness
-    window.addEventListener('resize', () => {
-        if (state.currentStockData) createEarningsChart(currentChartMetric);
-    });
+    // Initialize compact hero bar (shows when main hero scrolls away)
+    tryInitCompactHeroBar();
     
     // Mobile bottom navigation functionality
     const homeBtn = document.getElementById('mobile-nav-home');
@@ -2687,6 +2675,7 @@ function setupEventListeners() {
             sidebar.classList.add('active');
             sidebarOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
+            document.body.classList.add('sidebar-drawer-open');
         });
     }
 
@@ -2726,6 +2715,145 @@ function setupEventListeners() {
     });
     
     // Search: handled centrally in setupSearchBar() to avoid duplicate handlers
+}
+
+// ==============================
+// Compact Hero Bar (Sticky)
+// ==============================
+function tryInitCompactHeroBar(attempts = 0) {
+    const maxAttempts = 20;
+    const bar = document.getElementById('compact-hero');
+    const hero = document.querySelector('.hero-header');
+    if (!bar || !hero || !state.currentStockData) {
+        if (attempts < maxAttempts) return setTimeout(() => tryInitCompactHeroBar(attempts + 1), 200);
+        return;
+    }
+    initCompactHeroBar();
+}
+
+function initCompactHeroBar() {
+    const bar = document.getElementById('compact-hero');
+    if (!bar) return;
+    // Populate initial values
+    updateCompactHeroBar();
+    // Mirror price changes from main header price element if available
+    try {
+        const priceEl = document.getElementById('stock-price');
+        if (priceEl) {
+            const mo = new MutationObserver(() => mirrorPriceToCompactBar());
+            mo.observe(priceEl, { childList: true, characterData: true, subtree: true });
+            mirrorPriceToCompactBar();
+        }
+    } catch(_) {}
+    // Theme changes may affect token-based colors; refresh bar coloring
+    window.addEventListener('themeChanged', () => { updateCompactHeroBar(true); });
+    // Show/hide with hero intersection
+    const heroEl = document.querySelector('.hero-header');
+    let chVisible = false;
+    const SHOW_THRESHOLD = 0.15; // show when < 15% visible
+    const HIDE_THRESHOLD = 0.45; // hide when > 45% visible
+    const io = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        const ratio = entry.intersectionRatio;
+        // Hysteresis to avoid flip-flop around the boundary
+        if (!chVisible && ratio <= SHOW_THRESHOLD) {
+            chVisible = true;
+            bar.hidden = false;
+            bar.style.display = 'block';
+            requestAnimationFrame(() => bar.classList.add('is-visible'));
+        } else if (chVisible && ratio >= HIDE_THRESHOLD) {
+            chVisible = false;
+            bar.classList.remove('is-visible');
+            bar.hidden = true;
+            bar.style.display = 'none';
+        }
+    }, { root: null, threshold: [0, 0.1, 0.15, 0.2, 0.3, 0.45, 0.5, 1] });
+    if (heroEl) io.observe(heroEl);
+}
+
+function mirrorPriceToCompactBar() {
+    const priceEl = document.getElementById('stock-price');
+    const priceText = priceEl ? priceEl.textContent.trim() : '';
+    const price = document.getElementById('ch-price');
+    if (price && priceText) price.textContent = priceText;
+}
+
+function updateCompactHeroBar(force = false) {
+    const d = state.currentStockData || {};
+    const p = d.Portfolio || {};
+    const gen = (d.API_Financials && d.API_Financials.General) || {};
+    const llm = (d.LLM_Reports && d.LLM_Reports.IDQ_Report) || {};
+    const af = d.Anti_Fragile_Score || {};
+    const ticker = (p.ticker || p.Ticker || '').toUpperCase();
+    const companyName = p.companyName || gen.companyName || p.Company_Name || '';
+    const quality = parseFloat(p.qualityScore || p.Quality_Score) || 0;
+    const idq = parseFloat(llm.idqScore || llm.totalIDQScore) || 0;
+    const afScore = parseFloat(af.totalScore) || 0;
+    const currency = (gen.currency || 'USD').toUpperCase();
+    const overall = computeOverallScore(quality, idq, afScore); // 0..100
+
+    // Populate DOM
+    const logoEl = document.getElementById('ch-logo');
+    const heroLogo = document.getElementById('company-logo');
+    if (logoEl) {
+        if (heroLogo && heroLogo.src) { logoEl.src = heroLogo.src; logoEl.style.display = 'block'; }
+        else { logoEl.style.display = 'none'; }
+    }
+    const tkrEl = document.getElementById('ch-ticker'); if (tkrEl) tkrEl.textContent = ticker || '—';
+    const nameEl = document.getElementById('ch-name'); if (nameEl) nameEl.textContent = companyName || '';
+    const prEl = document.getElementById('ch-price'); if (prEl) prEl.textContent = document.getElementById('stock-price')?.textContent?.trim() || '$0.00';
+    const curEl = document.getElementById('ch-currency'); if (curEl) curEl.textContent = currency;
+    const ovEl = document.getElementById('ch-overall'); if (ovEl) ovEl.textContent = overall.toFixed(1);
+    const tierName = overallTierName(overall);
+    const tierEl = document.getElementById('ch-tier-label'); if (tierEl) tierEl.textContent = tierName;
+    // Tier dot color based on overall percent mapping
+    const tierColor = colorForPercent(overall);
+    const dot = document.querySelector('#ch-tier .tier-dot');
+    if (dot) dot.style.background = tierColor;
+    const badge = document.getElementById('ch-tier');
+    if (badge) badge.style.setProperty('--tier-color', tierColor);
+    // Tooltip + accessible label for tier badge
+    if (badge) {
+        const range = overallTierRangeText(overall);
+        const tt = `Overall tier: ${tierName} (${range})\nOverall = 40% Quality + 35% IDQ + 25% AF`;
+        badge.setAttribute('data-tooltip', tt);
+        badge.setAttribute('aria-label', `Overall tier ${tierName}, ${range}. Overall equals forty percent Quality, thirty-five percent IDQ, and twenty-five percent Anti-Fragile.`);
+    }
+}
+
+function computeOverallScore(quality, idq, af) {
+    const qPct = Math.max(0, Math.min(100, (Number(quality)||0)/109*100));
+    const iPct = Math.max(0, Math.min(100, ((Number(idq)||0)+3)/15*100));
+    const aPct = Math.max(0, Math.min(100, ((Number(af)||0)+7)/24*100));
+    return (qPct*0.4) + (iPct*0.35) + (aPct*0.25);
+}
+
+function colorForPercent(pct) {
+    if (pct >= 80) return 'var(--color-score-purple)';
+    if (pct >= 74) return 'var(--color-score-blue)';
+    if (pct >= 65) return 'var(--color-score-green)';
+    if (pct >= 55) return 'var(--color-score-yellow)';
+    if (pct >= 32) return 'var(--color-score-orange)';
+    return 'var(--color-score-red)';
+}
+
+function overallTierName(score) {
+    if (score >= 85) return 'Apex Performer';
+    if (score >= 78) return 'Industry Powerhouse';
+    if (score >= 65) return 'Quality Compounder';
+    if (score >= 55) return 'Mixed Signals';
+    if (score >= 32) return 'Positionally Challenged';
+    return 'High Risk';
+}
+
+function overallTierRangeText(score) {
+    if (score >= 85) return '≥85';
+    if (score >= 78) return '78–84.9';
+    if (score >= 65) return '65–77.9';
+    if (score >= 55) return '55–64.9';
+    if (score >= 32) return '32–54.9';
+    return '<32';
 }
 
 // Lightweight toast helper (neutral)

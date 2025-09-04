@@ -121,6 +121,7 @@ body {
     transform: translateX(-100%);
     transition: transform var(--transition-base);
     overflow-y: auto;
+    overflow-x: hidden; /* prevent horizontal scroll bar */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -173,13 +174,13 @@ body {
     
     .navigation-sidebar {
         position: fixed;
-        width: 240px;
+        width: 256px; /* widened to accommodate close handle comfortably */
         transform: translateX(0);
         transition: none;
     }
     
     .main-content {
-        margin-left: 240px;
+        margin-left: 256px; /* match widened sidebar */
         padding-bottom: 0;
     }
     
@@ -218,6 +219,101 @@ body {
     border: 1px solid var(--color-border-primary);
     z-index: 1501; /* ensure results appear above header */
 }
+
+/* ============================================
+   COMPACT HERO (COMPANY) - STICKY SUMMARY BAR
+   Appears below universal header when hero scrolls away
+   ============================================ */
+.compact-hero {
+    position: sticky;
+    top: 45px; /* below universal header */
+    z-index: 350; /* below overlay (z ~399) */
+    background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+    border-bottom: 1px solid var(--color-border-primary);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    display: none; /* revealed by JS by removing [hidden] and setting display:block */
+}
+.compact-hero[hidden] { display: none !important; }
+.compact-hero .compact-hero-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 8px 16px;
+    color: var(--color-text-primary);
+}
+.compact-hero .ch-left { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.compact-hero .ch-logo { width: 24px; height: 24px; border-radius: 6px; object-fit: contain; background: #fff; padding: 2px; }
+.compact-hero .ch-ticker { font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
+.compact-hero .ch-name { color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
+.compact-hero .ch-name::before { content: '•'; margin: 0 6px; opacity: .6; }
+.compact-hero .ch-right { display: inline-flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+.compact-hero .ch-price { font-weight: 600; color: var(--color-text-primary); }
+.compact-hero .ch-currency { color: var(--color-text-secondary); font-size: 12px; margin-left: 2px; }
+.compact-hero .ch-sep { color: var(--color-text-secondary); }
+.compact-hero .ch-overall { font-weight: 700; }
+.compact-hero .ch-tier-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--color-border-primary); background: var(--glass-bg, transparent); }
+.compact-hero .ch-tier-badge .tier-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-score-purple); box-shadow: 0 0 8px var(--glow-purple); }
+/* Micro-interaction for tier badge */
+.compact-hero .ch-tier-badge:hover,
+.compact-hero .ch-tier-badge:focus-visible {
+  border-color: var(--tier-color, var(--color-border-primary));
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--tier-color, var(--color-score-purple)) 35%, transparent);
+}
+
+/* Mobile layout: stack into two neat rows */
+@media (max-width: 768px) {
+  .compact-hero .compact-hero-content { flex-direction: column; align-items: stretch; gap: 6px; padding: 8px 12px; }
+  .compact-hero .ch-left { justify-content: flex-start; gap: 8px; }
+  .compact-hero .ch-right { justify-content: space-between; gap: 8px; }
+  .compact-hero .ch-logo { width: 20px; height: 20px; }
+  .compact-hero .ch-currency { display: none; }
+  .compact-hero .ch-name { max-width: 65vw; font-size: 13px; }
+}
+
+/* Mobile: allow the Performance Trends chart to bleed horizontally a bit for better use of space */
+@media (max-width: 768px) {
+  #performance-trends .chart-container {
+    margin-left: -12px;
+    margin-right: -12px;
+    width: calc(100% + 24px);
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  #performance-trends .chart-container canvas { width: 100% !important; }
+}
+
+/* Desktop density tuning */
+@media (min-width: 1024px) {
+  .compact-hero .compact-hero-content { min-height: 52px; }
+}
+
+/* Alignment with sidebar states */
+@media (min-width: 1024px) {
+  /* default expanded */
+  .compact-hero { margin-left: 256px; }
+  body:not(.sidebar-expanded) .compact-hero { margin-left: 80px; }
+}
+
+@media (max-width: 767px) {
+  body.sidebar-drawer-open .compact-hero { margin-left: 86vw; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  body.sidebar-drawer-open .compact-hero { margin-left: 280px; }
+}
+
+/* Light theme polish: reduce shadow and ensure surface contrast */
+body.light-theme .compact-hero {
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border-primary);
+  box-shadow: none;
+  color: var(--color-text-primary);
+}
+
+/* Subtle entrance animation */
+.compact-hero { opacity: 0; transform: translateY(-6px); transition: opacity 200ms var(--transition-fast), transform 220ms var(--transition-fast); }
+.compact-hero.is-visible { opacity: 1; transform: translateY(0); }
 
 /* Light theme search input fixes */
 .light-theme .sidebar-input {

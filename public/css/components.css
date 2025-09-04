@@ -6,7 +6,7 @@
 .sidebar-close-btn {
   position: absolute;
   top: 50%;
-  right: 6px;
+  right: 10px;
   transform: translateY(-50%);
   width: 36px;
   height: 36px;
@@ -23,6 +23,17 @@
 }
 
 .sidebar-close-btn:hover { background: var(--glass-bg-hover); }
+
+/* Keyboard focus visibility for interactive elements */
+.nav-link:focus-visible,
+.header-button:focus-visible,
+.user-avatar:focus-visible,
+.mobile-nav-item:focus-visible,
+.sidebar-close-btn:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
 
 /* Bottom nav active state helper */
 .mobile-nav-item.active {
@@ -83,10 +94,16 @@
 /* Close handle hover */
 .sidebar-close-btn:hover { background: var(--glass-bg-hover); }
 
-/* Desktop collapsed state (icon-only) */
+/* Desktop behavior */
 @media (min-width: 1024px) {
   #universal-sidebar-container.collapsed {
     width: 80px !important;
+  }
+  /* Place close handle mid-edge OUTSIDE the sidebar using fixed positioning */
+  #universal-sidebar-container .sidebar-close-btn {
+    position: absolute;
+    right: 10px;
+    left: auto;
   }
   /* Hide bulky filters in collapsed state; show a mini button instead */
   #universal-sidebar-container.collapsed #sidebar-top .sidebar-search-container,
@@ -118,6 +135,16 @@
   #universal-sidebar-container.collapsed #universal-sidebar-theme-toggle .sidebar-theme-text {
     display: none;
   }
+}
+
+/* Mobile: center handle at right edge using viewport width-based sidebar */
+@media (max-width: 767px) {
+  #universal-sidebar-container.active .sidebar-close-btn { position: absolute; right: 10px; left: auto; }
+}
+
+/* Tablet: center handle at right edge using fixed 280px sidebar */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #universal-sidebar-container.active .sidebar-close-btn { position: absolute; right: 10px; left: auto; }
 }
 
 /* Sidebar theme toggle icon swapping (mirror header behavior) */

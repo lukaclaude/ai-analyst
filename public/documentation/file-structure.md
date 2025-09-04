@@ -8,6 +8,7 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `readme-index.md`: Index page notes (to be merged into README/docs).
 - `index.html`: Explore companies (list/grid/table). Loads universals, services, and `js/index-page.js`.
 - `company-card-fixed.html`: Detailed company analysis page. Loads universals, views, and company controller script.
+  - Includes `#compact-hero`: a sticky, compact company summary bar (logo, ticker, price, overall/tier) that appears below the header when the main hero scrolls out. Behavior wired in JS.
 - `assets/`: Favicons and static assets.
 - `components/`: HTML partials for universal header and sidebar.
 - `css/`: Theme tokens (shared), component primitives, and page-specific styles.
@@ -24,11 +25,12 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `components.css`: Shared component styles (header/sidebar/bottom-nav/minimal primitives).
 - `index.css`: Index page scoped styles (grid/list/table, filters, sort chips, sparklines).
 - `company-card-fixed.css`: Company page scoped styles (hero, score cards, analysis, tables).
+  - Styles for `#compact-hero` sticky bar (layout, theme, responsive behavior).
 
 ## js/services/
 - `ThemeService.js`: Theme source of truth (light/dark). Applies body class, persists to localStorage, emits `themeChanged`.
 - `DataService.js`: Firestore init, search index builder, recent companies (localStorage + pub/sub).
-- [Planned] `NavigationService.js`: Navigation entry points (goToCompany/goHome/open). Replaces per-page routing.
+- `NavigationService.js`: Navigation entry points (goToCompany/goHome/open). Replaces per-page routing progressively.
 
 ## js/lib/
 - `aliases.js`: Central alias lookups for key ratios and computed helpers (TTM & YoY).
@@ -52,8 +54,8 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `antifragile-shield.js`: Anti-Fragile visualization module; exposes update/handleResize.
 
 ## Page Controllers (planned)
-- `js/controllers/company.js` (planned): Centralizes company page lifecycle (theme/resize/orientation), orchestrates views and visualizations.
-- `js/controllers/index.js` (planned): Manages filters, sorting, pagination, and view rendering; wires NavigationService and DataService.
+- `js/controllers/company.js`: Centralizes company page lifecycle (theme/resize/orientation); coordinates compact hero refresh.
+- `js/controllers/index.js`: Future hooks for theme/lifecycle on index; keeps entry points slim.
 
 ## assets/favicons/
 - Web app manifest, pinned tab, icons set for platforms. Ensure `site.webmanifest` uses Finalysis name/short_name and desired theme/background.
@@ -67,7 +69,24 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - Theme: Components and canvases should listen to `themeChanged` and re-read CSS tokens from `document.body`.
 - Context: Universals must rely on `body[data-page-context]` (e.g., `index`, `company-card`).
 - Navigation: All routes (header search results, sidebar recents, list/grid/table rows) should go through NavigationService (planned).
+  - Implemented for header search and sidebar recents; anchor links in index grid intentionally link to the company page.
+
+## Index Page Structure (key classes)
+- Grid cards rendered by `js/index-page.js`:
+  - `.card-header` → left: logo, right: `.card-header-text`
+    - `.card-name` (top full row; truncated)
+    - `.card-tkr` (second row aligned to logo)
+  - `.tier-row` → overall score + colored tier label (above bottom rows)
+  - `.mini-stats` → Q/IDQ/AF compact stats
+  - `.mini-bars` → slim progress bars for Q/IDQ/AF
+  - `.fav-btn` → pinned top-right; SVG star; aria-pressed and data-tooltip
+
+## Company Page Structure (compact hero)
+- `#compact-hero` (sticky summary under universal header):
+  - `.ch-left` → logo • `#ch-ticker` • `#ch-name`
+  - `.ch-right` → `#ch-price` `#ch-currency` • `#ch-overall` • `#ch-tier`
+  - Appears when main `.hero-header` scrolls out (IntersectionObserver)
+  - Shifts with sidebar/drawer states via `body.sidebar-expanded` and `body.sidebar-drawer-open`
 
 ## Update Log
 - 2025-09-03 — Initial skeleton created; to be expanded during restructuring.
-

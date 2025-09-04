@@ -49,7 +49,7 @@
             </button>
             
             <!-- Theme Toggle -->
-            <button class="header-button icon-only" id="universal-theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+            <button class="header-button icon-only" id="universal-theme-toggle" aria-label="Toggle theme" data-tooltip="Toggle theme">
                 <svg class="sun-icon" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/>
                 </svg>
@@ -257,9 +257,12 @@
     border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
     background: linear-gradient(135deg, var(--glass-gradient-start, rgba(255,255,255,0.08)) 0%, var(--glass-gradient-end, rgba(255,255,255,0.02)) 100%);
     backdrop-filter: var(--glass-blur, blur(10px)) var(--glass-saturate, saturate(160%));
+    max-width: 220px;
+    overflow: hidden;
 }
+.company-chip { display: none !important; }
 .company-chip img { width: 18px; height: 18px; border-radius: 4px; background: transparent; object-fit: contain; }
-.company-chip .chip-texts { display: flex; flex-direction: column; line-height: 1; }
+.company-chip .chip-texts { display: flex; flex-direction: column; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .company-chip .chip-line1 { display: flex; align-items: center; gap: 6px; }
 .company-chip .chip-line2 { font-size: 11px; opacity: 0.9; }
 .company-chip #uh-chip-ticker { font-weight: 700; font-size: 12px; letter-spacing: 0.2px; }
@@ -267,14 +270,25 @@
 .company-chip #uh-chip-price { font-weight: 600; }
 .company-chip #uh-chip-currency { margin-left: 4px; opacity: 0.8; font-size: 11px; }
 
+/* Mobile: compact chip visible; optimized for space */
 @media (max-width: 768px) {
-  .company-chip { display: none; }
+  .company-chip {
+    display: inline-flex;
+    padding: 4px 8px;
+    gap: 6px;
+    margin-left: 8px;
+  }
+  .company-chip img { width: 14px; height: 14px; }
+  .company-chip .chip-line2 { display: none; }
+  .company-chip #uh-chip-ticker { font-size: 12px; }
+  .company-chip #uh-chip-score { font-size: 11px; }
 }
 
 /* Align chip after expanded sidebar on company pages (desktop) */
 @media (min-width: 1024px) {
   body[data-page-context="company-card"].sidebar-expanded .company-chip { margin-left: 240px; }
 }
+
 
 .header-button.icon-only {
     padding: 8px;
@@ -357,17 +371,12 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-    .global-search-container {
-        display: none;
-    }
-    
-    .header-button span {
-        display: none;
-    }
-    
-    .logo-text {
-        display: none;
-    }
+    .global-search-container { display: none; }
+    .header-button span { display: none; }
+    /* Show brand text next to logo on mobile for continuity */
+    .logo-text { display: inline; font-size: 14px; }
+    /* Remove Watchlist icon in mobile header (present in bottom nav) */
+    #watchlist-button { display: none; }
 }
 
 /* Mobile: on-demand search reveal via body class */
@@ -391,5 +400,19 @@
     body.show-mobile-search .global-search::placeholder {
         color: var(--color-text-muted);
     }
+}
+
+/* Desktop: anchor search to fixed content edge (universal across pages) */
+@media (min-width: 1024px) {
+  .universal-header-content { position: relative; }
+  /* Reserve space so left content (logo + optional chip) does not overlap search */
+  .header-left { padding-right: 380px; }
+  .global-search-container {
+    position: absolute;
+    left: 256px; /* fixed alignment with content edge; independent of sidebar toggle */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
 }
 </style>

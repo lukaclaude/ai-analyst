@@ -234,35 +234,37 @@
       const iPct = Math.round(((x.idq+3)/15)*100);
       const aPct = Math.round(((x.af+7)/24)*100);
       const fav = state.favorites.has(x.ticker);
+      const tierColor = colorForPercent(x.overall);
+      const tlabel = tierName(x.overall);
       return `
         <div class="preview-card block text-inherit no-underline" data-ticker="${x.ticker}">
-          <button class="fav-btn" data-ticker="${x.ticker}" aria-label="Toggle favorite" title="Toggle favorite" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:${fav?'#f5c518':'var(--color-text-secondary)'};cursor:pointer;z-index:2;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
+          <button class="fav-btn" data-ticker="${x.ticker}" aria-label="Toggle favorite" aria-pressed="${fav ? 'true' : 'false'}" data-tooltip="Toggle favorite" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:${fav?'#f5c518':'var(--color-text-secondary)'};cursor:pointer;z-index:3;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
           </button>
-          <div class="chart-container"><canvas id="chart-${x.ticker}"></canvas></div>
-          <a class="flex items-center gap-3 mb-2" href="/company-card-fixed.html?ticker=${encodeURIComponent(x.ticker)}">
+          <div class="chart-container" style="z-index:0;"><canvas id="chart-${x.ticker}"></canvas></div>
+          <a class="card-header" href="/company-card-fixed.html?ticker=${encodeURIComponent(x.ticker)}">
             ${logoTag(x)}
-            <div class="min-w-0">
-              <div class="truncate" style="font-weight:600;">${x.ticker} • ${x.name}</div>
-              <div class="mini-meta">${priceStr || ''}</div>
+            <div class="card-header-text">
+              <div class="card-name" data-tooltip="${x.name}">${x.name}</div>
+              <div class="card-tkr">${x.ticker}</div>
             </div>
-            <div class="ml-auto company-chip-mini"><span>${overallStr}</span></div>
           </a>
-          <div class="grid grid-cols-3 gap-2 text-xs mt-2">
-            <div class="mini-meta"><span style="font-weight:600;">Q</span>: ${x.quality ?? 'N/A'}<span class="opacity-60">/109</span></div>
-            <div class="mini-meta"><span style="font-weight:600;">IDQ</span>: ${x.idq ?? 'N/A'}<span class="opacity-60">/12</span></div>
-            <div class="mini-meta"><span style="font-weight:600;">AF</span>: ${x.af ?? 'N/A'}<span class="opacity-60">/17</span></div>
+          <div class="tier-row" data-tooltip="Overall ${x.overall.toFixed(1)} • ${tlabel}">
+            <div class="overall-score">${x.overall.toFixed(1)}</div>
+            <div class="tier-label" style="color:${tierColor}">${tlabel}</div>
           </div>
-          <div class="grid grid-cols-3 gap-2 mt-3">
-            <div style="height:6px;border-radius:9999px;background:var(--color-bg-tertiary);overflow:hidden;">
-              <div style="height:100%;width:${qPct}%;background:var(--color-score-purple);"></div>
-            </div>
-            <div style="height:6px;border-radius:9999px;background:var(--color-bg-tertiary);overflow:hidden;">
-              <div style="height:100%;width:${iPct}%;background:var(--color-score-blue);"></div>
-            </div>
-            <div style="height:6px;border-radius:9999px;background:var(--color-bg-tertiary);overflow:hidden;">
-              <div style="height:100%;width:${aPct}%;background:var(--color-score-green);"></div>
-            </div>
+          <div class="card-meta">
+            <div class="mini-meta">${priceStr || ''}</div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-[11px] mt-2 mini-stats">
+            <div class="mini-meta"><strong>Q</strong> ${x.quality ?? 'N/A'}<span class="opacity-60">/109</span></div>
+            <div class="mini-meta"><strong>IDQ</strong> ${x.idq ?? 'N/A'}<span class="opacity-60">/12</span></div>
+            <div class="mini-meta"><strong>AF</strong> ${x.af ?? 'N/A'}<span class="opacity-60">/17</span></div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-2 mini-bars">
+            <div class="bar-bg"><div class="bar-fill" style="width:${qPct}%;background:var(--color-score-purple);"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${iPct}%;background:var(--color-score-blue);"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${aPct}%;background:var(--color-score-green);"></div></div>
           </div>
         </div>`;
     }).join('')}</div>`;
@@ -327,7 +329,7 @@
               <div class="mini-meta">${priceStr}</div>
               <div class="mini-meta">${mcapStr}</div>
               <div class="mini-meta">Updated: ${updated}</div>
-              <button class="fav-btn" data-ticker="${x.ticker}" aria-label="Toggle favorite" title="Toggle favorite" style="background:transparent;border:none;color:${fav?'#f5c518':'var(--color-text-secondary)'};cursor:pointer;">
+              <button class="fav-btn" data-ticker="${x.ticker}" aria-label="Toggle favorite" aria-pressed="${fav ? 'true' : 'false'}" data-tooltip="Toggle favorite" style="background:transparent;border:none;color:${fav?'#f5c518':'var(--color-text-secondary)'};cursor:pointer;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>
               </button>
             </div>
@@ -451,6 +453,8 @@
         saveFavorites();
         // Toggle color
         btn.style.color = state.favorites.has(t) ? '#f5c518' : getComputedStyle(document.body).getPropertyValue('--color-text-secondary');
+        // Reflect accessibility state
+        btn.setAttribute('aria-pressed', state.favorites.has(t) ? 'true' : 'false');
       });
     });
   }
@@ -723,6 +727,7 @@
         const isActive = b.getAttribute('data-sort') === current;
         b.classList.toggle('active', isActive);
         b.textContent = isActive ? base + (state.sort.dir === 'asc' ? ' ↑' : ' ↓') : base;
+        b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
     };
     reflect();

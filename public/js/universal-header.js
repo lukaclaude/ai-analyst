@@ -86,6 +86,23 @@ class UniversalHeader {
             const av = e.target && e.target.closest && e.target.closest('#user-menu-button');
             if (av) { e.preventDefault(); this.toggleUserMenu(); }
         }, true);
+
+        // Intercept header search result clicks globally and use NavigationService
+        document.addEventListener('click', (e) => {
+            const link = e.target && e.target.closest && e.target.closest('a.search-result-item--header');
+            if (!link) return;
+            try {
+                e.preventDefault();
+                const url = new URL(link.getAttribute('href'), window.location.href);
+                const t = url.searchParams.get('ticker');
+                if (!t) return;
+                if (window.NavigationService && typeof window.NavigationService.goToCompany === 'function') {
+                    window.NavigationService.goToCompany(t);
+                } else {
+                    window.location.href = `/company-card-fixed.html?ticker=${encodeURIComponent(t)}`;
+                }
+            } catch (_) {}
+        }, true);
         
         // Scroll effect + theme changes
         window.addEventListener('scroll', () => this.handleScroll());
@@ -236,8 +253,7 @@ class UniversalHeader {
         const chip = document.getElementById('uh-company-chip');
         if (!chip) return;
         const ctxAttr = document.body && document.body.getAttribute && document.body.getAttribute('data-page-context');
-        const p = window.location.pathname || '';
-        const isCompanyPage = (ctxAttr === 'company-card') || p.includes('company');
+        const isCompanyPage = (ctxAttr === 'company-card');
         const hero = document.querySelector('.hero-header');
         // Strictly disable/remove chip on non-company pages (e.g., index)
         if (!isCompanyPage || !hero) {
@@ -275,25 +291,31 @@ class UniversalHeader {
 
     // Expose a robust search focus helper for mobile/desktop
     static focusHeaderSearch() {
-        function tryFocus() {
+        function tryFocus(immediate = false) {
             const input = document.getElementById('global-search');
             if (!input) return false;
             if (window.innerWidth <= 768) {
                 document.body.classList.add('show-mobile-search');
+                // Ensure any sidebar drawer is closed so search is tappable
+                document.body.classList.remove('sidebar-drawer-open');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-            setTimeout(() => {
-                try { input.focus({ preventScroll: true }); } catch(_) { input.focus(); }
-                try { const len = input.value.length; input.setSelectionRange(len, len); } catch(_) {}
-            }, 50);
+            // Attempt immediate focus first (helps Chrome mobile)
+            try { input.focus({ preventScroll: true }); } catch(_) { try { input.focus(); } catch(_) {} }
+            if (!immediate) {
+                setTimeout(() => {
+                    try { input.focus({ preventScroll: true }); } catch(_) { try { input.focus(); } catch(_) {} }
+                    try { const len = input.value.length; input.setSelectionRange(len, len); } catch(_) {}
+                }, 50);
+            }
             return true;
         }
-        if (tryFocus()) return true;
+        if (tryFocus(true)) return true;
         // Retry a few times if header is still loading
         let attempts = 0;
         const t = setInterval(() => {
             attempts++;
-            if (tryFocus() || attempts > 10) clearInterval(t);
+            if (tryFocus() || attempts > 12) clearInterval(t);
         }, 80);
         return true;
     }
