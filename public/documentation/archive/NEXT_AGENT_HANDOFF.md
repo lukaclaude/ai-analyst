@@ -2,6 +2,7 @@
 > This file has been consolidated into README.md (Project Guide).
 > For the latest status, next steps, and handoff, see README.md.
 > The long‑term product spec remains in public/blueprint.md.
+> Archived: 2025-09-05 — retained for historical reference.
 
 # 🚨 NEXT AGENT HANDOFF - CRITICAL FIXES NEEDED
 ### Updated: August 30, 2025 (Session 5)

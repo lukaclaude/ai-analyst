@@ -11,6 +11,8 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
 - Universal Header (components/universal-header.html + js/universal-header.js)
   - Desktop: anchored search; Mobile: programmatic focus for Chrome/Safari.
   - Tooltip policy: use `data-tooltip`; never native `title`.
+  - Search results: tiny favicon logo at left (fallback chain: Clearbit → Google S2 → DuckDuckGo) with letter fallback; works on mobile/desktop.
+  - Alignment: brand/logo remain pinned to left on ultra-wide screens; search position is stable and not sidebar-coupled.
 - Compact Hero (company only)
   - Sticky summary below header (logo/ticker/name/price/overall/tier). Hysteresis prevents flicker.
 - Universal Sidebar (js/universal-sidebar.js)
@@ -21,8 +23,8 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
   - Small legal banner (localStorage); Disclaimer and Privacy links.
 - Services
   - ThemeService (js/services/ThemeService.js): theme state + `themeChanged` event.
-  - DataService (js/services/DataService.js): unified overall score for search; search cache V2.
-  - NavigationService (js/services/NavigationService.js): goToCompany/goHome.
+  - DataService (js/services/DataService.js): unified overall score for search; search cache V2; search index includes `websiteHost` for logos.
+  - NavigationService (js/services/NavigationService.js): goToCompany/goHome/open; `handleHeaderSearchResult(e)` centralizes header result navigation and updates recents.
 - Controllers
   - Company (js/controllers/company.js): centralizes theme/resize/orientation redraws; refreshes compact hero; redraws charts/score breakdown.
   - Index (js/controllers/index.js): placeholder for future lifecycle.
@@ -55,11 +57,17 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
    - Final aria-pressed/state checks; verify focus order/visibility with sticky + drawer interactions.
 6) Analytics/cookies (if enabled later)
    - If adding analytics, introduce a consent banner (opt‑in) and document the cookie policy.
+7) Company modularization & payload (next phase)
+   - Move remaining logic from `js/company-card-complete-fix.js` into `js/views/*` with a thin company bootstrap.
+   - Lazy-load heavy blocks (charts, historical tables) on first interaction/visibility; provide loaders and ensure theme/resize hooks.
+   - Extract shared CSS primitives to `css/components.css`; prune duplicates in `css/company-card-fixed.css`.
 
 ## Where to Start (Agent)
 - Read README.md (architecture fundamentals, contracts) and docs:
   - documentation/docs/universal-components.md (contracts)
   - documentation/docs/index.md (index structure)
+  - documentation/docs/company.md (company page structure & lifecycle)
+  - documentation/file-structure.md (structural library & planned changes)
 - Pick up TODOs in documentation/TODO-RESTRUCTURE.md and the list above.
 - Keep to:
   - No native `title`; use `data-tooltip`.
@@ -71,5 +79,5 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
 - Mobile: bottom Search focuses header input (Chrome/Safari); chart width; compact hero transition.
 - Desktop: sidebar expand/collapse → footer/header alignment correct.
 - Company metrics: ratios/growth formatted consistently; Working Capital currency/units.
-- Header search results: score matches overall; colored tier dot.
+- Header search results: score matches overall; colored tier dot; tiny logo or letter fallback visible on mobile/desktop.
 - Legal/About: theme toggling works; footer at bottom; no sidebar offset.

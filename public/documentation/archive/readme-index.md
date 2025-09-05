@@ -1,3 +1,5 @@
+Archived: 2025-09-05 — See documentation/docs/index.md
+
 Index Page — Notes & Changes (Current)
 
 Note: This content has been consolidated into documentation/docs/index.md (with an appendix). Please refer there for the up‑to‑date developer guide.

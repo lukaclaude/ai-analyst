@@ -218,35 +218,13 @@ Notes:
 
 ## Next Steps (Prioritized)
 
-Phase 1 — Universal Components & Shared Styles
-- [ ] Universal Sidebar skeleton (context‑aware)
-  - Company page: section navigation at top; Recent Companies at bottom
-  - Index page: filters at top; Recent Companies at bottom
-  - See: README “Architecture Fundamentals > Universal components”, blueprint.md §3.3, §7.1
-- [ ] Extract shared component styles into `css/components.css` (header, sidebar, bottom nav)
-  - See: README “Code Map”
-- [ ] `DataService` (single Firestore init + search + recent companies)
-  - See: README “Services (plan)”
+See `documentation/TODO-RESTRUCTURE.md` for the active plan. Immediate next phase:
 
-Phase 2 — Mobile Responsiveness
-- [ ] Score cards: stack on mobile, 2‑col on tablet, 3‑col on desktop (blueprint.md §4.2)
-- [ ] Tables: card view (mobile), condensed (tablet), full (desktop) (blueprint.md §4.2)
-- [ ] Hero header: simplified on mobile; mini chart desktop‑only (blueprint.md §4.2)
-- [x] Sidebar drawer: add close control and refine width/behavior per breakpoint (close control + overlay + body scroll lock)
- - [ ] Score details panel: verify tabs/chips sticky offsets on scroll/orientation/theme change; ensure active tab click does not close (✕ only)
- - [x] Score cards (mobile) density: tightened min-height/padding and compact visuals; rhythm verified
- - [ ] Active states: confirm stronger highlight for both top tabs and Quality/AF chips across themes
- - [x] Performance Trends (mobile): responsive height, HiDPI scaling, reduced label density/point size
- - [x] Key Financial Metrics (mobile): category tiles render as a two‑column grid
-
-Phase 3 — Visual Polish
-- [ ] Typography scale and rhythm; depth system (consistent shadows/elevations) (blueprint.md §4.x)
-- [ ] Performance: reduce blur intensity on mobile; use `content-visibility` where helpful
- - [ ] Tabs/Chips seam: optional visual unification (single bar) pending decision
- - [ ] Hero header (mobile): tune logo size, name/ticker/price clamp values for compactness (verify legibility)
-
-Phase 4 — Premium Effects
-- [ ] Enhance score visualizations; progressive enhancement (desktop‑first), respect reduced‑motion (blueprint.md §4.1)
+Phase H — Company Modularization & Payload
+- JS: move remaining logic from `js/company-card-complete-fix.js` into view modules (`js/views/*`) with a thin company bootstrap; deprecate the monolith after parity.
+- Lazy-load: dynamically import charts and historical tables on first interaction/visibility.
+- CSS: extract shared primitives (badges/pills, mini bars) to `css/components.css`; scope company styles and prune duplicates.
+- QA/docs: verify no regressions; update file-structure.md and AGENT_HANDOFF with final module boundaries.
 
 ## Testing & QA Checklist
 

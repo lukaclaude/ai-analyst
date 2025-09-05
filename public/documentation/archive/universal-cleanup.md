@@ -1,3 +1,5 @@
+Archived: 2025-09-05 — See documentation/docs/universal-components.md
+
 Universal Items Cleanup Notes
 
 Context: During index page modernization, a few company‑specific UI elements were embedded in “universal” components. These work today, but should be cleaned up to make universals page‑agnostic and easier to extend.
@@ -32,4 +34,3 @@ Suggested next steps
 2) Extract the company chip into a small include (or gated render) used only on company pages.
 3) Add a light `NavigationService` for consistent cross‑page navigation.
 4) Audit and namespace page‑specific CSS selectors.
-

@@ -5,7 +5,6 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 ## Top-Level
 - `README.md`: Living guide (current status, architecture, QA). Entry point for developers.
 - `blueprint.md`: Stable product/experience/visual blueprint and long-term plan.
-- `readme-index.md`: Index page notes (to be merged into README/docs).
 - `index.html`: Explore companies (list/grid/table). Loads universals, services, and `js/index-page.js`.
 - `company-card-fixed.html`: Detailed company analysis page. Loads universals, views, and company controller script.
   - Includes `#compact-hero`: a sticky, compact company summary bar (logo, ticker, price, overall/tier) that appears below the header when the main hero scrolls out. Behavior wired in JS.
@@ -68,15 +67,37 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 
 ## documentation/
 - `TODO-RESTRUCTURE.md`: Working checklist and checkpoints for the refactor.
-- `file-structure.md`: This document; keep updated as files move/change.
-- `universal-cleanup.md`: Past notes on universal components cleanup (to be folded into Architecture docs).
+- `file-structure.md`: This document; keep updated as files move/change. Treat as the structural library.
+- `AGENT_HANDOFF.md`: At-a-glance brief for the next agent (how to run, architecture summary, next steps).
+- `docs/`:
+  - `index.md`: Index page developer guide (behaviors, structures, change log).
+  - `universal-components.md`: Universals architecture note and contracts.
+  - `company.md`: Company page developer guide (structure, lifecycle, planned modularization/lazy‑load).
+- `archive/`: Legacy docs retained for history (e.g., `CONSOLIDATED_PROJECT_STATUS.md`, `PHASE_0_COMPLETION_STATUS.md`, `NEXT_AGENT_HANDOFF.md`, `universal-cleanup.md`, and `readme-index.md`).
+
+## Documentation Taxonomy (authoritative)
+- Product spec: `blueprint.md` (stable vision/requirements)
+- Living guide: `README.md` (current truth + links)
+- Structural map: `documentation/file-structure.md` (authoritative layout, ownership, planned changes)
+- Active plan: `documentation/TODO-RESTRUCTURE.md` (workstreams + checkpoints)
+- Handoff: `documentation/AGENT_HANDOFF.md` (quick start + next steps)
+- Page docs: `documentation/docs/*` (index/universals specifics)
 
 ## Known Integration Points
 - Theme: Components and canvases should listen to `themeChanged` and re-read CSS tokens from `document.body`.
 - Context: Universals must rely on `body[data-page-context]` (e.g., `index`, `company-card`). No path-based fallbacks.
 - Navigation: All routes (header search results, sidebar recents, list/grid/table rows) should go through NavigationService (planned).
   - Implemented for header search and sidebar recents; anchor links in index grid intentionally link to the company page.
-
+  
+## Planned Changes (Next Phase)
+- Company page modularization
+  - JS: move remaining logic from `js/company-card-complete-fix.js` into `js/views/score-cards.js`, `js/views/analysis.js`, `js/views/tables.js`; retain a thin company bootstrap to wire services/controllers/visualizations.
+  - Lazy-load: dynamically import heavy modules (charts and historical tables) on first interaction/visibility.
+  - CSS: extract shared primitives (badges/pills, mini bars) to `css/components.css`; keep page-specific polish in `css/company-card-fixed.css`.
+- Ownership
+  - Universals: `components/*`, `js/universal-*`, `css/components.css` (shared)
+  - Company: `company-card-fixed.html`, `js/controllers/company.js`, `js/views/*`, `css/company-card-fixed.css`
+  - Index: `index.html`, `js/index-page.js`, `css/index.css`
 ## Index Page Structure (key classes)
 - Grid cards rendered by `js/index-page.js`:
   - `.card-header` → left: logo, right: `.card-header-text`
