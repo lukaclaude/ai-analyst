@@ -40,10 +40,12 @@ Premium, performant landing page for exploring companies using the Score Trinity
 ## Accessibility
 - aria-pressed on sort chips (active), favorites-only, and favorites star.
 - Focus rings for interactive elements; universal tooltip for `[data-tooltip]`.
+ - Live announcements: dataset meta and page info use `aria-live="polite"`.
 
 ## Next Enhancements
 - Optional virtualization for large datasets; debounce filters/search.
 - Minor polish: subtle hover motion on star; unify pill placement across views.
+ - Grid view purpose: reevaluate role vs list/table; redesign to deliver unique value.
 
 
 ---
@@ -95,3 +97,4 @@ Implementation map
 
 Change Log (selected)
 - 2025‑09‑03: Mobile list two‑row layout; sort chips hidden on mobile; favorites-only toggle; corrected Last Updated; search focus helper added.
+ - 2025‑09‑05: Header search shows tiny logos; list rows gain mini tier badge with ranges tooltip; sidebar shows "Favorites only" indicator; a11y live-region and sort-chip SR labels added; mini visuals sourced from helpers.

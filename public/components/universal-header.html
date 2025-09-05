@@ -6,8 +6,8 @@
     <div class="universal-header-content">
         <!-- Left Section -->
         <div class="header-left">
-            <a href="/" class="logo-container" aria-label="Finalysis Home">
-                <img class="logo" src="/assets/favicons/favicon.svg" alt="Finalysis" width="32" height="32"/>
+            <a href="/" class="logo-container" aria-label="AI-Analyst Home">
+                <img class="logo" src="/assets/favicons/favicon.svg" alt="AI-Analyst" width="32" height="32"/>
                 <span class="logo-text logo-mono"><./AI/ANALYST></span>
             </a>
 
@@ -89,8 +89,8 @@
 
 .universal-header-content {
     height: 100%;
-    max-width: 1920px;
-    margin: 0 auto;
+    width: 100%; /* keep brand pinned left on ultra-wide displays */
+    margin: 0;
     padding: 0 20px;
     display: flex;
     align-items: center;
@@ -209,6 +209,17 @@
     display: flex;
     flex-direction: column;
 }
+
+/* Left group: tiny logo + two-line text */
+.search-result-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.search-result-main { min-width: 0; }
+.search-result-logo-wrap {
+    width: 24px; height: 24px; border-radius: 6px; overflow: hidden;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+}
+.search-result-logo { width: 100%; height: 100%; object-fit: contain; background: #fff; display: block; }
+.search-result-logo-fallback { font-size: 12px; font-weight: 700; color: var(--color-text-primary); line-height: 1; }
 
 .search-result-item .search-result-ticker {
     font-weight: 700;

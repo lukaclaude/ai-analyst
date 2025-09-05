@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Financial Analysis Platform</title>
+    <title>AI-Analyst — Company Analysis</title>
     
     <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +17,8 @@
     <link rel="mask-icon" href="/assets/favicons/safari-pinned-tab.svg" color="#00C88A">
     <meta name="msapplication-config" content="/assets/favicons/browserconfig.xml">
     <meta name="msapplication-TileColor" content="#00C88A">
-    <meta name="application-name" content="Finalysis">
-    <meta name="apple-mobile-web-app-title" content="Finalysis">
+    <meta name="application-name" content="AI-Analyst">
+    <meta name="apple-mobile-web-app-title" content="AI-Analyst">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
     <link rel="shortcut icon" href="/assets/favicons/favicon.ico">
@@ -463,6 +463,9 @@
             </section>
         </main>
     </div>
+
+    <!-- Universal Footer -->
+    <div id="universal-footer-container"></div>
     
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav" role="navigation" aria-label="Mobile navigation">
@@ -515,6 +518,30 @@
     <script src="./js/lib/formatters.js"></script>
     <script src="./js/lib/tiers.js"></script>
     <script src="./js/universal-header.js"></script>
+    <script>
+      (async function(){
+        try {
+          const cont = document.getElementById('universal-footer-container');
+          if (cont) {
+            const resp = await fetch('./components/universal-footer.html');
+            cont.innerHTML = await resp.text();
+          }
+        } catch(_) {}
+      })();
+    </script>
+    <script src="./js/universal-footer.js"></script>
+    <script>
+      (async function(){
+        try {
+          const cont = document.getElementById('universal-footer-container');
+          if (cont) {
+            const resp = await fetch('/components/universal-footer.html');
+            cont.innerHTML = await resp.text();
+          }
+        } catch(_) {}
+      })();
+    </script>
+    <script src="./js/universal-footer.js"></script>
     <script src="./js/controllers/company.js"></script>
     <script src="./js/views/score-cards.js"></script>
     <script src="./js/views/analysis.js"></script>

@@ -56,13 +56,14 @@ Purpose: Guide the incremental refactor toward a maintainable, componentized app
 - [ ] Maintain `documentation/file-structure.md` (this repo-wide map) as we change structure.
 
 ## Workstream F — Branding & Manifest
-- [ ] Update `assets/favicons/site.webmanifest` name/short_name to “Finalysis”; verify icon set and theme/background.
+- [x] Update `assets/favicons/site.webmanifest` name/short_name to “AI-Analyst”; verify icon set and theme/background.
 
 ## Workstream G — UI Polish (Index Grid)
 - [x] Replace emoji star with SVG icon (menus + sorting chip + cards).
 - [x] Two-row header in grid cards (Name on top line, Ticker below aligned to logo).
 - [x] Tier row (Overall + colored tier label) above bottom stats/bars.
 - [x] Tighten spacing; preserve modern gradient/shadows; prevent overlay collisions.
+- [ ] Purpose redesign: Reevaluate grid view’s role vs list/table. Define a clear use case (e.g., trend previews, comparisons, or grouping), then redesign visuals accordingly and document the decision.
 
 ## Checkpoints & Pauses
 We will pause after each checkpoint for verification before proceeding:

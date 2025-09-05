@@ -22,6 +22,28 @@
   z-index: 2;
 }
 
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Shared mini progress bar primitives */
+.bar-bg {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-bg-tertiary);
+  overflow: hidden;
+}
+.bar-fill { height: 100%; }
+
 .sidebar-close-btn:hover { background: var(--glass-bg-hover); }
 
 /* Keyboard focus visibility for interactive elements */
@@ -30,6 +52,7 @@
 .user-avatar:focus-visible,
 .mobile-nav-item:focus-visible,
 .sidebar-close-btn:focus-visible,
+.footer-link:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;

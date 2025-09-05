@@ -21,7 +21,8 @@ Primary goals:
 ## Quick Start
 
 - Run server: `cd public && python3 -m http.server 8000`
-- Test URL: `http://localhost:8000/company-card-fixed.html?ticker=NVDA`
+- Index: `http://localhost:8000/`
+- Company: `http://localhost:8000/company-card-fixed.html?ticker=NVDA`
 - Breakpoints to watch: 375px (mobile), 768px (tablet), 1024px (desktop), 1920px (wide)
 - Theme toggle: universal header moon/sun button (ThemeService)
 - Mobile Search: tap bottom Search; a header search input appears below the header (readable, solid background). Suggestions are tap‑navigable.
@@ -42,6 +43,7 @@ What works (100%)
 - Score Cards: main score numerals now use theme text color (light on dark, dark on light) instead of tier color; Anti‑Fragile shield background is neutral per theme (no gray block in light theme); IDQ/Quality visuals still use tier colors for strokes/gradients
 - Performance Trends: chart fills container, redraws on resize, visible on mobile
 - Health Indicators: Working Capital displays bn/tn/m units (with currency)
+  - Working Capital uses the statement currency (TTM.reportedCurrency) for accurate representation (e.g., DKK for NVO).
 - Detailed Financials: shares outstanding pulls from multiple possible keys (weightedAverageShares / Outstanding / Diluted)
 - IDQ tiers (raw‑score mapping): 11–12 Pioneer (purple), 9–10 Leader (blue), 6–8 Integrator (green), 3–5 Follower (yellow), ≤2 Lagging (orange). The IDQ chip, IDQ label pill, and indicator dot all use the same mapping; indicator position uses normalized percent for layout only.
 - Key Financial Metrics: tooltips added for Revenue, Net Income, EPS, Gross/Operating/Net margins, P/E, P/B, EV/EBITDA, Current Ratio, Debt/Equity, ROE, ROA, Revenue/EPS growth. Grid values formatted with tn/bn/m/k.
@@ -49,7 +51,7 @@ What works (100%)
 - Quality gauge ticks and refined hover states (respect `prefers-reduced-motion`).
 - IDQ label pill (tier dot reflects mapping); Anti‑Fragile shield neutral background fill for clarity across themes. Removed redundant static IDQ caption under chip (kept moving label above the position bar).
 - “Copy Insight” action in Company Analysis copies the synthesized thesis with clipboard fallback.
-- Finalysis branding and favicon/PWA setup: header brand switched to “Finalysis”; transparent favicon pack wired (ico/svg/png/apple-touch), Safari pinned-tab, MS tile, and site.webmanifest (maskable icons, theme/background colors) for proper tabs/bookmarks/PWA icons.
+- AI-Analyst branding and favicon/PWA setup: header brand displays “<./AI/ANALYST>”; transparent favicon pack wired (ico/svg/png/apple-touch), Safari pinned-tab, MS tile, and site.webmanifest (maskable icons, theme/background colors) for proper tabs/bookmarks/PWA installs.
 - Universal header + Compact hero: the header is truly universal (logo + brand, anchored search, actions). On company pages, when the main hero scrolls out of view, a sticky compact hero bar appears below the header showing logo, ticker, company name, price, overall score and tier label (with tooltip). The old header chip is deprecated. Mobile search focus is handled programmatically for Safari/Chrome: tapping the bottom Search icon reveals and focuses the header search input with an immediate attempt and short retry loop for reliability.
 - Rank badges: copy reads “#Y of N • Top X%” where Top X% = round(rank/total×100) (lower is better). Fallback ranks no longer include a tilde (~).
 - Sub‑score rounding: quality sub‑scores display rounded to 1 decimal to prevent float artifacts (e.g., 12.3999999 → 12.4).
@@ -161,8 +163,14 @@ Universal components (plan)
 
 Services (plan)
 - `DataService` — single Firestore init; search; recent companies; caching (implemented)
-- `NavigationService` — page navigation with query params and history
+- `NavigationService` — page navigation (implemented; `goToCompany/goHome/open`; used by header search and sidebar Recents)
 - `StateService` — lightweight pub/sub for cross‑component state
+
+### Body flags
+- `body[data-page-context]` — explicit page context (e.g., `index`, `company-card`) used by universal components
+- `body.sidebar-expanded` — desktop sidebar expanded state controls header/compact-hero alignment
+- `body.sidebar-drawer-open` — mobile/tablet drawer open state with overlay and body scroll lock
+- `body.show-mobile-search` — reveals mobile header search and focuses input
 
 ## Design Quick Reference (Summaries + Links)
 
@@ -224,10 +232,12 @@ Phase 2 — Mobile Responsiveness
 - [ ] Score cards: stack on mobile, 2‑col on tablet, 3‑col on desktop (blueprint.md §4.2)
 - [ ] Tables: card view (mobile), condensed (tablet), full (desktop) (blueprint.md §4.2)
 - [ ] Hero header: simplified on mobile; mini chart desktop‑only (blueprint.md §4.2)
-- [ ] Sidebar drawer: add close control and refine width/behavior per breakpoint (README “Known issues / gaps”)
+- [x] Sidebar drawer: add close control and refine width/behavior per breakpoint (close control + overlay + body scroll lock)
  - [ ] Score details panel: verify tabs/chips sticky offsets on scroll/orientation/theme change; ensure active tab click does not close (✕ only)
- - [ ] Score cards (mobile) density: finalize min-height/padding/active transform and audit cascade so overrides always apply
+ - [x] Score cards (mobile) density: tightened min-height/padding and compact visuals; rhythm verified
  - [ ] Active states: confirm stronger highlight for both top tabs and Quality/AF chips across themes
+ - [x] Performance Trends (mobile): responsive height, HiDPI scaling, reduced label density/point size
+ - [x] Key Financial Metrics (mobile): category tiles render as a two‑column grid
 
 Phase 3 — Visual Polish
 - [ ] Typography scale and rhythm; depth system (consistent shadows/elevations) (blueprint.md §4.x)
@@ -251,7 +261,7 @@ Functionality
 
 Visual & Responsive
 - Section surfaces visible and subtle in both themes
-- Mobile: text readable, touch targets ≥44px, score cards stack, drawer close control (pending)
+- Mobile: text readable, touch targets ≥44px, score cards stack, drawer close control works
 - Tablet/Desktop: grids and tables align; no overflow issues
 - Sticky stack (mobile): Header → Tabs → Chips → Content (no overlap); verify on scroll/orientation/theme change
 - Performance Trends (mobile): chart height readable; labels/points legible; redraws on rotate/theme change
@@ -261,6 +271,8 @@ Visual & Responsive
 
 Accessibility
 - Focus states visible; contrast sufficient; tooltips readable; reduced motion respected
+- Index sort chips: `aria-pressed` reflects active; include a visually hidden “ascending/descending” status for screen readers
+- Favorites‑only toggle: `aria-pressed` and `data-tooltip` reflect current state (“Show favorites only” vs “Show all”)
 
 ## Handoff Summary (For the Next Agent)
 
@@ -271,6 +283,7 @@ If you only read one section, read this:
 - Section surfaces are standardized. Use `.section-surface` for premium, theme‑aware section backgrounds.
 - Header search (desktop/mobile) and sidebar search are both working. Sidebar shows results that update the page inline; header navigates via links.
 - Bottom nav: Home and Search wired; Favorites is a placeholder; Menu opens the sidebar (mobile close control to be implemented in Phase 2).
+ - Bottom nav: Home and Search wired; Favorites is a placeholder; Menu opens the sidebar (overlay + body lock). Close control present on the sidebar.
 - IDQ color logic: use raw IDQ score for tiers — see `getIdqTierColors(idqScore)` in `js/company-card-complete-fix.js`. Do not use percent tiers for IDQ color.
 - Score numerals: on `themeChanged`, reapply `--color-text-primary` to `#quality-score-value`, `#idq-score-value`, `#antifragile-score-value`.
 - Anti‑Fragile sub‑scores: single column (3 metrics). Quality sub‑scores: 2‑column on desktop. This avoids awkward gaps.
@@ -302,6 +315,7 @@ Start with (next steps):
 
 ## Change Log
 
+- 2025‑09‑05: Header search results now show tiny company logos (favicon via domain) with graceful letter fallback; search index extended with `websiteHost`. Accessibility tweaks: sort chips announce ascending/descending via SR‑only text; favorites‑only toggle updates its tooltip; dataset/page info announce via aria‑live. Index list adds a small tier badge with ranges tooltip; sidebar shows a “⭐ Favorites only” indicator when active. Introduced `js/visualizations/mini-visuals.js` for tiny SVGs.
 - 2025‑09‑03: Mobile refinements — Performance Trends canvas now scales in height with HiDPI support; reduced label density and smaller points. Key Financial Metrics render as two‑column tiles on mobile; Financial Health tooltips use the universal tooltip with tap‑to‑pin. Brand label changed to “./AI/ANALYST”; chip logo background transparent; company chip alignment respects expanded sidebar (desktop). Shared `window.focusHeaderSearch()` added to focus header search on mobile.
 - 2025‑09‑02: Desktop‑first landing polish. Added Quality gauge tick marks and restrained hover glow (reduced‑motion aware). IDQ label pill + caption with tier dot; Anti‑Fragile shield neutral fill in both themes. Centralized metric aliasing (`js/lib/aliases.js`) with fallbacks for P/E, EV/EBITDA, Operating Margin, Debt/Equity; metrics grid and detailed tables use aliases to avoid N/A when alternates exist. Added “Copy Insight” action in analysis with clipboard fallback and feedback. Began Phase B: added `js/lib/formatters.js`, `js/lib/tiers.js`, and `js/views/score-cards.js`; libs are loaded before the main app.
 
@@ -309,7 +323,7 @@ Start with (next steps):
 
 - 2025‑09‑02: Mobile sticky/layout fixes — added dynamic `--tabs-offset`, moved chip spacing to content only, removed legacy section padding for chip sections; consistent panel wrappers for IDQ/AF; Anti‑Fragile header spacing aligned with IDQ; mobile close UX (✕) and prevented active tab from closing; stronger active states for top tabs and chips; Gauntlet label mapping and negative‑only red using theme tokens; initial mobile density pass for cards and compact hero header. Files: css/company-card-fixed.css, js/views/score-cards.js, js/company-card-complete-fix.js
 - 2025‑09‑02: Header chip + ranks + IDQ caption — add universal header company chip (logo/ticker/overall score/price on scroll); fix overall score event flow and tier color; remove redundant IDQ caption; correct rank Top% math (Top = rank/total), keep copy order “#Y of N • Top X%”, and remove tilde for fallback ranks. Files: components/universal-header.html, js/universal-header.js, company-card-fixed.html, js/company-card-complete-fix.js
-- 2025‑09‑02: Branding & icons — header brand updated to “Finalysis”; transparent favicon pack wired (ico/svg/png/apple‑touch), Safari pinned‑tab, MS tile; site.webmanifest updated (maskable icons, theme/background). Ensures correct icons for tabs, bookmarks, and PWA installs. Files: components/universal-header.html, index.html, company-card-fixed.html, assets/favicons/*
+- 2025‑09‑02: Branding & icons — header brand updated; transparent favicon pack wired (ico/svg/png/apple‑touch), Safari pinned‑tab, MS tile; site.webmanifest updated (maskable icons, theme/background). Ensures correct icons for tabs, bookmarks, and PWA installs. Files: components/universal-header.html, index.html, company-card-fixed.html, assets/favicons/*
 - 2025‑09‑02: Views extraction (Phase B) — moved Company Analysis and Detailed Financials rendering into `js/views/analysis.js` and `js/views/tables.js`; bootstrapping prefers new views but keeps legacy fallbacks. No behavior changes.
 - 2025‑09‑02: Sub‑score display fix — round Quality sub‑scores in score cards to 1 decimal to avoid float overflow/artifacts. File: js/company-card-complete-fix.js
 - 2025‑09‑02: Archived original single‑file breakdowns and manual test pages. Files moved to `archive/original/` (company-card_OLD-*.html) and `archive/manual-tests/` (test-company.html, test-nvda.html, debug.html). Historical docs moved to `archive/docs/` (IMPLEMENTATION_FIX_SUMMARY.md, PROJECT_STATUS_README.md). Root README remains the living guide; archive/README.md explains archive usage.

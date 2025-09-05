@@ -29,21 +29,22 @@
   }
 
   function formatMarketCap(value, currencyCode = 'USD') {
-    if (!value || isNaN(value)) return 'N/A';
+    if (value == null || isNaN(value)) return 'N/A';
     let symbol = '';
     switch ((currencyCode || '').toUpperCase()) {
       case 'USD': symbol = '$'; break; case 'EUR': symbol = '€'; break; case 'GBP': symbol = '£'; break; case 'DKK': symbol = 'kr.'; break; default: symbol = currencyCode + ' '; break;
     }
     const num = parseFloat(value);
+    const sign = num < 0 ? '-' : '';
+    const abs = Math.abs(num);
     let display;
-    if (num >= 1e12) display = `${(num / 1e12).toFixed(1)} tn`;
-    else if (num >= 1e9) display = `${(num / 1e9).toFixed(1)} bn`;
-    else if (num >= 1e6) display = `${(num / 1e6).toFixed(1)} m`;
-    else if (num >= 1e3) display = `${(num / 1e3).toFixed(1)} k`;
-    else display = num.toFixed(2);
-    return `${symbol}${display}`;
+    if (abs >= 1e12) display = `${(abs / 1e12).toFixed(1)} tn`;
+    else if (abs >= 1e9) display = `${(abs / 1e9).toFixed(1)} bn`;
+    else if (abs >= 1e6) display = `${(abs / 1e6).toFixed(1)} m`;
+    else if (abs >= 1e3) display = `${(abs / 1e3).toFixed(1)} k`;
+    else display = abs.toFixed(2);
+    return `${sign}${symbol}${display}`;
   }
 
   window.Formatters = { formatCurrency, formatQuantity, formatMarketCap };
 })();
-

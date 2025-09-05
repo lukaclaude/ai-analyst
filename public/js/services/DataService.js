@@ -2,7 +2,7 @@
 
 (function() {
   const RECENT_KEY = 'recentCompanies';
-  const SEARCH_CACHE_KEY = 'searchIndexCacheV1';
+  const SEARCH_CACHE_KEY = 'searchIndexCacheV2';
   const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
   const listeners = new Set();
 
@@ -77,12 +77,24 @@
       const ticker = d?.Portfolio?.ticker;
       const name = d?.Portfolio?.companyName;
       if (!ticker || !name) return;
-      // Approximate overall score if components present
-      const q = parseFloat(d?.Portfolio?.qualityScore) || 0;
-      const idq = parseFloat(d?.LLM_Reports?.IDQ_Report?.idqScore) || 0;
-      const af = parseFloat(d?.Anti_Fragile_Score?.totalScore) || 0;
-      const overall = ((q/109)*50) + ((idq/12)*25) + ((af/17)*25);
-      idx.push({ ticker, name, score: isNaN(overall) ? 0 : parseFloat(overall.toFixed(1)) });
+      // Website host for tiny logos in search
+      let websiteHost = '';
+      try {
+        const raw = d?.API_Financials?.General?.companyWebsite || d?.Portfolio?.companyWebsite || '';
+        if (raw) {
+          try { websiteHost = new URL(raw).hostname; }
+          catch { websiteHost = new URL('https://' + raw).hostname; }
+        }
+      } catch (_) { websiteHost = ''; }
+      // Compute overall using unified formula: 40% Q + 35% IDQ + 25% AF
+      const qRaw = parseFloat(d?.Portfolio?.qualityScore) || 0;
+      const idqRaw = parseFloat(d?.LLM_Reports?.IDQ_Report?.idqScore) || 0;
+      const afRaw = parseFloat(d?.Anti_Fragile_Score?.totalScore) || 0;
+      const qPct = Math.max(0, Math.min(100, (qRaw/109)*100));
+      const iPct = Math.max(0, Math.min(100, ((idqRaw + 3)/15)*100));
+      const aPct = Math.max(0, Math.min(100, ((afRaw + 7)/24)*100));
+      const overall = (qPct*0.40) + (iPct*0.35) + (aPct*0.25);
+      idx.push({ ticker, name, score: isNaN(overall) ? 0 : parseFloat(overall.toFixed(1)), websiteHost });
     });
     searchIndex = idx;
     lastIndexAt = Date.now();

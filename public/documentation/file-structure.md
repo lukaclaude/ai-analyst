@@ -23,13 +23,17 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 ## css/
 - `theme.css`: Design tokens (colors, type, radii, shadows, breakpoints). Also shared utilities and layout primitives.
 - `components.css`: Shared component styles (header/sidebar/bottom-nav/minimal primitives).
+  - Utilities: `.sr-only` (screen-reader only)
 - `index.css`: Index page scoped styles (grid/list/table, filters, sort chips, sparklines).
+  - List row: optional `.tier-badge-mini` pill next to Overall (hidden on mobile)
 - `company-card-fixed.css`: Company page scoped styles (hero, score cards, analysis, tables).
   - Styles for `#compact-hero` sticky bar (layout, theme, responsive behavior).
+  - Avoid redeclaring header search dropdown; header component owns `.search-results-dropdown` styles.
 
 ## js/services/
 - `ThemeService.js`: Theme source of truth (light/dark). Applies body class, persists to localStorage, emits `themeChanged`.
 - `DataService.js`: Firestore init, search index builder, recent companies (localStorage + pub/sub).
+  - Search index fields: `{ ticker, name, score, websiteHost }` (websiteHost used for tiny logos in header search)
 - `NavigationService.js`: Navigation entry points (goToCompany/goHome/open). Replaces per-page routing progressively.
 
 ## js/lib/
@@ -40,6 +44,7 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 ## js/ (universals + entry)
 - `tooltip.js`: Single DOM-node, theme-aware tooltip for `[data-tooltip]`; keyboard and mobile tap-to-pin support.
 - `universal-header.js`: Loads header partial; controls theme toggle, global search, chip visibility, and search behavior.
+  - Search results include a tiny logo at left (favicon via Google S2) with letter fallback. Classes: `.search-result-left`, `.search-result-logo-wrap`, `.search-result-logo`, `.search-result-logo-fallback`.
 - `universal-sidebar.js`: Renders context-aware top section; manages recents, filters mini-button, and collapse behavior.
 
 ## js/views/
@@ -52,13 +57,14 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `quality-orbital.js`: Quality score visualization module; exposes update/handleResize.
 - `idq-processor.js`: IDQ score visualization module; exposes update/handleResize.
 - `antifragile-shield.js`: Anti-Fragile visualization module; exposes update/handleResize.
+- `mini-visuals.js`: Tiny inline SVG helpers for list/grid previews (`window.MiniVisuals.{quality,idq,af}`)
 
 ## Page Controllers (planned)
 - `js/controllers/company.js`: Centralizes company page lifecycle (theme/resize/orientation); coordinates compact hero refresh.
 - `js/controllers/index.js`: Future hooks for theme/lifecycle on index; keeps entry points slim.
 
 ## assets/favicons/
-- Web app manifest, pinned tab, icons set for platforms. Ensure `site.webmanifest` uses Finalysis name/short_name and desired theme/background.
+- Web app manifest, pinned tab, icons set for platforms. Ensure `site.webmanifest` uses AI-Analyst name/short_name and desired theme/background.
 
 ## documentation/
 - `TODO-RESTRUCTURE.md`: Working checklist and checkpoints for the refactor.
@@ -67,7 +73,7 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 
 ## Known Integration Points
 - Theme: Components and canvases should listen to `themeChanged` and re-read CSS tokens from `document.body`.
-- Context: Universals must rely on `body[data-page-context]` (e.g., `index`, `company-card`).
+- Context: Universals must rely on `body[data-page-context]` (e.g., `index`, `company-card`). No path-based fallbacks.
 - Navigation: All routes (header search results, sidebar recents, list/grid/table rows) should go through NavigationService (planned).
   - Implemented for header search and sidebar recents; anchor links in index grid intentionally link to the company page.
 
@@ -89,4 +95,5 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
   - Shifts with sidebar/drawer states via `body.sidebar-expanded` and `body.sidebar-drawer-open`
 
 ## Update Log
+- 2025-09-05 — Header search includes tiny logos; search index adds `websiteHost`. Added `.sr-only` utility. Index list: mini tier badge tooltip; sidebar favorites-only indicator. Added `js/visualizations/mini-visuals.js`.
 - 2025-09-03 — Initial skeleton created; to be expanded during restructuring.

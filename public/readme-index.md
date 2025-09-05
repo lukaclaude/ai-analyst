@@ -1,5 +1,7 @@
 Index Page — Notes & Changes (Current)
 
+Note: This content has been consolidated into documentation/docs/index.md (with an appendix). Please refer there for the up‑to‑date developer guide.
+
 Overview
 - Purpose: A premium, performant landing page for exploring companies using the Score Trinity, true to blueprint.md and reusing universal services.
 - Tech: Universal header/sidebar + ThemeService + DataService (single Firestore init). Index-specific logic in js/index-page.js; styles in css/index.css.
@@ -61,11 +63,11 @@ Universal components — observations & to address
 - Header: Company chip
   - Now disabled on index via data-page-context. Long-term: gate rendering via a component slot or a page-context check to avoid header-runtime heuristics.
 - Sidebar: Context detection
-  - Uses body[data-page-context] and falls back to path. Long-term: remove path heuristics and always rely on an explicit flag.
+  - Uses body[data-page-context] only. Remove any residual path heuristics if encountered.
 - Sidebar (collapsed desktop)
   - Filter UI hides and a compact “Filters” button appears. Consider a richer collapsed state (icons + counts) later.
 - Navigation consistency
-  - Recent Companies in the universal sidebar now routes index → company page. Consider a NavigationService to centralize routing decisions and remove per-page click handlers.
+  - Recent Companies in the universal sidebar routes via NavigationService. Ensure any remaining per-page click handlers are centralized through it.
 - CSS scope
   - Maintain page-scoped styles for index (css/index.css) to avoid collisions with company page.
 

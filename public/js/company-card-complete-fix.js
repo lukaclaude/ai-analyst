@@ -1523,10 +1523,11 @@ function populateHealthScores() {
     
     if (wcElement && workingCapitalValue !== undefined) {
         const workingCapital = parseFloat(String(workingCapitalValue).replace(/,/g,''));
-        
+        // Prefer reported currency for working capital (financial statement currency)
+        const wcCurrency = (state.currentStockData?.API_Financials?.TTM?.reportedCurrency || state.currentStockData?.API_Financials?.General?.currency || currency || 'USD').toUpperCase();
         if (!isNaN(workingCapital)) {
-            // Use bn/tn/m/k units for readability, with currency
-            wcElement.textContent = formatMarketCap(workingCapital, currency);
+            // Use bn/tn/m/k units for readability, with the correct statement currency
+            wcElement.textContent = formatMarketCap(workingCapital, wcCurrency);
             wcElement.className = 'text-4xl font-bold ' + (workingCapital > 0 ? 'text-green-400' : 'text-red-400');
             
             if (wcInterpretation) {

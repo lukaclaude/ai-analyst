@@ -288,22 +288,10 @@
     if (pct >= 32) return 'var(--color-score-orange)';
     return 'var(--color-score-red)';
   }
-  function miniQualitySVG(score) {
-    const pct = Math.max(0, Math.min(100, (Number(score)||0)/109*100));
-    const stroke = colorForPercent(pct);
-    const dash = (pct/100)*41.5;
-    return `<svg viewBox="0 0 20 20" width="20" height="20" style="transform:rotate(135deg)"><circle cx="10" cy="10" r="8.8" fill="none" stroke="#30363D" stroke-width="2" stroke-dasharray="41.5 55.3"/><circle cx="10" cy="10" r="8.8" fill="none" stroke="${stroke}" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${dash} 55.3"/></svg>`;
-  }
-  function miniIdqSVG(score) {
-    const colors = (window.Tiers && window.Tiers.getIdqTierColors) ? window.Tiers.getIdqTierColors(Number(score)||0) : { color: colorForPercent(((Number(score)||0)+3)/15*100) };
-    const c = colors.color;
-    return `<svg viewBox="20 22 24 22" width="20" height="20"><g fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M26.962,23.149h10.077c2.23,0,4.038,1.808,4.038,4.038v8.077c0,2.23-1.808,4.038-4.038,4.038h-10.077c-2.23,0-4.038-1.808-4.038-4.038v-8.077C22.923,24.957,24.731,23.149,26.962,23.149z" /><path d="M28.97,27.166h6.06c1.121,0,2.03,0.909,2.03,2.03v4.06c0,1.121-0.909,2.03-2.03,2.03h-6.06c-1.121,0-2.03-0.909-2.03-2.03v-4.06C26.94,28.075,27.849,27.166,28.97,27.166z"/></g></svg>`;
-  }
-  function miniAfSVG(score) {
-    const pct = Math.max(0, Math.min(100, ((Number(score)||0)+7)/24*100));
-    const stroke = colorForPercent(pct);
-    return `<svg viewBox="10 20 180 150" width="20" height="20"><path d="M40,40 L100,25 L160,40 L160,100 C160,130 130,150 100,160 C70,150 40,130 40,100 Z" fill="none" stroke="${stroke}" stroke-width="6" stroke-linejoin="round"/></svg>`;
-  }
+  // Mini visuals sourced via tiny helpers
+  function miniQualitySVG(score) { return (window.MiniVisuals && window.MiniVisuals.quality) ? window.MiniVisuals.quality(score) : ''; }
+  function miniIdqSVG(score) { return (window.MiniVisuals && window.MiniVisuals.idq) ? window.MiniVisuals.idq(score) : ''; }
+  function miniAfSVG(score) { return (window.MiniVisuals && window.MiniVisuals.af) ? window.MiniVisuals.af(score) : ''; }
 
   function renderList(list) {
     const cont = byId('content-container');
@@ -316,6 +304,9 @@
       const hover = `Overall ${x.overall.toFixed(1)} | Q ${x.quality}/109 | IDQ ${x.idq}/12 | AF ${x.af}/17`;
       const overallPct = x.overall; // already 0..100
       const overallColor = colorForPercent(overallPct);
+      const tier = tierName(x.overall);
+      const tierColor = overallColor;
+      const tierTooltip = `Tier: ${tier} • Overall = 40% Q, 35% IDQ, 25% AF • Ranges: ≥80 purple, ≥74 blue, ≥65 green, ≥55 yellow, ≥32 orange, else red`;
       const fav = state.favorites.has(x.ticker);
       return `
         <div class="glass-morphism list-row-card rounded-xl p-3 mb-2 block text-inherit no-underline" data-tooltip="${hover}">
@@ -338,7 +329,10 @@
             <div class="flex items-center gap-2"><span>${miniQualitySVG(x.quality)}</span><span class="mini-meta"><strong>Q</strong> ${x.quality}/109</span></div>
             <div class="flex items-center gap-2"><span>${miniIdqSVG(x.idq)}</span><span class="mini-meta"><strong>IDQ</strong> ${x.idq}/12</span></div>
             <div class="flex items-center gap-2"><span>${miniAfSVG(x.af)}</span><span class="mini-meta"><strong>AF</strong> ${x.af}/17</span></div>
-            <div class="ml-auto mini-meta" style="font-weight:600;color:${overallColor}">Overall ${x.overall.toFixed(1)}</div>
+            <div class="ml-auto flex items-center gap-2">
+              <div class="mini-meta" style="font-weight:600;color:${overallColor}">Overall ${x.overall.toFixed(1)}</div>
+              <span class="tier-badge-mini" data-tooltip="${tierTooltip}"><span class="dot" style="color:${tierColor};background:${tierColor}"></span><span>${tier}</span></span>
+            </div>
           </div>
           </a>
         </div>`;
@@ -706,6 +700,9 @@
     const reflect = () => {
       btn.classList.toggle('active', !!state.filterFavorites);
       btn.setAttribute('aria-pressed', state.filterFavorites ? 'true' : 'false');
+      btn.setAttribute('data-tooltip', state.filterFavorites ? 'Show all' : 'Show favorites only');
+      const ind = document.getElementById('fav-only-indicator');
+      if (ind) ind.style.display = state.filterFavorites ? 'block' : 'none';
     };
     reflect();
     btn.addEventListener('click', () => {
@@ -726,7 +723,13 @@
         const base = b.getAttribute('data-label') || b.textContent.trim();
         const isActive = b.getAttribute('data-sort') === current;
         b.classList.toggle('active', isActive);
-        b.textContent = isActive ? base + (state.sort.dir === 'asc' ? ' ↑' : ' ↓') : base;
+        if (isActive) {
+          const arrow = state.sort.dir === 'asc' ? ' ↑' : ' ↓';
+          const sr = state.sort.dir === 'asc' ? '<span class="sr-only"> ascending</span>' : '<span class="sr-only"> descending</span>';
+          b.innerHTML = `${base}${arrow}${sr}`;
+        } else {
+          b.textContent = base;
+        }
         b.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
     };

@@ -92,15 +92,14 @@ class UniversalHeader {
             const link = e.target && e.target.closest && e.target.closest('a.search-result-item--header');
             if (!link) return;
             try {
+                if (window.NavigationService && typeof window.NavigationService.handleHeaderSearchResult === 'function') {
+                    return window.NavigationService.handleHeaderSearchResult(e);
+                }
+                // Fallback if NavigationService missing
                 e.preventDefault();
                 const url = new URL(link.getAttribute('href'), window.location.href);
                 const t = url.searchParams.get('ticker');
-                if (!t) return;
-                if (window.NavigationService && typeof window.NavigationService.goToCompany === 'function') {
-                    window.NavigationService.goToCompany(t);
-                } else {
-                    window.location.href = `/company-card-fixed.html?ticker=${encodeURIComponent(t)}`;
-                }
+                if (t) window.location.href = `/company-card-fixed.html?ticker=${encodeURIComponent(t)}`;
             } catch (_) {}
         }, true);
         
@@ -179,19 +178,78 @@ class UniversalHeader {
             return;
         }
         
+        const colorForPercent = (pct) => {
+            if (pct >= 80) return 'var(--color-score-purple)';
+            if (pct >= 74) return 'var(--color-score-blue)';
+            if (pct >= 65) return 'var(--color-score-green)';
+            if (pct >= 55) return 'var(--color-score-yellow)';
+            if (pct >= 32) return 'var(--color-score-orange)';
+            return 'var(--color-score-red)';
+        };
+
         resultsContainer.innerHTML = `
             <div class="search-results-list">
-                ${results.map(r => `
-                    <a href="?ticker=${r.ticker}" class="search-result-item search-result-item--header">
-                        <div class="search-result-main">
-                            <div class="search-result-ticker">${r.ticker}</div>
-                            <div class="search-result-name">${r.name}</div>
+                ${results.map(r => {
+                    const score = typeof r.score === 'number' ? r.score : null;
+                    const color = score != null ? colorForPercent(score) : 'var(--color-text-secondary)';
+                    const dot = score != null ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};margin-right:6px;"></span>` : '';
+                    const host = r.websiteHost || '';
+                    const initial = (r.ticker || '?').charAt(0);
+                    const logo = host ? `<img class=\"search-result-logo\" data-host=\"${host}\" alt=\"${r.ticker} logo\">` : '';
+                    return `
+                    <a href="?ticker=${r.ticker}" class="search-result-item search-result-item--header" data-name="${r.name?.replace(/&/g,'&amp;').replace(/\"/g,'&quot;')}" data-host="${host}">
+                        <div class="search-result-left">
+                          <div class="search-result-logo-wrap">
+                            ${logo}
+                            <div class="search-result-logo-fallback" aria-hidden="true">${initial}</div>
+                          </div>
+                          <div class="search-result-main">
+                              <div class="search-result-ticker">${r.ticker}</div>
+                              <div class="search-result-name">${r.name}</div>
+                          </div>
                         </div>
-                        ${r.score ? `<div class="search-result-score">${r.score}</div>` : ''}
-                    </a>
-                `).join('')}
+                        ${score != null ? `<div class="search-result-score">${dot}${score.toFixed(1)}</div>` : ''}
+                    </a>`;
+                }).join('')}
             </div>
         `;
+        this.attachSearchLogoFallbacks(resultsContainer);
+    }
+
+    attachSearchLogoFallbacks(root) {
+        try {
+            const imgs = root.querySelectorAll('.search-result-logo');
+            const providers = [
+                (h) => `https://logo.clearbit.com/${h}`,
+                (h) => `https://www.google.com/s2/favicons?domain=${h}&sz=64`,
+                (h) => `https://icons.duckduckgo.com/ip3/${h}.ico`,
+            ];
+            imgs.forEach((img) => {
+                const wrap = img.closest('.search-result-logo-wrap');
+                const fb = wrap ? wrap.querySelector('.search-result-logo-fallback') : null;
+                const host = img.getAttribute('data-host');
+                if (!host) {
+                    if (img) img.style.display = 'none';
+                    if (fb) fb.style.display = 'inline-flex';
+                    return;
+                }
+                let i = 0;
+                const tryNext = () => {
+                    if (i >= providers.length) {
+                        img.style.display = 'none';
+                        if (fb) fb.style.display = 'inline-flex';
+                        return;
+                    }
+                    const src = providers[i++](host);
+                    img.style.display = 'block';
+                    if (fb) fb.style.display = 'inline-flex';
+                    img.onload = () => { if (fb) fb.style.display = 'none'; };
+                    img.onerror = tryNext;
+                    img.src = src;
+                };
+                tryNext();
+            });
+        } catch (_) {}
     }
     
     showSearchResults() {

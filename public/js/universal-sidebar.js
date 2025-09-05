@@ -53,6 +53,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="opacity:.8;"><path d="M3 5h18v2l-7 7v5l-4-2v-3L3 7z"/></svg>
           <span class="sidebar-section-title-text">Filters</span>
         </h3>
+        <div id="fav-only-indicator" class="mini-meta" style="display:none;margin:0 0 8px 16px;">⭐ Favorites only</div>
         <div class="section-surface" style="padding:12px;border-radius:12px;">
           <div class="filter-group" style="margin-bottom:10px;">
             <label class="text-xs sidebar-muted-text" for="filter-sector">Sector</label>
