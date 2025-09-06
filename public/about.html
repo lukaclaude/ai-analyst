@@ -4,11 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI-Analyst — About</title>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/theme.css" />
   <link rel="stylesheet" href="./css/components.css" />
-  <link rel="stylesheet" href="./css/company-card-fixed.css" />
+  <!-- Tailwind utilities (to match other pages' resets) -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { margin: 0; background: var(--color-bg-primary); color: var(--color-text-primary); display: flex; min-height: 100vh; flex-direction: column; }
+    body { margin: 0; background: var(--color-bg-primary); color: var(--color-text-primary); font-family: var(--font-sans); display: flex; min-height: 100vh; flex-direction: column; }
     main { flex: 1 0 auto; }
     .lead { color: var(--color-text-secondary); }
     .section { margin-bottom: 16px; }
@@ -18,8 +23,15 @@
   <script>(function(){try{var t=localStorage.getItem('theme'); if(t==='light') document.body.classList.add('light-theme');}catch(e){}})();</script>
   <div id="universal-header-container"></div>
 
-  <main class="container-centered" style="padding: 64px 16px; max-width: 920px;">
-    <h1 class="text-2xl" style="margin-bottom: 8px;">About AI‑Analyst</h1>
+  <div id="app" class="app-layout" style="padding-top: 45px;">
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <!-- Universal Sidebar Container -->
+    <div class="navigation-sidebar" id="universal-sidebar-container" aria-label="Universal sidebar"></div>
+
+    <main class="main-content">
+      <div class="container-centered" style="padding: 64px 16px; max-width: 920px;">
+        <h1 class="text-2xl" style="margin-bottom: 8px;">About AI‑Analyst</h1>
     <p class="lead" style="margin-bottom:16px;">A user‑friendly evolution of a complex spreadsheet—built to make company analysis fast, clear, and consistent.</p>
 
     <section class="section section-surface" style="padding:16px; border-radius:12px;">
@@ -68,14 +80,19 @@
         <li><strong>Better Onboarding</strong>: Explainers and optional tooltips for first‑time users.</li>
       </ul>
     </section>
-  </main>
+      </div>
+    </main>
+  </div>
 
   <div id="universal-footer-container"></div>
 
+  <!-- Firebase (compat) for universal search -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
   <script src="./js/services/ThemeService.js"></script>
+  <script src="./js/services/DataService.js"></script>
+  <script src="./js/services/NavigationService.js"></script>
   <script src="./js/universal-header.js"></script>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
-  <div class="navigation-sidebar" id="universal-sidebar-container" aria-label="Universal sidebar"></div>
   <nav class="mobile-bottom-nav" role="navigation" aria-label="Mobile navigation">
     <a href="/" aria-label="Home" class="mobile-nav-item"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>Home</span></a>
     <a href="#search" aria-label="Search" class="mobile-nav-item" id="mobile-nav-search"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg><span>Search</span></a>
@@ -86,10 +103,13 @@
   <script>
     (async function(){
       try {
-        const cont = document.getElementById('universal-footer-container');
+        const cont = document.getElementById('universal-sidebar-container');
         if (cont) {
-          const resp = await fetch('./components/universal-footer.html');
+          const resp = await fetch('/components/universal-sidebar.html');
           cont.innerHTML = await resp.text();
+          if (window.UniversalSidebar && window.UniversalSidebar.init) {
+            window.UniversalSidebar.init();
+          }
         }
       } catch(_) {}
     })();

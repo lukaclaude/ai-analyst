@@ -12,6 +12,7 @@ Key Behaviors
 
 Architecture
 - Page: `company-card-fixed.html` (uses `body#company[data-page-context="company-card"]`).
+- Bootstrap: `js/company-boot.js` (thin; wires view initializers like score-card tabs and sticky offsets; delegates lifecycle to controller).
 - Controller: `js/controllers/company.js` (handles theme/resize/orientation updates, compact hero refresh, charts redraw coordination).
 - Legacy monolith (to be decomposed): `js/company-card-complete-fix.js`.
 - Views (modular targets): `js/views/score-cards.js`, `js/views/analysis.js`, `js/views/tables.js`.
@@ -46,4 +47,3 @@ QA Checklist (company)
 Change Log (selected)
 - 2025‑09‑02: Compact hero added; header chip deprecated; mobile sticky/layout fixes; density pass.
 - 2025‑09‑01: Universal tooltip hardened; ThemeService centralized; expanded financial tooltips and aliasing.
-

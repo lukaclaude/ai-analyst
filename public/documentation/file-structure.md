@@ -21,7 +21,7 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 
 ## css/
 - `theme.css`: Design tokens (colors, type, radii, shadows, breakpoints). Also shared utilities and layout primitives.
-- `components.css`: Shared component styles (header/sidebar/bottom-nav/minimal primitives).
+- `components.css`: Shared component styles and primitives (header, universal sidebar shell, mobile bottom nav, container-centered, mobile nav trigger, minimal utilities, shared pills/badges, input styles).
   - Utilities: `.sr-only` (screen-reader only)
 - `index.css`: Index page scoped styles (grid/list/table, filters, sort chips, sparklines).
   - List row: optional `.tier-badge-mini` pill next to Overall (hidden on mobile)
@@ -40,11 +40,12 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `formatters.js`: Currency/quantity/market cap formatting; consistent across pages.
 - `tiers.js`: Tier/color mappings for scores and labels.
 
-## js/ (universals + entry)
+## js/ (universals + entry + bootstraps)
 - `tooltip.js`: Single DOM-node, theme-aware tooltip for `[data-tooltip]`; keyboard and mobile tap-to-pin support.
 - `universal-header.js`: Loads header partial; controls theme toggle, global search, chip visibility, and search behavior.
   - Search results include a tiny logo at left (favicon via Google S2) with letter fallback. Classes: `.search-result-left`, `.search-result-logo-wrap`, `.search-result-logo`, `.search-result-logo-fallback`.
 - `universal-sidebar.js`: Renders context-aware top section; manages recents, filters mini-button, and collapse behavior.
+- `company-boot.js`: Thin bootstrap for the company page; wires view initializers (e.g., score card tabs/sticky offsets) and delegates lifecycle to `js/controllers/company.js`. Adds lazy-load boundaries (Detailed Financials tables and deferred chart draws) with safe proxies/skeletons.
 
 ## js/views/
 - `score-cards.js`: Score card reveal panel behavior; sticky offsets; details rendering handoff.
@@ -58,9 +59,9 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `antifragile-shield.js`: Anti-Fragile visualization module; exposes update/handleResize.
 - `mini-visuals.js`: Tiny inline SVG helpers for list/grid previews (`window.MiniVisuals.{quality,idq,af}`)
 
-## Page Controllers (planned)
+## Page Controllers
 - `js/controllers/company.js`: Centralizes company page lifecycle (theme/resize/orientation); coordinates compact hero refresh.
-- `js/controllers/index.js`: Future hooks for theme/lifecycle on index; keeps entry points slim.
+- `js/controllers/index.js`: Hooks for theme/lifecycle on index; keeps entry points slim.
 
 ## assets/favicons/
 - Web app manifest, pinned tab, icons set for platforms. Ensure `site.webmanifest` uses AI-Analyst name/short_name and desired theme/background.
@@ -91,9 +92,10 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
   
 ## Planned Changes (Next Phase)
 - Company page modularization
-  - JS: move remaining logic from `js/company-card-complete-fix.js` into `js/views/score-cards.js`, `js/views/analysis.js`, `js/views/tables.js`; retain a thin company bootstrap to wire services/controllers/visualizations.
-  - Lazy-load: dynamically import heavy modules (charts and historical tables) on first interaction/visibility.
-  - CSS: extract shared primitives (badges/pills, mini bars) to `css/components.css`; keep page-specific polish in `css/company-card-fixed.css`.
+  - JS: move remaining logic from `js/company-card-complete-fix.js` into `js/views/score-cards.js`, `js/views/analysis.js`, `js/views/tables.js`; thin company bootstrap now lives at `js/company-boot.js` and wires services/controllers/visualizations.
+  - Lazy-load: dynamically import heavy modules (charts and historical tables) on first interaction/visibility. Initial boundary in place for Detailed Financials (loads `js/views/tables.js` on first visibility with skeleton), and earnings/mini charts draw only when visible, all wired via `js/company-boot.js`.
+  - Note: Chart.js is not used (earnings chart uses Canvas 2D), so it is not loaded to reduce payload.
+  - CSS: extract shared primitives (badges/pills, mini bars, universal sidebar shell, bottom nav, container-centered) to `css/components.css`; keep page-specific polish in `css/company-card-fixed.css`.
 - Ownership
   - Universals: `components/*`, `js/universal-*`, `css/components.css` (shared)
   - Company: `company-card-fixed.html`, `js/controllers/company.js`, `js/views/*`, `css/company-card-fixed.css`
@@ -116,5 +118,8 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
   - Shifts with sidebar/drawer states via `body.sidebar-expanded` and `body.sidebar-drawer-open`
 
 ## Update Log
+- 2025-09-05 — H3: Moved shared layout into `components.css` (container-centered, app layout, universal sidebar shell, mobile bottom nav, mobile nav trigger). Pages no longer need `company-card-fixed.css` for these primitives.
+- 2025-09-05 — H3: Extracted shared pills/badges into `components.css` (`.tier-badge-mini`, `.ch-tier-badge`, `.tier-badge-compact`), removed duplicates from page CSS.
+- 2025-09-05 — H1: Score Cards view extracted to `js/views/score-cards.js` and thin page bootstrap added at `js/company-boot.js` (wires tabs/sticky offsets). No functional changes; contracts preserved.
 - 2025-09-05 — Header search includes tiny logos; search index adds `websiteHost`. Added `.sr-only` utility. Index list: mini tier badge tooltip; sidebar favorites-only indicator. Added `js/visualizations/mini-visuals.js`.
 - 2025-09-03 — Initial skeleton created; to be expanded during restructuring.

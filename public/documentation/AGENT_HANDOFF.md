@@ -48,7 +48,7 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
    - Add explanatory visuals/mini‑interactions to walk through Score Trinity, Score Cards, Analysis, and Trends.
    - Consider embedded, interactive examples (e.g., mini score card with tooltips).
 2) Shared styles
-   - Extract a tiny shared pill/badge style (tier badges) into `css/components.css`.
+   - Shared pills/badges and inputs are now in `css/components.css`. Final sweep: extract any remaining truly shared table/cell primitives; prune unused selectors in `css/company-card-fixed.css`.
 3) Final formatting cleanup
    - Remove remaining non‑critical inline formatting in `js/company-card-complete-fix.js`.
 4) Index performance (optional)
@@ -57,10 +57,15 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
    - Final aria-pressed/state checks; verify focus order/visibility with sticky + drawer interactions.
 6) Analytics/cookies (if enabled later)
    - If adding analytics, introduce a consent banner (opt‑in) and document the cookie policy.
-7) Company modularization & payload (next phase)
-   - Move remaining logic from `js/company-card-complete-fix.js` into `js/views/*` with a thin company bootstrap.
-   - Lazy-load heavy blocks (charts, historical tables) on first interaction/visibility; provide loaders and ensure theme/resize hooks.
-   - Extract shared CSS primitives to `css/components.css`; prune duplicates in `css/company-card-fixed.css`.
+7) Company modularization & payload (Phase H)
+   - H1 complete: Score Cards moved; bootstrap in place.
+   - H2 in progress: tables lazy-loaded (skeleton + proxy), earnings/mini charts deferred until visible.
+   - H3 in progress: shared CSS extracted (pills/badges, inputs, layout); prune remaining duplicates after final sweep.
+
+## Test Checklist (quick)
+- Index (dark/light): sidebar filter inputs and per-page dropdown look theme-friendly; recent-company logos are 24×24; tiny tier dot visible in list rows; footer aligns at desktop next to sidebar; bottom nav appears on mobile.
+- Company: Score Cards reveal toggles; sticky offsets update on theme/resize/orientation; Detailed Financials load when scrolled into view (skeleton disappears); earnings chart draws when the section scrolls into view; mini price chart fetches when visible; avatar size matches index; sidebar close arrow is centered mid-edge.
+- About/Legal: header search works (Firebase + DataService); fonts match (Inter/JetBrains Mono); sidebar loads with Recent Companies + Theme toggle; footer adapts to sidebar; bottom nav and drawer work on mobile.
 
 ## Where to Start (Agent)
 - Read README.md (architecture fundamentals, contracts) and docs:

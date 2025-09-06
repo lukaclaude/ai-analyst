@@ -2504,10 +2504,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Setup search bar
     setupSearchBar();
 
-    // Wire panel tabs (desktop)
-    if (window.ScoreCardsView && window.ScoreCardsView.setupPanelTabs) {
-        window.ScoreCardsView.setupPanelTabs();
-    }
+    // Score Cards wiring handled by js/company-boot.js
     
     // Initialize universal sidebar (default)
     try {

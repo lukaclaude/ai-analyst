@@ -335,6 +335,32 @@
       const cont = document.getElementById('universal-sidebar-container');
       if (cont) cont.classList.remove('collapsed');
     });
+
+    // Close/collapse button wiring (universal)
+    const cont = document.getElementById('universal-sidebar-container');
+    const closeBtn = cont ? cont.querySelector('.sidebar-close-btn') : null;
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    if (closeBtn && cont) {
+      closeBtn.addEventListener('click', () => {
+        const isDesktop = window.innerWidth >= 1024;
+        const main = document.querySelector('.main-content');
+        if (isDesktop) {
+          const collapsed = cont.classList.toggle('collapsed');
+          if (main) main.style.marginLeft = collapsed ? '80px' : '256px';
+          closeBtn.textContent = collapsed ? '>' : '<';
+          document.body.classList.toggle('sidebar-expanded', !collapsed);
+        } else {
+          cont.classList.remove('active');
+          if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+          document.body.classList.remove('sidebar-drawer-open');
+        }
+      });
+    }
+    // Initialize body class based on current state (desktop)
+    if (cont && window.innerWidth >= 1024) {
+      document.body.classList.toggle('sidebar-expanded', !cont.classList.contains('collapsed'));
+    }
   }
 
   // Expose for later wiring

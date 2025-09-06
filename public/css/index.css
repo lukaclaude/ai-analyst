@@ -68,10 +68,7 @@
 #favorites-only-toggle svg { width: 14px; height: 14px; vertical-align: -2px; fill: currentColor; }
 #favorites-only-toggle.active { color: #f5c518; }
 
-/* Tiny tier badge for list rows (hidden on mobile) */
-.tier-badge-mini { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; border-radius: 999px; border: 1px solid var(--glass-border); background: var(--glass-bg); font-size: 11px; color: var(--color-text-secondary); }
-.tier-badge-mini .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
-@media (max-width: 767px) { .tier-badge-mini { display: none; } }
+/* Tiny tier badge moved to css/components.css */
 
 /* Sidebar filter polish */
 #universal-sidebar-container .section-surface { padding: 14px; }
@@ -81,8 +78,9 @@
 #universal-sidebar-container #reset-filters:hover { border-color: var(--color-border-primary); }
 
 /* Small utilities */
-.mini-meta { font-size: 11px; color: var(--color-text-secondary); }
-.logo-fallback-mini { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--glass-bg); border: 1px solid var(--glass-border); }
+/* .mini-meta moved to css/components.css */
+/* Card/logo fallback size for index cards */
+.preview-card .logo-fallback-mini { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; background: var(--glass-bg); border: 1px solid var(--glass-border); }
 
 /* Mobile helpers */
 @media (max-width: 767px) {

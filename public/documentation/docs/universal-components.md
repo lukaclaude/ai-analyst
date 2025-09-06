@@ -19,6 +19,7 @@ This note documents the behavior and contracts for the universal components so d
 - Desktop: fixed 256px; close handle at mid-edge; no horizontal scroll.
 - Collapsed width: 80px; content aligns (header/compact hero unaffected).
 - Mobile/Tablet: drawer overlay toggles `body.sidebar-drawer-open` so content (compact hero) shifts and remains readable.
+- Top area contract: `#sidebar-top` is page-specific (filters on index, section nav on company); bottom area is universal (Recent Companies + Theme toggle).
 
 ## Class/Flag Summary
 - `body[data-page-context]` → page context (e.g., `index`, `company-card`) for universal components.

@@ -71,23 +71,27 @@ Purpose: Guide the incremental refactor toward a maintainable, componentized app
 ## Workstream H — Company Modularization & Payload
 - Goals: reduce monolith size, improve maintainability, and defer heavy work with lazy loading while preserving behavior.
 - JS modularization
-  - [ ] Move remaining logic from `js/company-card-complete-fix.js` into view modules: `js/views/score-cards.js`, `js/views/analysis.js`, `js/views/tables.js`.
-  - [ ] Create a thin bootstrap (e.g., `js/company-boot.js`) that wires services, controllers, and visualizations; deprecate large monolith once migrated.
+  - [x] H1 — Score Cards extracted to `js/views/score-cards.js`; tabs/sticky offsets wired via `js/company-boot.js`.
+  - [ ] Move Analysis view to `js/views/analysis.js` (complete wiring via bootstrap/controller). (Most logic already modular; verify residuals only.)
+  - [x] Move Tables view to `js/views/tables.js` (complete wiring via bootstrap/controller).
+  - [x] Create a thin bootstrap (`js/company-boot.js`) that wires views and delegates lifecycle to controller.
 - Lazy-load boundaries
-  - [ ] Dynamically import heavy blocks on first interaction/visibility (IntersectionObserver): charts and historical tables.
-  - [ ] Provide small loaders/skeletons; ensure theme/resize/orientation hooks attach post-load; announce via aria-live where appropriate.
+  - [x] Detailed Financials (tables) lazy-loaded on first visibility; skeleton inserted; legacy calls proxied via Company Boot (safe fallback).
+  - [x] Charts: earnings trend drawing deferred until first visibility; legacy calls proxied; ensure theme/resize/orientation calls are safe (render occurs after visible). Mini price chart fetch also deferred until first visible. Chart.js not used.
 - CSS consolidation
-  - [ ] Extract shared primitives (badges/pills, mini bars, table cells) to `css/components.css`.
-  - [ ] Keep company-specific styling in `css/company-card-fixed.css`; scope under `#company` where helpful; prune duplicates.
+  - [x] Extract shared primitives to `css/components.css`: universal sidebar shell (off‑canvas container + overlay), centered container, app layout, mobile bottom nav, mobile nav trigger, input styles.
+  - [x] Extract shared pills/badges: `.tier-badge-mini`, `.ch-tier-badge`, `.tier-badge-compact` moved to `css/components.css`.
+  - [x] Final sweep: table/cell primitives remain page‑scoped; no additional shared extraction needed.
+  - [x] Pruned duplicates and removed page overrides; docs updated.
 - Dead code pruning
   - [ ] Remove unused selectors/helpers left behind after the move; keep changes scoped to the refactor.
 - Size budget & measurement
   - [ ] Document size targets (guidelines): per‑page JS ≲ 100–150 KB unminified; CSS ≲ 50–80 KB; larger acceptable if lazy-loaded.
   - [ ] Add a quick measurement note (e.g., `wc -c` or devtools coverage) and record before/after.
 - QA & docs
-  - [ ] Verify no regressions (themes, mobile/desktop, compact hero, tooltips, charts) and that lazy-load sections handle theme/resize.
-  - [ ] Update `documentation/file-structure.md` to reflect final module boundaries and lazy-load points.
-  - [ ] Update README Change Log and `documentation/AGENT_HANDOFF.md` with migration summary and any new entry points.
+  - [x] Verify no regressions (themes, mobile/desktop, compact hero, tooltips, charts) and that lazy-load sections handle theme/resize.
+  - [x] Update `documentation/file-structure.md` to reflect final module boundaries and lazy-load points.
+  - [x] Update README Change Log and `documentation/AGENT_HANDOFF.md` with migration summary and test checklist.
 
 ### Checkpoints (H)
 1) Views moved (boot in place)

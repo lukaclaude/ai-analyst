@@ -59,10 +59,187 @@ button:focus-visible {
 }
 
 /* Bottom nav active state helper */
-.mobile-nav-item.active {
+.mobile-nav-item.active { border-top: 2px solid var(--color-score-purple); }
+
+/* Sidebar utility text and borders */
+.sidebar-section-border { border-top: 1px solid var(--color-border-primary); }
+.sidebar-muted-text { color: var(--color-text-muted); }
+.mini-meta { font-size: 11px; color: var(--color-text-secondary); }
+
+/* Inputs (sidebar + small selects) */
+.sidebar-input {
+  background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
-  border-top: 2px solid var(--color-score-purple);
+  border: 1px solid var(--color-border-primary);
 }
+.sidebar-input::placeholder { color: var(--color-text-muted); }
+.sidebar-input:focus {
+  outline: none;
+  border-color: var(--focus-ring-color);
+  box-shadow: 0 0 0 1px var(--focus-ring-color);
+}
+.light-theme .sidebar-input {
+  background: #ffffff;
+  color: var(--color-text-primary);
+  border: 1px solid #d0d7de;
+}
+.light-theme .sidebar-input::placeholder { color: #656d76; }
+.light-theme .sidebar-input:focus { border-color: #0969da; box-shadow: 0 0 0 1px #0969da; }
+
+  /* ============================================
+   Shared Pills / Badges
+   ============================================ */
+  /* Tiny tier badge used in index list rows */
+  .tier-badge-mini { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; border-radius: 999px; border: 1px solid var(--glass-border); background: var(--glass-bg); font-size: 11px; color: var(--color-text-secondary); }
+  .tier-badge-mini .dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  @media (max-width: 767px) { .tier-badge-mini { display: none; } }
+
+  /* Company compact hero tier badge (extracted for reuse) */
+  .compact-hero .ch-tier-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--color-border-primary); background: var(--glass-bg, transparent); }
+  .compact-hero .ch-tier-badge .tier-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-score-purple); box-shadow: 0 0 8px var(--glow-purple); }
+  .compact-hero .ch-tier-badge:hover,
+  .compact-hero .ch-tier-badge:focus-visible { border-color: var(--tier-color, var(--color-border-primary)); box-shadow: 0 0 0 2px color-mix(in oklab, var(--tier-color, var(--color-score-purple)) 35%, transparent); }
+
+  /* Compact tier badge used in analysis */
+  .tier-badge-compact { display: inline-flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4); background: var(--glass-bg); border: 1.5px solid var(--tier-color); border-radius: 100px; cursor: help; position: relative; }
+  .tier-badge-compact:hover .tier-tooltip { display: none; }
+  .tier-name { font-size: 0.875rem; font-weight: var(--weight-bold); color: var(--tier-color); text-transform: uppercase; letter-spacing: 0.05em; }
+  .tier-score { display: flex; align-items: baseline; gap: 2px; }
+
+/* ============================================
+   Universal Sidebar: Recent Companies list
+   ============================================ */
+.recent-company-item { padding: 8px 12px; margin-bottom: 4px; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; }
+.recent-company-item:hover { background: var(--glass-bg); transform: translateX(4px); }
+.company-info-row { display: flex; align-items: center; gap: 10px; }
+.company-mini-logo { width: 24px; height: 24px; border-radius: 4px; object-fit: contain; background: rgba(255,255,255,0.9); padding: 2px; flex-shrink: 0; border: 1px solid var(--color-border-primary); }
+.logo-fallback-mini { width: 24px; height: 24px; border-radius: 4px; background: linear-gradient(135deg, var(--color-accent-purple), var(--color-accent-blue)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--color-border-primary); }
+.logo-fallback-mini span { color: #fff; font-weight: bold; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.company-text { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; }
+.recent-company-item .ticker { font-weight: var(--weight-semibold); color: var(--color-text-primary); font-size: var(--text-sm); line-height: 1.2; }
+.recent-company-item .name { color: var(--color-text-muted); font-size: var(--text-xs); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; line-height: 1.2; }
+.light-theme .recent-company-item .ticker { color: var(--color-text-primary); }
+.light-theme .recent-company-item .name { color: var(--color-text-secondary); }
+.light-theme .recent-company-item:hover { background: rgba(0,0,0,0.05); }
+
+/* ============================================
+   Centered Container (shared)
+   ============================================ */
+.container-centered,
+.main-content-wrapper,
+#main-content > div {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+@media (min-width: 768px) {
+  .container-centered,
+  .main-content-wrapper,
+  #main-content > div {
+    padding: 0 var(--space-6);
+    max-width: 100%;
+  }
+}
+@media (min-width: 1024px) {
+  .container-centered,
+  .main-content-wrapper,
+  #main-content > div {
+    max-width: 1280px;
+  }
+}
+@media (min-width: 1920px) {
+  .container-centered,
+  .main-content-wrapper,
+  #main-content > div {
+    max-width: 1440px;
+  }
+}
+
+/* ============================================
+   App Layout + Universal Sidebar Shell (shared)
+   ============================================ */
+.app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* Mobile: Sidebar hidden by default */
+.navigation-sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 86vw; max-width: 360px;
+  height: 100vh;
+  padding-top: 56px; /* clear universal header */
+  background: var(--color-bg-secondary);
+  backdrop-filter: var(--glass-blur) var(--glass-saturate);
+  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
+  border-right: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-modal);
+  transform: translateX(-100%);
+  transition: transform var(--transition-base);
+  overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+}
+.navigation-sidebar.active { transform: translateX(0); }
+
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: calc(var(--z-modal) - 1);
+  opacity: 0; transition: opacity var(--transition-base);
+}
+.sidebar-overlay.active { display: block; opacity: 1; }
+
+.main-content {
+  flex: 1; min-height: 100vh; background: var(--color-bg-primary);
+  margin-left: 0;
+  padding-bottom: calc(var(--touch-target-large) + var(--space-4)); /* space for bottom nav */
+}
+
+@media (min-width: 768px) {
+  .navigation-sidebar { width: 280px; max-width: none; }
+}
+@media (min-width: 1024px) {
+  .app-layout { flex-direction: row; }
+  .navigation-sidebar { position: fixed; width: 256px; transform: translateX(0); transition: none; }
+  .main-content { margin-left: 256px; padding-bottom: 0; }
+  .sidebar-overlay { display: none !important; }
+}
+
+/* ============================================
+   Mobile Bottom Navigation (shared)
+   ============================================ */
+.mobile-bottom-nav {
+  display: none; /* Hidden by default, shown on mobile */
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--touch-target-large);
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border-primary);
+  box-shadow: 0 -2px 10px rgba(var(--shadow-color), 0.15);
+  z-index: var(--z-sticky);
+  padding: 0 var(--space-2);
+}
+.mobile-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; color: var(--color-text-muted); text-decoration: none; font-size: 10px; padding: var(--space-2);
+  transition: color var(--transition-fast); -webkit-tap-highlight-color: transparent;
+}
+.mobile-nav-item:active,
+.mobile-nav-item.active { color: var(--color-score-blue); }
+.mobile-nav-item svg { width: 20px; height: 20px; }
+.mobile-nav-item span { font-size: 10px; font-weight: var(--weight-medium); }
+@media (max-width: 767px) { .mobile-bottom-nav { display: flex; } }
+
+/* Mobile nav trigger (hamburger) */
+.mobile-nav-trigger {
+  display: flex; align-items: center; justify-content: center;
+  width: var(--touch-target-comfortable); height: var(--touch-target-comfortable);
+  background: transparent; border: none; color: var(--color-text-primary);
+  cursor: pointer; padding: var(--space-3); border-radius: var(--radius-lg);
+  transition: background var(--transition-fast);
+  position: fixed; top: var(--space-2); left: var(--space-2); z-index: var(--z-sticky);
+}
+.mobile-nav-trigger:hover,
+.mobile-nav-trigger:focus { background: var(--glass-bg-hover); outline: none; }
+.mobile-nav-trigger:focus-visible { box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color); }
+@media (min-width: 1024px) { .mobile-nav-trigger { display: none; } }
 
 /* Universal sidebar layout */
 .universal-sidebar {
@@ -71,6 +248,7 @@ button:focus-visible {
   flex-direction: column;
   height: 100%;
 }
+.sidebar-header { position: static; }
 .universal-sidebar .sidebar-content {
   display: flex;
   flex-direction: column;

@@ -95,6 +95,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
 }
 
 .header-left,
@@ -102,6 +103,7 @@
     display: flex;
     align-items: center;
     gap: 20px;
+    box-sizing: border-box;
 }
 
 /* Logo */
@@ -250,6 +252,9 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    line-height: 1;
+    box-sizing: border-box;
+    min-height: 0; /* prevent page-level button min-heights from inflating */
 }
 
 .header-button:hover {
@@ -324,11 +329,19 @@
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-sizing: border-box;
+    min-height: 0; /* override any global button min-height */
+    min-width: 0;
 }
 
 .user-avatar:hover {
-    transform: scale(1.1);
-    border-color: rgba(255, 255, 255, 0.4);
+    /* Keep hover subtle and consistent across pages */
+    transform: none;
+    border-color: rgba(255, 255, 255, 0.32);
 }
 
 .avatar-placeholder {

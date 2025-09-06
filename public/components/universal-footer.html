@@ -9,7 +9,7 @@
         <span class="footer-sep">•</span>
         <a href="/legal.html#disclaimer" class="footer-link">Disclaimer</a>
         <span class="footer-sep">•</span>
-        <a href="/legal.html#privacy" class="footer-link">Privacy & Cookies</a>
+        <a href="/legal.html#privacy" class="footer-link">Privacy<span class="mobile-hidden"> &amp; Cookies</span></a>
         <span class="footer-sep">•</span>
         <a href="https://www.lukalike.com" target="_blank" rel="noopener" class="footer-link">My working portfolio</a>
       </nav>
@@ -48,19 +48,25 @@
 @media (max-width: 768px) {
   .site-footer-inner { flex-direction: column; align-items: center; gap: 6px; text-align: center; }
   .footer-right { align-self: center; }
-  /* Compact row with wrap; hide separators to save space */
-  .footer-links { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 8px 12px; }
-  .footer-sep { display: none; }
+  /* Try to keep links on a single row */
+  .footer-links { display: inline-flex; flex-wrap: nowrap; justify-content: center; gap: 8px; }
+  .footer-link { font-size: 11px; }
+  .footer-sep { display: inline; opacity: .5; }
+  .mobile-hidden { display: none; }
   /* Keep footer visible above fixed bottom nav */
   .site-footer { padding-bottom: calc(var(--touch-target-large) + 8px); }
 }
 
 /* Desktop alignment next to sidebar */
 @media (min-width: 1024px) {
-  /* Footer aligns next to sidebar only on pages with sidebars */
+  /* Footer aligns next to sidebar on all pages that use the universal sidebar */
   body[data-page-context="company-card"].sidebar-expanded .site-footer,
-  body[data-page-context="index"].sidebar-expanded .site-footer { margin-left: 256px; }
+  body[data-page-context="index"].sidebar-expanded .site-footer,
+  body[data-page-context="about"].sidebar-expanded .site-footer,
+  body[data-page-context="legal"].sidebar-expanded .site-footer { margin-left: 256px; }
   body[data-page-context="company-card"]:not(.sidebar-expanded) .site-footer,
-  body[data-page-context="index"]:not(.sidebar-expanded) .site-footer { margin-left: 80px; }
+  body[data-page-context="index"]:not(.sidebar-expanded) .site-footer,
+  body[data-page-context="about"]:not(.sidebar-expanded) .site-footer,
+  body[data-page-context="legal"]:not(.sidebar-expanded) .site-footer { margin-left: 80px; }
 }
 </style>
