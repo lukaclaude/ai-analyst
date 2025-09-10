@@ -1,5 +1,4 @@
-// Universal Sidebar (skeleton): context-aware content + recent companies
-// Not wired into existing page yet to avoid regressions.
+// Universal Sidebar: self-hydrates markup and wires behavior across all pages
 
 (function() {
   let currentContext = null;
@@ -317,13 +316,19 @@
     next();
   }
 
-  function init() {
-    const context = detectContext();
-    renderTop(context);
-    renderRecent();
-    if (window.DataService && typeof window.DataService.subscribeRecent === 'function') {
-      window.DataService.subscribeRecent(renderRecent);
-    }
+  async function ensureMarkup() {
+    const container = document.getElementById('universal-sidebar-container');
+    if (!container) return false;
+    // Already hydrated if markup exists
+    if (container.querySelector('.universal-sidebar')) return true;
+    try {
+      const resp = await fetch('/components/universal-sidebar.html');
+      container.innerHTML = await resp.text();
+      return true;
+    } catch(_) { return false; }
+  }
+
+  function wireThemeAndMini() {
     // Theme toggle wiring
     const themeBtn = document.getElementById('universal-sidebar-theme-toggle');
     if (themeBtn && window.ThemeService && typeof window.ThemeService.toggle === 'function') {
@@ -335,32 +340,48 @@
       const cont = document.getElementById('universal-sidebar-container');
       if (cont) cont.classList.remove('collapsed');
     });
+  }
 
-    // Close/collapse button wiring (universal)
+  function wireCloseDelegated() {
     const cont = document.getElementById('universal-sidebar-container');
-    const closeBtn = cont ? cont.querySelector('.sidebar-close-btn') : null;
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    if (closeBtn && cont) {
-      closeBtn.addEventListener('click', () => {
-        const isDesktop = window.innerWidth >= 1024;
-        const main = document.querySelector('.main-content');
-        if (isDesktop) {
-          const collapsed = cont.classList.toggle('collapsed');
-          if (main) main.style.marginLeft = collapsed ? '80px' : '256px';
-          closeBtn.textContent = collapsed ? '>' : '<';
-          document.body.classList.toggle('sidebar-expanded', !collapsed);
-        } else {
-          cont.classList.remove('active');
-          if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-          document.body.style.overflow = '';
-          document.body.classList.remove('sidebar-drawer-open');
-        }
-      });
-    }
+    if (!cont) return;
+    if (cont.dataset.closeWired === '1') return;
+    cont.addEventListener('click', (e) => {
+      const btn = e.target && (e.target.closest && e.target.closest('.sidebar-close-btn'));
+      if (!btn) return;
+      const isDesktop = window.innerWidth >= 1024;
+      const main = document.querySelector('.main-content');
+      if (isDesktop) {
+        const collapsed = cont.classList.toggle('collapsed');
+        if (main) main.style.marginLeft = collapsed ? '80px' : '256px';
+        btn.textContent = collapsed ? '>' : '<';
+        document.body.classList.toggle('sidebar-expanded', !collapsed);
+      } else {
+        cont.classList.remove('active');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+        document.body.classList.remove('sidebar-drawer-open');
+      }
+    });
+    cont.dataset.closeWired = '1';
     // Initialize body class based on current state (desktop)
-    if (cont && window.innerWidth >= 1024) {
+    if (window.innerWidth >= 1024) {
       document.body.classList.toggle('sidebar-expanded', !cont.classList.contains('collapsed'));
     }
+  }
+
+  async function init() {
+    const ok = await ensureMarkup();
+    if (!ok) return;
+    const context = detectContext();
+    renderTop(context);
+    renderRecent();
+    if (window.DataService && typeof window.DataService.subscribeRecent === 'function') {
+      window.DataService.subscribeRecent(renderRecent);
+    }
+    wireThemeAndMini();
+    wireCloseDelegated();
   }
 
   // Expose for later wiring
@@ -370,4 +391,8 @@
     getContext: function() { return currentContext || detectContext(); },
     updateTopFromState
   };
+
+  // Auto-init when DOM is ready
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

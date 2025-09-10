@@ -77,20 +77,6 @@
   </nav>
   <script src="./js/universal-sidebar.js"></script>
   <script>
-    (async function(){
-      try {
-        const cont = document.getElementById('universal-sidebar-container');
-        if (cont) {
-          const resp = await fetch('/components/universal-sidebar.html');
-          cont.innerHTML = await resp.text();
-          if (window.UniversalSidebar && window.UniversalSidebar.init) {
-            window.UniversalSidebar.init();
-          }
-        }
-      } catch(_) {}
-    })();
-  </script>
-  <script>
     (function(){
       try {
         const sb = document.getElementById('universal-sidebar-container');

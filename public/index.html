@@ -232,39 +232,7 @@
       const app = document.getElementById('app');
       const loading = document.getElementById('app-loading');
 
-      // Load universal sidebar markup
-      try {
-        const cont = document.getElementById('universal-sidebar-container');
-        if (cont) {
-          const resp = await fetch('/components/universal-sidebar.html');
-          cont.innerHTML = await resp.text();
-          if (window.UniversalSidebar && typeof window.UniversalSidebar.init === 'function') {
-            window.UniversalSidebar.init();
-            if (window.UniversalSidebar.setContext) window.UniversalSidebar.setContext('index');
-          }
-          // Wire collapse/close behavior similar to company page
-          const closeBtn = cont.querySelector('.sidebar-close-btn');
-          const sidebarOverlay = document.getElementById('sidebar-overlay');
-          if (closeBtn) closeBtn.addEventListener('click', () => {
-            const isDesktop = window.innerWidth >= 1024;
-            const main = document.querySelector('.main-content');
-            if (isDesktop) {
-              const collapsed = cont.classList.toggle('collapsed');
-              if (main) main.style.marginLeft = collapsed ? '80px' : '256px';
-              document.body.classList.toggle('sidebar-expanded', !collapsed);
-              closeBtn.textContent = collapsed ? '>' : '<';
-            } else {
-              cont.classList.remove('active');
-              if (sidebarOverlay) sidebarOverlay.classList.remove('active');
-              document.body.style.overflow = '';
-            }
-          });
-        }
-        // Initialize body class alignment on desktop
-        if (window.innerWidth >= 1024) {
-          document.body.classList.toggle('sidebar-expanded', !cont.classList.contains('collapsed'));
-        }
-      } catch (e) { console.warn('Sidebar init failed', e); }
+      // UniversalSidebar self-hydrates and wires itself; no page-level fetch/wiring needed
 
       // Mobile sidebar toggles
       const mobileNavTrigger = document.getElementById('mobile-nav-trigger');

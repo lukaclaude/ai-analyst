@@ -100,20 +100,6 @@
     <a href="#menu" aria-label="Menu" class="mobile-nav-item" id="mobile-bottom-menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg><span>Menu</span></a>
   </nav>
   <script src="./js/universal-sidebar.js"></script>
-  <script>
-    (async function(){
-      try {
-        const cont = document.getElementById('universal-sidebar-container');
-        if (cont) {
-          const resp = await fetch('/components/universal-sidebar.html');
-          cont.innerHTML = await resp.text();
-          if (window.UniversalSidebar && window.UniversalSidebar.init) {
-            window.UniversalSidebar.init();
-          }
-        }
-      } catch(_) {}
-    })();
-  </script>
   <script src="./js/universal-footer.js"></script>
   <script>
     (function(){

@@ -44,7 +44,7 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `tooltip.js`: Single DOM-node, theme-aware tooltip for `[data-tooltip]`; keyboard and mobile tap-to-pin support.
 - `universal-header.js`: Loads header partial; controls theme toggle, global search, chip visibility, and search behavior.
   - Search results include a tiny logo at left (favicon via Google S2) with letter fallback. Classes: `.search-result-left`, `.search-result-logo-wrap`, `.search-result-logo`, `.search-result-logo-fallback`.
-- `universal-sidebar.js`: Renders context-aware top section; manages recents, filters mini-button, and collapse behavior.
+  - `universal-sidebar.js`: Self-hydrates markup into `#universal-sidebar-container`, renders context-aware top section, manages recents, filters mini-button, and collapse behavior (delegated handler). Mobile drawer close handled universally.
 - `company-boot.js`: Thin bootstrap for the company page; wires view initializers (e.g., score card tabs/sticky offsets) and delegates lifecycle to `js/controllers/company.js`. Adds lazy-load boundaries (Detailed Financials tables and deferred chart draws) with safe proxies/skeletons.
 
 ## js/views/

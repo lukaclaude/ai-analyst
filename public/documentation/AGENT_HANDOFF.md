@@ -16,7 +16,8 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
 - Compact Hero (company only)
   - Sticky summary below header (logo/ticker/name/price/overall/tier). Hysteresis prevents flicker.
 - Universal Sidebar (js/universal-sidebar.js)
-  - Desktop: 256px (expanded) / 80px (collapsed); mobile/tablet: drawer overlay.
+  - Self-hydrates markup into `#universal-sidebar-container` on DOM ready (no per-page fetch needed).
+  - Desktop: 256px (expanded) / 80px (collapsed) via delegated close handler; mobile/tablet: drawer overlay.
   - Body flags: `sidebar-expanded` (desktop), `sidebar-drawer-open` (mobile), `data-page-context` (‘index’, ‘company-card’, etc.).
 - Universal Footer (components/universal-footer.html + js/universal-footer.js)
   - Sits at bottom; aligned next to sidebar on pages that have one; stacked on mobile.
