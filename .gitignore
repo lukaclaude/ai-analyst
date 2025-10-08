@@ -90,3 +90,5 @@ public/temp-images/
 # IDE / workspace
 .vscode/
 *.code-workspace
+# Firebase functions dependencies
+functions/node_modules/
