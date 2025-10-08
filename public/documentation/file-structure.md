@@ -34,6 +34,7 @@ Purpose: Provide a clear, up-to-date map of files and their roles to help future
 - `DataService.js`: Firestore init, search index builder, recent companies (localStorage + pub/sub).
   - Search index fields: `{ ticker, name, score, websiteHost }` (websiteHost used for tiny logos in header search)
 - `NavigationService.js`: Navigation entry points (goToCompany/goHome/open). Replaces per-page routing progressively.
+- `AnalyticsService.js`: GA4 lightweight wrapper. Dynamically loads `gtag.js` with measurement ID, logs `page_view` on load, and exposes `logEvent`/`logPageView` for future use. Centralized and reversible.
 
 ## js/lib/
 - `aliases.js`: Central alias lookups for key ratios and computed helpers (TTM & YoY).

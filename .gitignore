@@ -15,7 +15,9 @@ firebase-debug.*.log*
 # Uncomment this if you'd like others to create their own Firebase project.
 # For a team working on the same Firebase project(s), it is recommended to leave
 # it commented so all members can deploy to the same project(s) in .firebaserc.
-# .firebaserc
+.firebaserc
+functions/.runtimeconfig.json
+functions/serviceAccount*.json
 
 # Runtime data
 pids
@@ -70,3 +72,21 @@ node_modules/
 
 # macOS system files
 .DS_Store
+
+# Local environment files
+*.env
+*.env.*
+functions/.env
+functions/.env.*
+
+# Personal/data backups
+public/_backups/
+public/temp-images/
+
+# Credentials
+*.key
+*.pem
+
+# IDE / workspace
+.vscode/
+*.code-workspace

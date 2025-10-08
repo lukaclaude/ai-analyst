@@ -87,3 +87,9 @@ This document gives an at‑a‑glance brief so any agent (or non‑coder owner)
 - Company metrics: ratios/growth formatted consistently; Working Capital currency/units.
 - Header search results: score matches overall; colored tier dot; tiny logo or letter fallback visible on mobile/desktop.
 - Legal/About: theme toggling works; footer at bottom; no sidebar offset.
+ 
+## Analytics
+- Entry point: `js/services/AnalyticsService.js` (loads GA4 `gtag.js`, logs `page_view` on load; exposes `logEvent`).
+- Measurement ID: uses `G-QQW25R6FB8` (from Firebase config). Can be overridden via `window.__GA_MEASUREMENT_ID` if needed.
+- Debug: add `?ga_debug=1` to URL to enable GA debug mode; check GA4 DebugView.
+- Real‑time: open any page and confirm a user in GA4 real‑time within ~30s (ad blockers can suppress calls; test incognito).
